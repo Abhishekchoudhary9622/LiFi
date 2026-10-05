@@ -964,8 +964,30 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
         {/* CENTER STAGE: HARDWARE SETUP (COVERS 100% OF AVAILABLE) */}
         {/* ------------------------------------------------------- */}
         <section className="flex-1 flex flex-col min-h-0 overflow-hidden relative select-none">
+          {/* Mobile Component Quick-Selection Strip (< lg) */}
+          <div className="lg:hidden z-10 flex items-center space-x-1.5 overflow-x-auto scrollbar-none py-1.5 px-2 bg-[#060a14] border-b border-[#182642] text-[11px] font-mono shrink-0">
+            <span className="text-slate-400 text-[10px] uppercase font-bold shrink-0">Tap Part:</span>
+            {HARDWARE_COMPONENTS.map(c => (
+              <button
+                key={c.id}
+                onClick={() => {
+                  focusComponent(c.id);
+                  setSidebarMode('docked');
+                }}
+                className={`px-2 py-0.5 rounded-full whitespace-nowrap transition-all flex items-center space-x-1 shrink-0 ${
+                  selectedCompId === c.id
+                    ? 'bg-blue-600 text-white font-bold shadow'
+                    : 'bg-[#0f172a] text-slate-300 border border-slate-700'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: c.box.color }} />
+                <span>{c.shortName}</span>
+              </button>
+            ))}
+          </div>
+
           {/* Sub-Header Floating Control Overlay Bar */}
-          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20 flex flex-wrap items-center gap-1.5 bg-[#080d19]/90 backdrop-blur-md px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-[#17243c] shadow-xl text-xs font-mono max-w-[calc(100vw-16px)]">
+          <div className="absolute top-10 lg:top-3 left-2 sm:left-3 z-20 flex flex-wrap items-center gap-1.5 bg-[#080d19]/90 backdrop-blur-md px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-[#17243c] shadow-xl text-xs font-mono max-w-[calc(100vw-16px)]">
             <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
             <span className="font-bold text-white tracking-wide text-[10px] sm:text-[11px]">
               Hardware Twin
@@ -1230,6 +1252,7 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
                       onClick={(e) => {
                         e.stopPropagation();
                         focusComponent(comp.id);
+                        setSidebarMode('docked');
                       }}
                       onMouseEnter={() => setHoveredCompId(comp.id)}
                       onMouseLeave={() => setHoveredCompId(null)}
