@@ -1,0 +1,1839 @@
+
+--- PAGE 1 ---
+1
+SemLiFi: Burst-Aware Semantic Recovery With
+Confidence-Gated Fallback for LiFi Links
+Dr. Chirra Venkata Ramireddy, Abhay Sharma, Mahi Bhardwaj, Abhishek Choudhary, and Kumari Sandhya
+Abstract—Visible light communication (VLC) and Light Fidelity
+(LiFi) links are highly sensitive to temporary line-of-sight
+blockage. Unlike independent bit errors, a physical obstruction
+can remove a contiguous interval of symbols, producing a
+burst loss whose duration and location depend on obstruction
+dynamics and link geometry. This paper presents SemLiFi, a
+cross-layer burst-recovery framework that combines a physically
+implemented LiFi testbed, controlled optical occlusion, empirical
+burst characterization, Burst-Aware Semantic Reconstruction
+(BASR), and a Confidence-Gated Fallback Protocol (CGFP). BASR
+reconstructs missing structured telemetry from surviving context
+and burst information, while CGFP routes each reconstruction
+either to semantic acceptance or to selective exact recovery.
+The prototype uses ESP32 transmit and receive nodes, on–
+off keying with Manchester coding, a high-intensity LED, a
+BPW34 photodiode, an LM358 transimpedance amplifier, CRC-8
+validation, and an SG90 servo-controlled optical flap. The reported
+study contains 56 empirical occlusion events, a 74,281-parameter
+edge-constrained Transformer BASR model, and disjoint 664/641-
+burst calibration/test splits for CGFP. The clean-link path reports
+449.0 ms mean latency with zero bit errors. The evaluated Reed–
+Solomon configuration recovers 37.5% of observed occlusion
+bursts, while Stop-and-Wait ARQ reports 97.1% delivery at 1560.0
+ms mean latency. BASR reports 42.63±1.47% exact reconstruction
+accuracy and 100.0% accuracy on the evaluated motor-state
+field. At the calibrated threshold τ ∗ = 0.80, accepted semantic
+patches have 97.13% precision and a 0.78% patch-error rate, with
+27.15% of retransmissions avoided in the reported simulation.
+Continuous-burst simulation reaches 100% delivery at 790.7
+ms with 1.00 ±0.13% UFER, while a 15-frame live run reaches
+100% delivery and 0.00% UFER by rejecting all low-confidence
+semantic reconstructions and invoking exact fallback. The results
+support the feasibility of the integrated recovery architecture
+within the tested structured-telemetry and controlled-occlusion
+setting, while the small live-hardware sample and absence of
+completed component ablations limit broader claims.
+Index Terms—LiFi, visible light communication, optical wireless
+communication, burst errors, semantic communication, semantic
+reconstruction, confidence gating, edge inference, embedded
+Transformer, error-resilient telemetry.
+I. INTRODUCTION
+Visible light communication (VLC) uses controlled modu-
+lation of optical intensity to convey information, while LiFi
+extends optical wireless communication toward bidirectional
+and networked connectivity. VLC has been investigated for
+indoor communications because of the availability of optical
+Dr. Chirra Venkata Ramireddy is with the School of Computer
+Science and Engineering (SCOPE), VIT-AP University, Amaravati,
+Andhra Pradesh, India (e-mail: venkataramramireddy.chirra@vitap.ac.in).
+The student authors are with SCOPE, VIT-AP University, Amara-
+vati, Andhra Pradesh, India (e-mail: abhay.23bce7190@vitapstudent.ac.in;
+mahi.23bce7822@vitapstudent.ac.in; abhishek.23bce8137@vitapstudent.ac.in;
+sandhya.23bce9257@vitapstudent.ac.in).
+spectrum, electromagnetic compatibility, spatial confinement,
+and the possibility of reusing lighting infrastructure. Founda-
+tional channel analyses and subsequent surveys established
+the importance of transmitter–receiver geometry, irradiance
+angle, receiver orientation, optical filtering, and line-of-sight
+conditions in determining link quality [1]–[3]. IEEE 802.15.7
+further provides a standards framework for short-range optical
+wireless communication [4].
+The same line-of-sight dependence that is useful for optical
+spatial confinement creates a distinctive reliability problem. A
+person crossing an optical path, a temporary object, equipment
+movement, receiver rotation, or another obstruction can atten-
+uate the received signal for a finite interval. Consequently,
+errors need not be independent in time. Instead, several
+adjacent symbols or bytes can become unavailable together.
+For a physical system, the resulting burst length is linked to
+obstruction duration, optical geometry, modulation timing, and
+receiver thresholding. A recovery mechanism that assumes only
+independent random errors can therefore fail to represent the
+dominant impairment mode of an obstructed optical link.
+Conventional error-control mechanisms remain essential in
+this setting. Forward error correction (FEC) adds redundancy
+so that a receiver can recover corrupted information without
+a retransmission. Reed–Solomon (RS) codes are a classical
+family of block codes with well-established symbol-error
+and burst-error decoding properties [5], [6]. Their correction
+capability, however, is bounded by the redundancy selected
+for the code. Automatic repeat request (ARQ) instead requests
+missing or corrupted information again and can preserve exact
+payload content, but the retransmission itself consumes time
+and requires a return path. When the forward optical path is
+temporarily unavailable, retransmission latency can become
+significant.
+Semantic communication offers a complementary perspective.
+Rather than treating every source symbol as equally important,
+semantic systems exploit source structure, context, or task
+objectives to infer information that is useful to the receiver
+[7]–[9]. Recent work has also demonstrated semantic commu-
+nication over visible-light links and underwater optical wireless
+channels, showing that learning-based semantic methods can
+be coupled to physical optical communication systems [10],
+[11]. These developments motivate a narrower question: can
+contextual semantic reconstruction be used specifically for
+temporary optical burst loss while preserving an exact-recovery
+path whenever the reconstruction is not sufficiently trustworthy?
+This paper presents SemLiFi, a cross-layer architecture
+designed around that question. SemLiFi does not claim that
+semantic reconstruction should replace FEC or ARQ. Instead,
+--- PAGE 2 ---
+2
+it introduces a conditional recovery path. First, the physical
+link generates and measures a burst caused by controlled
+optical occlusion. Second, Burst-Aware Semantic Reconstruc-
+tion (BASR) estimates the missing structured payload from
+surviving context and burst metadata. Third, a Confidence-
+Gated Fallback Protocol (CGFP) combines semantic confidence,
+physical burst severity, and structural validity. A reconstruction
+is accepted only when it satisfies the calibrated decision
+criterion; otherwise, the receiver requests selective exact
+recovery.
+The research question is therefore:Can a physically imple-
+mented LiFi link exploit contextual semantic reconstruction
+during temporary burst loss while retaining an exact-recovery
+path for uncertain predictions?
+The contributions are fourfold:
+1) a low-cost ESP32-based LiFi testbed with repeatable servo-
+controlled optical occlusion;
+2) a burst-aware reconstruction methodology in which cor-
+ruption patterns are derived from measured optical burst
+behavior rather than only independent random masking;
+3) a confidence-gated routing mechanism combining model
+confidence, physical burst severity, and hard structural
+validity; and
+4) an evaluation framework comparing semantic recovery and
+exact fallback with no recovery, Reed–Solomon FEC, and
+Stop-and-Wait ARQ.
+The remainder of the paper is organized as follows. Section II
+reviews related work and identifies the research gap. Section III
+defines the notation and system model. Section IV describes the
+physical testbed and burst characterization. Section V presents
+BASR and CGFP. Section VI describes the experimental
+methodology. Section VII reports the measured and simulated
+results available in the supplied experimental record. Section
+VIII discusses the findings, limitations, and threats to validity.
+Section IX gives reproducibility details and future work,
+followed by the conclusion.
+II. RELATEDWORK ANDRESEARCHGAP
+A. Optical Wireless Communication
+The physical behavior of VLC links has been extensively
+studied. Komine and Nakagawa developed a foundational
+analysis of indoor VLC links, including optical channel gain
+and geometric factors [1]. Elgalaet al.surveyed indoor
+optical wireless communication and highlighted practical issues
+associated with optical front ends, modulation, and link design
+[2]. Pathaket al.subsequently reviewed VLC communication,
+networking, and sensing, identifying challenges spanning the
+physical, networking, and application layers [3]. These studies
+establish the physical context in which temporary line-of-sight
+blockage can be treated as a channel impairment.
+The present work focuses on a narrower failure mode:
+a temporary physical obstruction that creates a localized,
+contiguous loss interval. The objective is not to develop a new
+optical propagation model. Instead, the measured burst behavior
+is used as an input to the recovery layer. This distinction is
+important because the burst distribution becomes part of the
+semantic recovery problem rather than merely a post hoc stress
+test.
+B. FEC and ARQ
+Reed–Solomon coding was introduced as a finite-field
+polynomial code and has subsequently been used for reliable
+communication systems requiring symbol-error correction [5].
+Burst-error decoding methods further demonstrate how code
+structure can be exploited when errors occur in clusters [6]. In
+SemLiFi, RS-FEC is retained as an exact-recovery baseline. The
+evaluation uses RS(33,25), for which the selected configuration
+hast= 4symbol-error correction capability.
+ARQ provides a different exact-recovery mechanism. A
+receiver detects an invalid frame and requests retransmission.
+The approach is conceptually simple and remains appropriate
+when exact source reproduction is mandatory. The drawback
+considered in this work is recovery delay during a temporary
+optical outage. SemLiFi therefore treats ARQ as the fallback
+path rather than as a mechanism to be eliminated.
+C. Semantic Communication
+Deep-learning semantic communication has explored the
+use of learned representations to communicate information
+relevant to a receiver’s task rather than enforcing bit-perfect
+reconstruction in every setting [7]. Qinet al.discuss semantic
+communication principles and challenges, while G ¨und¨uzet
+al.survey context-, semantic-, and task-oriented communi-
+cation architectures [8], [9]. These works motivate the use
+of contextual information but do not specifically address the
+combination of a physically measured optical burst, a localized
+structured-payload reconstruction task, and an exact fallback
+gate.
+Maet al.recently demonstrated a visible-light semantic
+communication system with a physical VLC platform and
+investigated semantic throughput under practical VLC con-
+straints [10]. Nennoucheet al.investigated semantic underwater
+optical wireless communication using a variational autoencoder
+and evaluated robustness against underwater optical channel
+impairments [11]. SemLiFi addresses a different recovery
+objective: it focuses on temporary localized burst loss and
+on deciding when a reconstructed telemetry segment should
+be trusted.
+D. Research Gap
+The research gap considered here is the intersection of three
+requirements:
+1) the impairment is generated by a physical optical obstruc-
+tion;
+2) semantic reconstruction is explicitly conditioned on the
+resulting burst characteristics; and
+3) semantic output is not trusted unconditionally but is passed
+through a calibrated confidence gate with an exact-recovery
+fallback.
+The contribution is therefore architectural and experimental
+rather than a claim that VLC, semantic communication, or FEC
+is individually new. The evaluation also separates simulated
+--- PAGE 3 ---
+3
+TABLE I
+POSITIONING OFSEMLIFIRELATIVE TOSELECTEDRELATEDWORK
+System Physical optical HW Burst-conditioned Exact fallback
+reconstruction gate
+Maet al.[10] Yes No No
+Nennoucheet al.
+[11]
+Underwater optical No No
+Xieet al.[7] No No No
+Qinet al.[8] Survey No No
+SemLiFi ESP32/OOK Yes Yes
+semantic efficiency from live hardware safety behavior, which
+is necessary because the available live experiment contains
+only 15 frames and all semantic reconstructions were rejected.
+III. SYSTEMMODEL ANDARCHITECTURE
+A. Notation
+Let the transmitted structured payload be
+Y= [y 1,y 2,...,y N ].(1)
+An optical obstruction produces a binary corruption mask
+B= [b 1,b 2,...,b N ],(2)
+where bi = 1 denotes a corrupted or unavailable symbol. The
+physical corruption process is represented as
+Y′ =C(Y,B).(3)
+When the receiver detects a contiguous loss interval, the
+surviving prefix and suffix are denoted by Y− and Y +. BASR
+estimates the missing segment as
+ˆYm =f(Y −,Y +,B;θ),(4)
+where θ denotes the learned parameters. A probabilistic
+formulation is
+ˆy= arg max
+y
+P(y|Y −,Y +,B).(5)
+The explicit use of B differentiates SemLiFi from a model
+that treats all missing regions as statistically identical.
+The physical burst duration is
+TB =t e−ts,(6)
+and the approximate number of affected bits is
+NB≈ TB
+Tb
+,(7)
+where Tb is the measured bit period. The normalized burst
+span can be written as
+ρB = NB
+Npayload
+.(8)
+B. Cross-Layer Recovery Pipeline
+The complete pipeline is
+Physical Burst→BASR→CGFP.(9)
+The physical layer first detects and characterizes the loss. BASR
+then estimates the missing structured content. CGFP decides
+whether to accept the reconstruction or request exact recovery.
+This ordering prevents the semantic module from operating
+without knowledge of the severity of the physical impairment.
+TABLE II
+EXPERIMENTALCONFIGURATIONUSED IN THEREPORTEDSTUDY
+Parameter Reported configuration
+TX/RX MCU ESP32 / ESP32
+Optical source High-intensity LED, GPIO 23, OOK
+Photodetector BPW34 PIN photodiode, GPIO 34
+ADC
+Amplifier LM358-based TIA
+Line coding Manchester coding
+Bit period / rate 1000µs / 1000 bps
+Integrity check CRC-8, polynomial 0x31
+Occlusion SG90 servo flap, 3 profiles
+Payload Structured telemetry
+Empirical burst events 56
+BASR parameters 74,281
+CGFP calibration/test 664 / 641 bursts
+Simulation seeds 42, 101, 2024, 7, 99
+C. Frame and Recovery Semantics
+The implemented frame uses the structure
+[0xAA 0x55][LEN][SEQ][PAYLOAD][CRC8][\r\n].
+The synchronization word is two bytes. The length field
+identifies the payload length and the sequence identifier
+supports selective retransmission. The payload is a structured
+telemetry string. CRC-8 uses the Dallas/Maxim polynomial
+x8 +x 5 +x 4 + 1 (0x31). CRC validation is used for exact
+bit-level integrity; it is not treated as evidence that a semantic
+reconstruction is correct.
+IV. PHYSICALTESTBED ANDBURSTCHARACTERIZATION
+A. Hardware Configuration
+The transmitter contains an ESP32 microcontroller, a high-
+intensity LED, and a transistor-based LED driver. The source
+implementation identifies GPIO 23 as the LED control output
+and uses on–off keying (OOK) with Manchester coding. The
+receiver uses a BPW34 silicon PIN photodiode connected to
+an LM358-based transimpedance amplifier (TIA), followed
+by an ESP32 ADC input identified as GPIO 34. A software
+OOK slicer and Manchester decoder recover the frame. An
+SG90 servo-controlled flap is positioned between the optical
+transmitter and receiver to create repeatable obstruction events.
+The component choices are intended to make the testbed low-
+cost and inspectable. The ESP32 provides the GPIO, ADC,
+timing, and processing resources needed by the prototype.
+The BPW34 provides a simple optical detector, while the
+LM358 TIA converts the photodiode current into a measurable
+voltage. The servo flap allows the duration and repetition of
+physical blockage to be controlled more consistently than an
+uncontrolled hand obstruction.
+B. Optical Modulation and Sampling
+The reported implementation uses a 1000 µs bit period,
+corresponding to a raw rate of 1000 bps. Receiver sampling is
+performed within a mid-bit window of approximately 450–550
+µs into the bit interval. The mid-bit strategy is intended to
+reduce sensitivity to transition transients and timing uncertainty.
+--- PAGE 4 ---
+4
+Structured payload ESP32 TX
+OOK + Manchester
+Optical path
++ occlusion
+BPW34 + LM358
+ESP32 ADC
+Burst detection
+and context extraction
+BASR
+reconstruction
+CGFP
+C≥τ ∗?
+Accept
+semantic patch
+Selective NACK
++ exact retransmission
+No
+exact payload
+Fig. 1. SemLiFi cross-layer architecture. Physical burst observations condition BASR, and CGFP routes the reconstruction either to semantic acceptance or to
+selective exact recovery.
+The use of Manchester coding provides a transition structure
+that can assist clock recovery and invalid-transition detection.
+The physical system should not be interpreted as a com-
+mercial LiFi throughput benchmark. The rate is a proof-
+of-concept setting chosen for transparent physical recovery
+experiments. The paper therefore evaluates recovery behavior
+at the implemented rate rather than claiming performance at
+the much higher rates reported by specialized LiFi systems.
+C. Receiver Calibration
+The reported receiver calibration measured dark ADC
+values of approximately 0–5 counts and illuminated values
+of approximately 95–176 counts. An operating threshold of
+approximately 50 ADC counts was used. Manchester transition
+consistency checks complemented CRC validation. These
+measurements establish a substantial separation between the
+observed dark and illuminated levels under the reported test
+conditions, but the calibration is not assumed to remain constant
+under arbitrary ambient illumination or geometry.
+D. Burst Profiles
+A burst is represented as a contiguous interval in which the
+optical path becomes unavailable or unreliable. The logger
+records start time, end time, duration, corrupted symbols,
+affected bytes, frame identifier, and local signal information.
+The study reports 56 empirical occlusion events across three
+servo-driven profiles: P1 short blockage of approximately 15–
+40 ms, P2 long blockage of approximately 150–380 ms, and
+P3 mixed/randomized duration.
+The empirical burst distribution is important for BASR.
+Instead of masking independent characters with arbitrary
+probabilities, the model is exposed to contiguous losses whose
+duration is related to the physical obstruction process. The
+source reports that physical obstructions corrupted approxi-
+mately 10–25 contiguous bytes, which is substantially larger
+than the four-symbol correction capability of the selected
+RS(33,25) configuration in the evaluated cases.
+time
+availability
+TB
+contiguous burst
+valid
+loss
+Fig. 2. Burst model used by SemLiFi. A temporary obstruction removes a
+contiguous interval of the optical signal; the measured duration TB is mapped
+to an estimated affected-symbol count.
+E. Physical Failure Modes and Threat Model
+The tested impairment is non-adversarial, physically gener-
+ated burst loss. The system does not claim protection against
+intentional frame forgery, telemetry spoofing, or an attacker
+who injects syntactically valid false data. Three physical cases
+remain particularly important: bursts longer than the training
+distribution, repeated or overlapping obstructions outside the
+measured profiles, and timing ambiguity near a CRC boundary.
+These cases are relevant because the confidence model is
+calibrated to the observed channel rather than to an arbitrary
+worst-case distribution.
+V. BURST-AWARESEMANTICRECONSTRUCTION
+A. Structured Payload Assumption
+BASR is intended for telemetry in which fields have syntax
+and contextual regularities. Examples used in the study include
+•TEMP=27.4,HUM=61,MOTOR=ON,
+•DEVICE=04,TEMP=26.8,STATUS=ACTIVE, and
+•VOLT=3.72,CURR=0.42,STATE=OK.
+The structured format is central to the method. A receiver
+can exploit field names, delimiters, neighboring values, and
+application constraints to generate a candidate reconstruction.
+This does not imply that arbitrary encrypted binary payloads
+can be reconstructed. The method is evaluated only on the
+structured telemetry setting described by the source.
+--- PAGE 5 ---
+5
+B. Edge-Constrained Transformer
+BASR is implemented as an edge-constrained Transformer
+encoder with model dimension dmodel = 64 , four attention
+heads, two encoder layers, and feed-forward dimension dff =
+96. The reported model contains 74,281 trainable parameters,
+against a 75,000-parameter budget. This corresponds to 99.04%
+utilization of the stated budget. The architecture is deliberately
+compact; the goal is not to maximize language-modeling
+capacity but to provide a small contextual predictor that can
+be coupled to an embedded communication receiver.
+For a candidate missing sequence ˆYm, exact reconstruction
+accuracy is defined as the fraction of evaluated missing
+segments that exactly match the transmitted segment. Task or
+field accuracy is computed separately for application-relevant
+fields. This distinction is important because a semantic receiver
+can preserve a task-critical state while failing to reproduce
+every character of the original message.
+C. Semantic Failure Example
+Consider a payload containing
+TEMP=27.4,HUM=61,MOTOR=ON.
+A reconstruction such as
+TEMP=21.4,HUM=61,MOTOR=ON
+may remain syntactically valid while being semantically wrong.
+A CRC cannot certify such a reconstruction because the CRC
+is calculated over the original transmitted bits. Consequently,
+semantic plausibility and exact correctness must be separated
+in the recovery decision.
+VI. CONFIDENCE-GATEDFALLBACKPROTOCOL
+A. Confidence Function
+The source defines the CGFP score as
+C=C tokenCphysPenaltyburst(span)Ssyntax,(10)
+where Ctoken is the BASR token-level confidence, Cphys
+represents confidence associated with the physical observation,
+Penaltyburst is a nonincreasing function of burst span, and
+Ssyntax is a hard structural-validity indicator.
+The structural factor is deliberately binary. If the recon-
+structed payload violates a mandatory format or an admissible
+field constraint,Ssyntax = 0 and the result is rejected regardless
+of the learned model confidence. This is a conservative design
+choice: semantic confidence is treated as a routing signal, not
+as proof of exact correctness.
+The operating decision is
+D=
+{︄
+Accept semantic reconstruction, C≥τ,
+Selective exact fallback, C <τ. (11)
+The calibrated threshold reported in the source isτ ∗ = 0.80.
+Corrupted payload
++ burst metadata
+BASR candidate
+C=C tokenCphysPenaltyS syntax
+Accept patch NACK + exact
+retransmission
+C≥τ ∗ C <τ ∗
+Fig. 3. CGFP decision logic. Structural invalidity forces fallback; otherwise
+the calibrated confidence threshold selects between semantic acceptance and
+exact recovery.
+B. Burst-Severity Penalty
+The physical burst information is incorporated through a
+nonlinear nonincreasing penalty. The source records the penalty
+parameters as α= 0.50 andγ= 1.15 . The purpose of the term
+is qualitative and operational: as the fraction or span of missing
+content increases, confidence in a contextual reconstruction
+should not remain unchanged. The exact calibration is tied to
+the studied payloads and measured burst distribution.
+C. Selective Exact Fallback
+When C < τ∗, the receiver issues a selective negative
+acknowledgment (NACK) and requests the missing segment or
+affected frame through the exact-recovery path. The recovered
+content replaces the semantic candidate. This design means
+that semantic inference is an optimization opportunity rather
+than a mandatory reliability mechanism.
+D. Illustrative Decision
+For an illustrative frame with Ctoken = 0.93, Cphys = 0.90,
+Penaltyburst = 0.95, and valid syntax, the resulting score is
+C= 0.93×0.90×0.95≈0.795.(12)
+Since this value is below τ∗ = 0.80 , CGFP rejects the
+semantic candidate and invokes exact fallback. The example
+demonstrates the conservative operating point: a candidate can
+appear strong while still being rejected when its combined
+confidence is marginal. If a candidate violates a hard structural
+rule,S syntax = 0and fallback is immediate.
+VII. EXPERIMENTALMETHODOLOGY
+A. Experimental Stages
+The reported study is organized into four stages. First,
+clean-link transmissions establish the physical-layer baseline
+and CRC behavior. Second, controlled servo-driven occlusion
+generates the empirical burst dataset. Third, BASR is evaluated
+using corruption patterns derived from the measured burst
+distribution, while CGFP is calibrated and tested on disjoint
+burst sets. Fourth, the integrated SemLiFi pipeline is compared
+Fig. 3. CGFP decision logic. Structural invalidity forces fallback; otherwise the calibrated
+confidence threshold selects between semantic acceptance and exact recovery.
+--- PAGE 6 ---
+6
+with conventional recovery mechanisms under simulated and
+live optical conditions.
+The independent variables are blockage duration/profile,
+payload structure, link configuration, and confidence threshold.
+The dependent variables include exact reconstruction accuracy,
+task/field accuracy, recovery latency, UFER, retransmission
+overhead, false acceptance, and false rejection.
+B. Baselines
+Four recovery conditions are considered:
+1) No Recovery:the decoded payload is delivered without
+correction; this serves as a qualitative lower-level reference.
+2) RS-FEC:RS(33,25) is used for exact symbol correction,
+with t= 4 symbol errors as the selected correction
+capability.
+3) Stop-and-Wait ARQ:the receiver requests retransmission
+of the affected frame when exact recovery is required.
+4) SemLiFi + CGFP:BASR generates a semantic candidate
+and CGFP either accepts it or invokes selective exact
+recovery.
+The source specifies that comparisons should use the same
+payload population and comparable burst conditions. Where
+a latency value is a clean-link reference rather than a burst-
+recovery latency, it is explicitly labeled as such; this distinction
+is important for avoiding an invalid baseline comparison.
+C. Evaluation Metrics
+Exact reconstruction accuracy is
+Accexact = Nexact
+Nevaluated
+.(13)
+False acceptance rate is
+FAR= Nincorrect accepted
+Naccepted
+.(14)
+False rejection rate is
+FRR= Ncorrect rejected
+Ncorrect opportunities
+.(15)
+Recovery latency is
+Trec =T output−Tloss,(16)
+and total recovery time is decomposed as
+Ttotal =T communication +Tdetection +Tinference +Tfallback.
+(17)
+The end-to-end undetected frame error rate (UFER) is
+UFER= Nincorrect final
+Nevaluated frames
+.(18)
+The source treats a 2% UFER value as the preregistered
+acceptability bound; because the current manuscript record
+does not contain the preregistration document itself, this status
+must be independently verified before submission.
+D. Statistical Treatment
+The reported BASR exact accuracy and SemLiFi UFER
+values are expressed as mean ± standard deviation across
+five simulation seeds: 42, 101, 2024, 7, and 99. The variation
+therefore represents sensitivity to sampled frames and burst
+events under a fixed model and pipeline configuration, rather
+than variance from five independent model-training runs. The
+CGFP calibration/test split is 664/641 bursts and is described
+as disjoint at the event level.
+VIII. ANALYTICALINTERPRETATION OFBURSTRECOVERY
+A. Burst Length and Coding Capability
+The physical impairment and the coding configuration can
+be compared at the symbol level. For a bit period Tb, a burst
+of duration TB affects approximately NB≈T B/Tb bits before
+accounting for frame boundaries, Manchester expansion, and
+the distinction between bits and coded symbols. With the
+reportedTb = 1000µ s, even the shortest P1 obstruction interval
+of approximately 15 ms can affect a substantial contiguous
+region of the transmitted stream. The long P2 intervals can
+affect a much larger region. The exact number of corrupted
+bytes depends on where the obstruction begins and ends relative
+to the frame and on the Manchester decoding boundary.
+The selected RS(33,25) configuration has 8 parity symbols
+and a nominal correction capability of t= 4 symbol errors
+under the evaluated decoding configuration. The physical
+experiment reports approximately 10–25 contiguous corrupted
+bytes during obstruction. This does not mean that every event
+necessarily produces exactly 10–25 uncorrectable RS symbols,
+because frame boundaries, symbol definitions, and the decoder’s
+erasure/error handling affect the effective correction outcome.
+It does, however, explain why a finite correction window can be
+exceeded by the measured physical impairment. The reported
+37.5% recovery rate is therefore interpreted as an empirical
+result for the implemented configuration, not as a theoretical
+claim that RS codes cannot handle optical burst errors.
+B. Why the Semantic Path Can Reduce Retransmission
+Suppose an affected frame contains a structured payload in
+which some fields are predictable from surviving context. An
+exact recovery system treats the missing region as unavailable
+information and requests it again. A semantic recovery system
+instead computes a candidate from Y−, Y +, and B. If the
+candidate passes the CGFP gate, the receiver can deliver the
+candidate without using the exact retransmission path. The
+theoretical retransmission-saving fraction for a set of N frames
+can be written as
+Rsave = 1− M
+N,(19)
+where M is the number of frames that still require exact
+recovery. The source reports 27.15% retransmissions avoided
+at the selected operating point in simulation. Because the live
+15-frame run rejected every candidate, Rsave should not be
+interpreted as a measured hardware quantity.
+The trade-off is asymmetric. A false rejection causes an
+unnecessary exact recovery operation and therefore costs
+latency or channel use. A false acceptance can silently deliver
+--- PAGE 7 ---
+7
+an incorrect value. CGFP is designed around this asymmetry.
+The multiplicative confidence rule makes a low physical
+confidence or a hard syntax failure sufficient to suppress
+semantic delivery even when the learned model is individually
+confident.
+C. Confidence Calibration as a Communication-Layer Func-
+tion
+The confidence threshold should not be viewed as a generic
+machine-learning hyperparameter. In SemLiFi, it determines
+a communication-layer routing decision. The calibration data
+therefore need to represent the physical burst distribution and
+the payload schemas for which the system will operate. If the
+threshold is calibrated only on clean or synthetically corrupted
+data, it may not represent the behavior of the receiver under
+real optical occlusion.
+The reported 664/641 burst split provides a basis for a
+disjoint calibration/test design. The calibration set should be
+used to select τ and the burst-penalty parameters, while the
+test set should remain untouched until the final evaluation.
+This separation is especially important when the objective is a
+safety-oriented metric such as UFER. Threshold selection after
+observing the test errors would produce an optimistic estimate.
+A complete threshold study should report at least the accep-
+tance rate, exact precision, FAR, FRR, UFER, retransmission-
+avoidance rate, and recovery latency at each candidate threshold.
+The present source reports the selected operating point but
+not the complete sweep. Accordingly, the current paper treats
+τ∗ = 0.80 as a reported operating point and identifies
+the underlying sweep as a reproducibility item rather than
+reconstructing missing measurements.
+D. Task-Level Accuracy and Safety-Critical Fields
+Exact reconstruction and task-level recovery answer different
+questions. Exact reconstruction asks whether the missing
+representation is identical to the transmitted representation.
+Task-level accuracy asks whether a predefined field needed by
+the application is correct. The reported BASR results contain a
+substantial difference between these two metrics: exact accuracy
+is 42.63±1.47% , whereas the evaluated motor-state field
+reaches 100.0% accuracy.
+This difference is useful only if the task field definition is
+explicit. For example, a motor state encoded as MOTOR=ON
+can be treated as correct when the recovered state is exactly
+ON, even if another non-critical field differs. The 100.0% value
+should therefore not be interpreted as 100.0% exact payload
+recovery. The denominator and event definition used for this
+metric must be retained with the raw evaluation data.
+For safety-oriented telemetry, the safest policy may be to
+define a field-specific acceptance rule. A reconstruction that
+changes an actuation state could be forced to exact fallback
+even when other fields have high confidence. The current CGFP
+implementation provides a general structural-validity factor,
+but the source does not report a completed field-specific risk
+model. Such a model is a natural extension of the framework.
+E. Latency Decomposition
+The reported end-to-end latency can be understood as the
+sum of communication, burst detection, inference, validation,
+and fallback components. In the semantic-acceptance case, the
+fallback term is absent; in the rejection case, the exact-recovery
+term becomes dominant. This makes the system’s performance
+dependent on the distribution of confidence outcomes rather
+than only on the raw inference time.
+The reported 2.79 ms mean BASR inference time is
+therefore not directly comparable with the 790.7 ms end-to-
+end continuous-burst latency. The former measures the model
+computation on an edge CPU, while the latter includes the
+full communication and recovery path. The difference in scale
+also indicates why optimizing the physical and retransmission
+components can be more important than shaving small amounts
+from the neural inference time.
+The live hardware latency range of 636.6–792.9 ms should
+similarly be interpreted with its recovery behavior. Because
+all 15 frames triggered fallback, the observed latency includes
+exact-recovery actions rather than semantic-patch acceptance.
+The result cannot establish what the latency would be for a
+live frame that passes CGFP.
+IX. EXPERIMENTALREPRODUCIBILITY ANDSTATISTICAL
+RIGOR
+A. Separation of Training, Calibration, and Testing
+A defensible experimental pipeline should keep three kinds
+of information separate. The BASR training data determine
+model parameters. The CGFP calibration data determine the
+threshold and confidence mapping. The final test data estimate
+the reported performance. If bursts from the same physical event
+are split across these sets, leakage can occur because adjacent
+observations may share nearly identical optical conditions.
+The supplied record explicitly describes the 664/641 CGFP
+calibration/test split as disjoint at the event level. This is a
+useful property. For the final paper, the authors should also
+preserve the event identifier, physical profile, frame identifier,
+payload instance, and random seed for each sample so that the
+split can be audited.
+B. Simulation Versus Hardware Evidence
+The study combines physical measurements with simulation.
+This is appropriate for a proof-of-concept system because the
+hardware campaign establishes that the impairment exists and
+the simulation permits larger controlled comparisons. However,
+the two evidence types answer different questions.
+The 56-event physical campaign measures the burst phe-
+nomenon. The BASR and CGFP simulation evaluates the
+recovery strategy over a larger set of derived conditions. The
+15-frame hardware run tests the integrated decision behavior
+under actual optical conditions. Because the hardware run
+accepts no semantic patches, it cannot validate the simulation’s
+retransmission-avoidance efficiency. This distinction should
+remain explicit in every abstract, table, figure, and conclusion.
+--- PAGE 8 ---
+8
+C. Meaning of Mean Plus or Minus Standard Deviation
+The source reports 42.63±1.47% exact accuracy and
+1.00±0.13% UFER across five simulation seeds. The reported
+statistical treatment states that these seeds vary sampled frames
+and burst events under a fixed model and pipeline configuration.
+Thus, the standard deviation should not be described as
+model-training uncertainty. To estimate training variability,
+independent training runs with different initialization seeds
+would be required.
+Likewise, a five-seed simulation does not establish a con-
+fidence interval for deployment performance. The variance is
+useful as a sensitivity measure within the evaluated simulation
+design, but the live hardware population is currently much
+smaller. The paper therefore avoids attaching a population-
+level statistical guarantee to the reported 15-frame hardware
+result.
+D. Avoiding Leakage Through Payload Templates
+Structured telemetry can contain repeated templates. If the
+same payload instance or nearly identical field sequence appears
+in both training and testing, exact reconstruction accuracy may
+be inflated because the model can exploit memorized structure.
+A stronger future protocol should split by payload template or
+device identifier in addition to splitting by burst event. This
+would test whether BASR learns general structural relationships
+rather than simply memorizing recurring messages.
+E. Ablation Protocol Required for Causal Claims
+The central novelty depends on the interaction between
+burst awareness and confidence gating. A rigorous ablation
+should therefore include at least the following configurations:
+random-mask BASR without physical burst features; burst-
+aware BASR without burst features in CGFP; CGFP without
+the physical confidence factor; CGFP without the burst penalty;
+CGFP without the syntax factor; and the full system. Each
+configuration should be evaluated on the same held-out event
+set.
+The current source identifies this experiment as missing.
+Consequently, the paper does not claim that every individual
+factor is necessary based on the current measurements. Instead,
+it reports the performance of the integrated configuration and
+presents the ablation as a required next experiment.
+F . Recommended Reporting Matrix
+For each operating condition, a final dataset should contain
+the physical burst profile, duration, estimated affected symbols,
+frame length, BASR confidence, structural-validity result,
+semantic decision, exact-fallback decision, final correctness,
+task-field correctness, inference latency, and total recovery
+latency. This event-level record would allow reviewers to
+reproduce aggregate metrics and inspect false acceptances
+directly.
+TABLE III
+RECOMMENDEDEVENT-LEVELREPORTINGFIELDS
+Field Purpose
+Event/profile ID Physical-condition traceability
+TB and affected symbols Burst severity
+Payload/template ID Leakage control
+Ctoken,C phys Confidence audit
+Penalty burst Physical penalty audit
+Ssyntax Structural safety check
+CGFP decision Accept/reject routing
+Exact correctness Bit/segment ground truth
+Task-field correctness Application utility
+Fallback latency Exact recovery cost
+Final UFER flag End-to-end reliability
+X. ENGINEERINGDESIGNTRADEOFFS
+A. ESP32 Versus More Powerful Edge Hardware
+The ESP32 is appropriate for the proof-of-concept because
+the transmitter and receiver require GPIO timing, ADC acquisi-
+tion, Manchester decoding, burst detection, and communication
+control in addition to the semantic inference path. A more
+powerful processor could support larger models or higher
+rates, but it would also make the prototype less representative
+of a low-cost embedded edge implementation. The present
+74,281-parameter model is intentionally constrained to keep
+the inference component small.
+This choice does not imply that every Transformer ar-
+chitecture can run on an ESP32. The reported 2.79 ms
+value is an edge CPU measurement associated with the
+evaluated BASR implementation, and the complete deployment
+footprint depends on the runtime, memory allocator, numerical
+representation, and firmware integration. These details should
+be measured explicitly before claiming microcontroller-level
+deployment on a specific board.
+B. Why Manchester Coding Is Retained
+Manchester coding introduces transition redundancy and
+therefore reduces raw payload efficiency compared with a
+simple binary level scheme. It nevertheless provides a useful
+timing structure for a small experimental testbed. The receiver
+can use mid-bit sampling and transition checks to distinguish
+valid symbols from ambiguous optical observations. Since
+the study is focused on recovery logic rather than maximum
+throughput, this trade-off is acceptable within the tested
+configuration.
+C. CRC and Semantic Recovery Serve Different Roles
+CRC-8 validates bit-exact frames. BASR reconstructs miss-
+ing content when bit-exact information is unavailable. These
+functions should not be conflated. A CRC failure identifies
+that the received frame is not an exact copy; it does not tell
+the receiver what the missing value should be. Conversely, a
+semantic candidate that passes a syntax check does not satisfy
+the CRC of the original frame because the original missing
+bits remain unknown.
+The hybrid architecture therefore uses CRC and semantic
+confidence at different stages. CRC is used for exact valida-
+tion, while CGFP decides whether a semantic candidate is
+--- PAGE 9 ---
+9
+sufficiently trustworthy to avoid exact recovery. When exact
+fallback succeeds, the recovered frame can be validated with
+CRC.
+D. Why the Servo Flap Matters
+A manually generated blockage can vary substantially
+in duration, angle, and position. The servo flap provides
+repeatability and allows the study to generate three broad
+duration profiles. This does not make the resulting distribution
+representative of every human or environmental obstruction, but
+it provides a controlled experimental variable. Reproducibility
+is especially important when comparing model training on
+burst-aware masks against training on random masks.
+E. Safety-Conservative Operating Point
+The multiplicative confidence rule has a conservative in-
+terpretation. If any factor is small, the final confidence is
+reduced. A hard syntax failure sets the score to zero. The
+system therefore prefers false rejection over false acceptance
+when the confidence evidence is weak. This is appropriate
+for the stated safety concern but can reduce the number of
+accepted semantic patches.
+The current live result illustrates this trade-off. Mean
+confidence is approximately 0.46, well below the 0.80 threshold,
+and all 15 frames fall back to exact recovery. The gate therefore
+sacrifices retransmission avoidance to maintain conservative
+behavior under those hardware conditions. Whether a different
+threshold would provide a better operating point requires the
+missing threshold-sweep data and a larger hardware test set.
+XI. ALGORITHMICIMPLEMENTATION ANDOPERATING
+ENVELOPE
+A. Receiver-Side Procedure
+The receiver-side procedure can be expressed as a sequence
+of deterministic communication operations followed by con-
+ditional semantic inference. First, the ESP32 acquires the
+optical waveform and applies the calibrated threshold. Second,
+Manchester symbols are decoded and the frame delimiter,
+length, sequence identifier, and CRC fields are parsed. Third,
+a contiguous unavailable region is identified from missing
+symbols, transition violations, or frame-level integrity failure.
+Fourth, the receiver estimates the burst duration and affected-
+symbol count and extracts the surviving context.
+The semantic stage is entered only after the physical
+processing has established a candidate loss interval. BASR
+receives the surviving prefix, suffix, burst metadata, and payload
+structure and returns a candidate missing segment with token-
+level confidence. CGFP then evaluates structural validity and
+computes the combined score. If the score is below the
+threshold, the receiver does not deliver the semantic candidate.
+Instead, it requests exact recovery. The final payload is then
+subjected to the exact integrity mechanism available to the
+receiver.
+1. Synchronize and sample optical waveform
+2. Manchester decode and frame parsing
+3. Detect burst / invalid interval
+4. EstimateT B, affected symbols, and context
+5. BASR candidate + confidence
+6. CGFP structural and confidence gate
+7. Deliver patch or invoke exact fallback
+Fig. 4. Receiver-side processing sequence used to separate physical decoding,
+burst estimation, semantic inference, and exact fallback.
+B. Pseudocode
+The recovery logic can be summarized as follows:
+1) initialize the optical receiver and calibrated threshold;
+2) decode Manchester symbols and parse the frame;
+3) if the frame is clean and CRC-valid, deliver it without
+semantic inference;
+4) otherwise, identify the unavailable interval and estimate TB
+andN B;
+5) extract surviving prefix/suffix context and generate a BASR
+reconstruction;
+6) computeC=C tokenCphysPenaltyburstSsyntax;
+7) ifSsyntax = 0 orC <τ∗, issue NACK and recover exactly;
+8) otherwise, deliver the semantic candidate and log the
+decision;
+9) record final correctness, field correctness, latency, and the
+recovery path.
+This procedure has an important operational property: a
+clean frame bypasses the semantic model. Semantic inference
+is used only when the physical layer has evidence of a loss
+that cannot already be resolved by the normal integrity path.
+This reduces unnecessary inference and prevents the model
+from modifying error-free traffic.
+C. Operating Envelope
+The demonstrated operating envelope is defined by the
+physical and computational parameters reported in the study:
+1000 bps raw signaling, structured telemetry payloads, ESP32
+transmitter and receiver nodes, BPW34 detection, LM358 TIA,
+Manchester coding, and servo-driven blockage. Within this
+envelope, the system has evidence from both simulation and a
+small live experiment. Outside this envelope, the evidence is
+incomplete.
+In particular, the study does not establish performance
+for arbitrary distances, high-speed mobility, strong ambient
+--- PAGE 10 ---
+10
+TABLE IV
+CLAIM-TO-EVIDENCEMAPPING
+Claim Evidence available in current record
+Clean optical link works 449.0 ms mean; zero bit errors; 100%
+CRC
+Physical burst loss exists 56 empirical occlusion events; 10–25
+contiguous bytes
+BASR reconstructs structured
+data
+42.63±1.47%exact accuracy
+Task field can remain correct 100.0% reported motor-state accuracy
+CGFP limits accepted errors 97.13% patch precision; 0.78% patch
+error
+Simulation avoids retransmis-
+sions
+27.15% avoided atτ ∗ = 0.80
+Simulation end-to-end result 790.7 ms;1.00±0.13%UFER
+Hardware semantic efficiency Not established; all 15 frames rejected
+sunlight, multipath reflections, multiple simultaneous optical
+users, or high-rate LiFi modulation. The model also has not
+been shown to generalize across arbitrary payload schemas.
+These boundaries should be stated explicitly because a journal
+reviewer can otherwise interpret the semantic reconstruction
+result as a general-purpose LiFi reliability mechanism.
+D. Expected Behavior With Increasing Burst Severity
+As burst severity increases, the amount of surviving context
+decreases and the confidence penalty increases. The intended
+behavior is therefore a gradual shift from semantic acceptance
+toward exact fallback. At low severity, BASR has more context
+and may produce a high-confidence candidate. At intermediate
+severity, the confidence gate should accept only candidates
+with strong structural and contextual evidence. At severe loss,
+the system should increasingly reject semantic predictions and
+use exact recovery.
+This behavior is preferable to a fixed semantic-only policy
+because the physical channel supplies information about the
+reliability of the reconstruction. It also provides a direct experi-
+mental hypothesis: acceptance rate should generally decrease as
+normalized burst span increases, while false acceptance should
+remain bounded if the calibration is valid. The current supplied
+results do not provide a complete acceptance-versus-span curve,
+so this relationship remains a design expectation rather than a
+reported quantitative law.
+E. Reviewer-Focused Evidence Matrix
+A useful way to interpret the evidence is to map each major
+claim to the experiment that supports it. The physical-link
+claim is supported by clean-link measurements and the 56-event
+occlusion campaign. The BASR capability claim is supported
+by the reported exact and field-level accuracy values. The
+CGFP safety claim is supported by accepted-patch precision,
+patch-error rate, and the 15-frame live rejection behavior. The
+retransmission-avoidance claim is supported only by simulation
+because the live run accepted no patches. This separation
+prevents the strongest simulation result from being inadvertently
+presented as a hardware result.
+The evidence matrix is also a useful guide for revision. A
+stronger final paper should add a larger live dataset, the full
+TABLE V
+CLEAN-LINKPHYSICALVALIDATION
+Metric Reported value
+Mean transit latency 449.0 ms
+Latency range 443–455 ms
+Bit errors 0
+CRC-8 validation 100%
+threshold sweep, and the ablation results before making causal
+or generalization claims. The current version deliberately keeps
+those limitations visible rather than filling missing evidence
+with inferred values.
+XII. RESULTS
+A. Clean-Link Physical Validation
+The clean-link experiment reports a mean transit latency of
+449.0 ms, with a range of 443–455 ms, zero bit errors, and
+100% CRC-8 validation. This baseline is important because
+semantic recovery should not be used to compensate for a
+receiver that is already unreliable in the absence of occlusion.
+B. Empirical Burst Behavior
+The physical campaign contains 56 occlusion events. The
+three profiles cover short, long, and mixed/randomized servo-
+driven blockages. The source reports approximately 10–25
+contiguous corrupted bytes during physical obstruction. This
+observation is central to the motivation for burst-aware recovery:
+the physical corruption interval can be larger than the correction
+window of the selected RS-FEC configuration.
+Because the supplied experimental record does not provide a
+complete numerical table of mean, median, and maximum dura-
+tion for every P1–P3 profile, those values are not reconstructed
+here. Instead, the reported ranges and total event count are
+retained. This is deliberate: filling missing profile statistics from
+inference would compromise the reproducibility and accuracy
+of the paper.
+C. BASR Reconstruction Performance
+The BASR model contains 74,281 trainable parameters.
+The reported exact reconstruction accuracy is 42.63±1.47% .
+Although exact character-level recovery is below half of the
+evaluated missing segments, the reported motor actuation-state
+field accuracy is 100.0%. This demonstrates the distinction
+between exact source reproduction and task-relevant field
+preservation.
+The model’s mean edge CPU inference latency is reported as
+2.79 ms. The parameter count corresponds to an approximate
+290 KB footprint when stored as 32-bit floating-point weights
+and approximately 73 KB under an idealized 8-bit representa-
+tion. The latter is a storage estimate rather than a measurement
+of the complete deployed binary or runtime memory footprint.
+--- PAGE 11 ---
+11
+TABLE VI
+REPORTEDBASR PERFORMANCE
+Metric Value
+Trainable parameters 74,281
+Exact reconstruction accuracy42.63±1.47%
+Motor-state accuracy 100.0%
+Mean edge CPU inference latency 2.79 ms
+Parameter budget 75,000
+TABLE VII
+REPORTEDEND-TO-ENDRESULTS
+Method Reported result
+RS-FEC 37.5% delivery; 62.5% UFER; 449.0 ms
+is clean-link reference
+Stop-and-Wait ARQ 97.1% delivery; 1560.0 ms; 0.0% UFER
+SemLiFi, 100% burst simula-
+tion
+100.0% delivery; 790.7 ms; 1.00±
+0.13%UFER
+SemLiFi, mixed 40% burst 100.0% delivery; 592.5–595.5 ms
+SemLiFi, live hardware (N=
+15)
+100.0% delivery; 636.6–792.9 ms; 0.00%
+UFER
+D. Confidence-Gating Operating Point
+The reported CGFP threshold is τ∗ = 0.80. At this operating
+point, approximately 27.15% of retransmissions are avoided
+through accepted semantic patches in the evaluated simulation.
+Accepted patches have 97.13% precision, and the reported
+patch-error rate is 0.78%. These values are directly relevant
+to the design objective because the main safety concern is not
+merely rejection of a weak candidate but accidental acceptance
+of an incorrect one.
+The complete multi-point threshold sweep underlying the
+selected threshold is not present in the supplied experimental
+record. Therefore, the paper does not invent intermediate values
+at thresholds such as 0.50, 0.60, 0.70, or 0.90. The threshold
+should be regarded as a reported operating point requiring
+release of the underlying sweep for full reproducibility.
+E. End-to-End Comparison
+The source reports the following end-to-end values. RS-FEC
+recovers 37.5% of the real occlusion bursts and consequently
+leaves a 62.5% UFER in that evaluated burst set. The 449.0 ms
+value associated with the RS-FEC row is a clean-link reference,
+not a claim that RS-FEC burst recovery itself completes in
+449.0 ms. Stop-and-Wait ARQ reports 97.1% delivery at 1560.0
+ms mean latency and 0.0% UFER.
+Under continuous-burst simulation, SemLiFi reports 100.0%
+delivery at 790.7 ms mean latency with UFER 1.00±0.13% .
+Under the mixed condition in which 40% of frames experience
+bursts, the reported latency is 592.5–595.5 ms with 100.0%
+delivery. The source does not provide a comparable UFER
+value for this mixed condition, so none is inserted.
+F . Continuous-Burst Simulation
+The continuous-burst simulation is the principal quantitative
+comparison between the hybrid architecture and Stop-and-Wait
+ARQ. SemLiFi reaches 790.7 ms mean latency compared with
+ARQ SemLiFi
+0
+500
+1,000
+1,500
+1,560
+790.7
+Latency (ms)
+Fig. 5. Reported mean latency under continuous-burst simulation for Stop-and-
+Wait ARQ and SemLiFi. The comparison uses the source-reported operating
+conditions.
+1560.0 ms for ARQ, while both reported conditions achieve
+100% delivery. The reduction is
+1− 790.7
+1560.0≈49.3%.(20)
+The simulated SemLiFi UFER of 1.00±0.13% is below the
+reported 2% bound. However, this is a simulation result using
+the stated five seeds and evaluated burst distribution. It should
+not be interpreted as a universal LiFi reliability guarantee.
+G. Mixed-Burst Simulation
+When 40% of frames experience bursts, SemLiFi reports
+100% delivery and a latency range of 592.5–595.5 ms. This is
+lower than the continuous-burst condition because fewer frames
+require recovery actions. The result illustrates the expected
+dependence of total recovery cost on burst prevalence, but it
+should not be used to infer a continuous functional latency
+curve because the source reports only this mixed operating
+point.
+H. Live Hardware Evaluation
+The live hardware evaluation contains 15 frames. It reports
+100% delivery, a latency range of 636.6–792.9 ms, and 0.00%
+UFER. Importantly, all low-confidence semantic reconstructions
+were rejected. The mean confidence was approximately 0.46,
+below τ∗ = 0.80, and selective NACKs were therefore used
+for all 15 frames.
+This result is positive evidence for the safety behavior of the
+gate under the tested severe conditions, but it is not evidence
+that semantic patching is efficient on hardware. Since no
+live frame was accepted as a semantic patch, the 27.15%
+retransmission-avoidance result remains a simulation result. A
+larger hardware campaign is required before claiming that the
+simulated efficiency transfers to physical operation.
+XIII. DISCUSSION
+A. Semantic Usefulness Versus Exact Correctness
+The BASR result demonstrates why semantic usefulness
+and exact correctness should be reported separately. An exact
+reconstruction accuracy of 42.63% would be insufficient if
+the objective were bit-perfect replacement of every missing
+--- PAGE 12 ---
+12
+segment. The reported 100.0% motor-state accuracy, however,
+indicates that the evaluated application field remained correct
+despite imperfect character-level reconstruction. This does not
+make the semantic output safe by itself; an incorrect value in
+another field can still be operationally harmful. CGFP therefore
+provides the missing decision layer.
+B. Why Burst Awareness Matters
+The physical impairment is not an arbitrary mask. It is a
+contiguous loss interval produced by an obstruction. Burst
+duration determines how much context survives and how much
+of the payload is unavailable. Including burst metadata in
+BASR and in the confidence calculation therefore connects the
+physical and semantic layers. The approach is intended to be
+more physically grounded than training solely on independent
+random token masks.
+C. Why Exact Fallback Remains Necessary
+The central design principle is that semantic reconstruction
+is an optional shortcut to exact recovery, not a replacement
+for exact recovery. If the semantic candidate is sufficiently
+trustworthy under the calibrated criterion, the system can avoid
+retransmission. If confidence is low or structural validation
+fails, exact recovery remains available. This architecture
+is particularly relevant when the cost of a false semantic
+acceptance is larger than the cost of a false rejection.
+D. Interpretation of the Latency Result
+The approximately 49.3% reduction relative to the reported
+ARQ latency is meaningful only under the continuous-burst
+simulation conditions stated in the source. The result does
+not establish a universal latency advantage because latency
+depends on burst duration, retransmission protocol, frame
+length, processing hardware, and the availability of the return
+channel. The 2.79 ms BASR inference time is comparatively
+small relative to the reported end-to-end latency, but it is not
+the only computation or communication cost.
+E. Practical Deployment Considerations
+A physical deployment would need to account for ambient
+illumination, optical alignment, dimming behavior, LED driver
+dynamics, receiver saturation, and mobility. The approximate
+50-count receiver threshold was calibrated under the reported
+laboratory conditions. A moving receiver or a change in ambient
+light could shift the illuminated and dark distributions and
+therefore alter the effective confidence term.
+The 1000 bps demonstration rate also limits the scope of
+the current evaluation. A higher-rate implementation could
+change the relationship between physical burst duration and
+affected bytes. In particular, at a higher rate the same physical
+obstruction could erase more symbols, increasing the burden
+on both BASR and exact fallback.
+F . Energy Considerations
+The source does not report direct energy measurements.
+It is reasonable as an engineering hypothesis that avoiding
+retransmissions can reduce repeated transmitter and receiver
+activity, but this has not been quantified in the study. Therefore,
+energy savings are treated as a future measurement rather than
+a demonstrated result.
+G. Broader Optical Applicability
+The architectural pattern could be investigated for other
+optical channels experiencing contiguous loss, including free-
+space and underwater optical links. However, the burst distri-
+bution, physical confidence calibration, and structural payload
+constraints would have to be re-characterized for each channel.
+The current results should not be transferred directly to those
+settings.
+XIV. LIMITATIONS ANDTHREATS TOVALIDITY
+A. Physical Realism of Occlusion
+The servo flap provides repeatable blockage but cannot
+reproduce every real obstruction. Human motion, partial opacity,
+object shape, angle of incidence, receiver orientation, and
+ambient illumination can produce different burst statistics. The
+three measured profiles are therefore a controlled starting point
+rather than an exhaustive model of physical LiFi blockage.
+B. Payload Generality
+BASR depends on structured or partially predictable teleme-
+try. It should not be generalized to arbitrary encrypted or
+structureless binary data. Different payload schemas may
+require different model training and structural-validity rules.
+C. Live-Hardware Sample Size
+The live experiment contains only 15 frames. More im-
+portantly, every frame was rejected by CGFP. The live run
+therefore supports the rejection/fallback safety behavior but
+does not establish a hardware patch-acceptance rate or hardware
+retransmission-avoidance efficiency.
+D. Missing Component Ablations
+The available experimental record does not contain com-
+pleted ablation measurements separating burst-aware training
+from random masking or isolating the contribution of individual
+CGFP factors. As a result, the current data cannot prove that
+each component independently causes the reported end-to-end
+improvement. This should be addressed before making stronger
+causal claims.
+E. Threshold Calibration
+The reported threshold τ∗ = 0.80 and the burst-penalty
+parameters are specific to the evaluated telemetry and burst
+distribution. The complete threshold sweep is not included
+in the supplied record. The operating point should therefore
+be reproduced from the original calibration logs before final
+submission.
+--- PAGE 13 ---
+13
+ XIV. LIMITATIONS AND THREATS TO VALIDITY
+A. Physical Realism of Occlusion
+The servo flap provides repeatable blockage but cannot reproduce every
+real obstruction. Human motion, partial opacity, object shape, angle of
+incidence, receiver orientation, and ambient illumination can produce
+different burst statistics. The three measured profiles should therefore be
+interpreted as a controlled experimental starting point rather than an
+exhaustive model of physical LiFi blockage. The controlled actuator is
+valuable for repeatability, but it does not establish that the measured
+distribution is representative of all indoor optical environments.
+B. Payload Generality
+BASR depends on structured or partially predictable telemetry. The
+evaluated examples contain explicit field names, delimiters, numeric
+ranges, and state labels. These properties provide contextual constraints
+that are not available for arbitrary encrypted or structureless binary
+payloads. Different schemas would require their own training
+distribution, parsing rules, and structural-validity constraints. The
+reported accuracy should therefore be scoped to the structured-telemetry
+setting used in the study.
+C. Live-Hardware Sample Size
+The live experiment contains only 15 frames, and every low-confidence
+reconstruction was rejected by CGFP. The experiment therefore provides
+evidence about conservative fallback behavior rather than about the
+hardware acceptance rate of semantic patches. In particular, the reported
+27.15% retransmission avoidance remains a simulation result and should
+not be presented as a measured hardware efficiency.
+D. Missing Component Ablations
+The supplied record does not contain completed ablation measurements
+that separately isolate burst-aware training, the physical-confidence
+factor, the burst penalty, and the structural-validity term. Consequently,
+the current evidence supports the integrated system result but does not
+establish that each individual component is necessary for the observed
+performance. A controlled ablation on the same held-out event set is
+required before stronger causal claims are made.
+E. Threshold Calibration
+The reported operating threshold is τ* = 0.80, with burst-penalty
+parameters α = 0.50 and γ = 1.15. The complete threshold sweep is not
+included in the supplied record. Threshold selection should therefore be
+reproduced from the original calibration logs, and the final paper should
+report acceptance rate, precision, FAR, FRR, UFER, retransmission
+avoidance, and recovery latency across the candidate thresholds.
+F. UFER Acceptance Bound
+The manuscript describes a 2% UFER acceptance bound, but the
+supplied record does not include the preregistration document. The status
+of that bound should be independently verified before submission. If no
+formal preregistration exists, the wording should identify the criterion as
+an evaluation threshold rather than a preregistered commitment.
+G. Bibliographic and Author Verification
+The final submission should preserve the verified conference-paper
+metadata for the Nennouche et al. citation [11] and should be checked by
+all authors for author order, affiliations, and institutional e-mail
+addresses. These checks are editorial requirements and are not
+experimental evidence.
+ XV. REPRODUCIBILITY AND IMPLEMENTATION
+ DETAILS
+A. Reproduction Sequence
+A reproducible run should begin with hardware assembly and receiver
+calibration, followed by clean-link verification. The three servo-driven
+obstruction profiles should then be executed while preserving event
+timing, burst duration, affected symbols, frame identifiers, and local
+signal measurements. BASR masks should be generated from the
+measured burst distribution rather than from independent random
+masking alone. The CGFP calibration/test split should remain disjoint at
+the event level, and the reported simulation seeds should be retained.
+B. Implementation Organization
+ Component
+Role
+Sender.ino
+OOK transmit firmware
+Receiver.ino
+OOK receive firmware
+servo_rig.ino
+Occlusion controller
+burst_logger.py
+Burst logging
+data/burst_events.jsonl
+Raw burst-event log
+rs_fec.py
+Reed–Solomon baseline
+arq_baseline.py
+ARQ baseline
+basr/model.py
+BASR architecture
+basr/train.py
+BASR training
+cgfp/confidence.py
+Confidence engine
+cgfp/patcher.py
+Decision/patch logic
+integration/full_pipeline.py
+Unified pipeline
+C. Reproducibility Metadata
+The reported simulation seeds are 42, 101, 2024, 7, and 99. A complete
+reproducibility package should additionally identify the software
+versions, operating system, ESP32 firmware revision,
+compiler/toolchain, dataset hashes, model checkpoint hash, and the full
+threshold sweep. These items are not fully specified in the supplied
+manuscript and should be taken from the development records rather
+than inferred.
+D. Event-Level Logging
+For each obstruction event, the retained record should include the profile
+identifier, start and end times, burst duration, estimated affected symbols,
+frame identifier, payload or template identifier, BASR confidence,
+physical-confidence term, burst penalty, syntax-validity flag, CGFP
+decision, final correctness, and recovery latency. Keeping these fields
+together allows aggregate results to be recomputed directly from event
+records and makes false acceptances auditable.
+E. Experimental Separation
+Clean-link validation, physical burst characterization, BASR evaluation,
+CGFP calibration, and integrated end-to-end evaluation should remain
+distinct experimental stages. A clean frame should bypass semantic
+inference, while a burst event should be processed only after the physical
+receiver establishes an invalid or unavailable interval. This separation
+prevents semantic processing from altering error-free traffic and helps
+isolate communication, inference, and fallback costs.
+
+--- PAGE 14 ---
+14
+ XVI. FUTURE WORK AND EXPERIMENTAL
+ EXTENSIONS
+A. Larger Hardware Campaign
+The most important next experiment is a larger live-hardware evaluation
+that deliberately covers moderate burst severities. The current 15-frame
+run rejected every semantic reconstruction, so a broader severity range is
+needed to obtain enough accepted patches to estimate hardware patch
+precision and patch error. The experiment should preserve event-level
+identifiers so that physical conditions can be separated from repeated
+payload templates.
+B. Controlled Ablation Study
+BASR should be trained and evaluated under at least two masking
+regimes: independent random masking and masks sampled from the
+measured optical burst distribution. The CGFP study should then remove
+one confidence factor at a time while keeping the same test events. This
+design can distinguish the effect of physical burst awareness from the
+effect of confidence gating and structural validation.
+C. Threshold-Sweep Publication
+A complete threshold study should report acceptance rate, exact
+precision, FAR, FRR, UFER, retransmission avoidance, and latency over
+a dense candidate set. The selected τ* = 0.80 can then be justified using a
+criterion defined before the final test evaluation. Reporting the complete
+curve is particularly important because a single operating point does not
+reveal the reliability–latency trade-off.
+D. Higher-Rate Evaluation
+The prototype uses a 1000 bps raw signaling rate. Increasing the rate
+changes the number of symbols affected by a fixed physical obstruction
+duration. The resulting interaction among burst length, surviving context,
+BASR accuracy, inference time, and retransmission cost should therefore
+be measured directly rather than extrapolated from the current operating
+point.
+E. Broader Physical Conditions
+Future physical experiments should vary obstruction opacity, size, angle,
+speed, and receiver orientation. Ambient-light conditions and
+source–receiver separation should also be varied independently. Such
+measurements would provide a broader empirical basis for calibrating
+Cphys and Pburst. Cross-domain evaluation in free-space or underwater
+optical links would require new burst characterization and
+payload-specific calibration.
+F. Security-Oriented Extensions
+If the architecture is considered for safety-relevant deployments,
+deliberate telemetry spoofing, syntactically valid false data, adversarial
+burst patterns, and optical manipulation should be evaluated separately.
+These cases are outside the current non-adversarial obstruction threat
+model and should not be conflated with the reported UFER
+measurements.
+ XVII. ETHICAL AND SAFETY CONSIDERATIONS
+A. Semantic Substitution Risk
+The principal safety concern is silent semantic substitution: a
+reconstructed value may be plausible and syntactically valid while
+differing from the transmitted value. Semantic confidence is therefore
+treated as a routing signal rather than as proof of correctness. The
+structural gate and exact fallback are designed to reduce the chance that
+an uncertain candidate is delivered as if it were exact.
+B. Scope of the Safety Evidence
+The current study does not evaluate deliberate frame forgery, malicious
+telemetry injection, adversarial examples, or intentional optical
+manipulation. The reported UFER should therefore be interpreted only
+within the tested physical-burst and structured-telemetry setting. The live
+experiment produced 0.00% UFER for 15 frames, but the small sample
+does not establish a population-level security or reliability guarantee.
+ XVIII. EXTENDED QUANTITATIVE ANALYSIS
+A. Coding Capability Versus Observed Burst Length
+The selected RS(33,25) configuration contains eight parity symbols and
+has a nominal correction capability of t = 4 symbol errors under the
+evaluated configuration. The physical campaign reports approximately
+10–25 contiguous corrupted bytes during obstruction. This difference
+explains why a finite correction window can be exceeded in some events,
+although the exact mapping from corrupted bytes to decoder symbols
+depends on frame boundaries, Manchester coding, and the decoder
+treatment of erasures and errors. The reported 37.5% recovery rate is
+therefore an empirical result for the implemented configuration rather
+than a theoretical limit on Reed–Solomon coding.
+B. Retransmission Avoidance
+For N affected frames, if M frames still require exact recovery, the
+retransmission-saving fraction is Rsave = 1 − M/N. At the reported
+operating point, the simulation avoids 27.15% of retransmissions.
+Because every one of the 15 live frames invokes fallback, no hardware
+retransmission-saving percentage is established by the current
+experiment.
+C. Task-Level Reliability
+The difference between exact reconstruction and task-level correctness is
+not only a reporting distinction; it changes the acceptance policy. A field
+that controls actuation or a safety-relevant state can be assigned a stricter
+rule than a non-critical descriptive field. Under the current architecture,
+such a policy can be implemented by extending the structural-validity
+factor so that selected fields force exact fallback whenever their
+reconstructed value is uncertain.
+D. Confidence Factor Interaction
+The multiplicative CGFP score makes the decision sensitive to each
+factor. A low physical-confidence estimate, a severe burst penalty, or a
+low token-level confidence can reduce the combined score below τ*. The
+hard syntax factor is stronger still: Ssyntax = 0 forces fallback regardless
+of learned confidence. This design reflects the asymmetric cost of false
+acceptance versus false rejection.
+E. Mixed-Burst Operating Point
+Under the reported mixed condition in which 40% of frames experience
+bursts, SemLiFi achieves 100% delivery with a latency range of
+592.5–595.5 ms. The supplied record does not provide a comparable
+UFER value for this condition. The result therefore illustrates the
+dependence of total recovery cost on burst prevalence without
+establishing a continuous latency curve.
+
+--- PAGE 15 ---
+15
+ XVIII. EXTENDED QUANTITATIVE ANALYSIS
+ (CONTINUED)
+C. Latency Decomposition
+The total recovery time can be decomposed as Ttotal = Tcommunication +
+Tdetection + Tinference + Tfallback. The reported BASR inference time is
+2.79 ms, whereas the continuous-burst end-to-end SemLiFi latency is
+790.7 ms. These quantities measure different stages and should not be
+compared as if they were equivalent. The large difference indicates that
+retransmission and communication components dominate the end-to-end
+timing under severe burst conditions.
+ Fig. 6. Reported mean latency under the continuous-burst simulation. The 1560.0 ms
+ ARQ value and 790.7 ms SemLiFi value are taken directly from the supplied
+ experimental record.
+D. Relative Latency Reduction
+Using the reported continuous-burst values, the relative reduction with
+respect to the Stop-and-Wait ARQ condition is 1 − 790.7/1560.0 ≈
+49.3%. This calculation is a derived comparison of the reported
+operating point. It does not establish a universal latency advantage
+because the result depends on burst prevalence, frame length,
+return-channel behavior, retransmission policy, and processing hardware.
+E. BASR Exact and Task-Level Accuracy
+The reported exact reconstruction accuracy is 42.63 ± 1.47%, while the
+evaluated motor-state field reaches 100.0% accuracy. The distinction is
+central: exact reconstruction requires the missing segment to match the
+transmitted representation, whereas task-level accuracy asks whether a
+predefined application field is correct. The latter can remain correct even
+when other non-critical characters differ. The denominator and event
+definition for the motor-state metric should be retained with the raw
+evaluation data.
+ Fig. 7. Reported BASR exact reconstruction and motor-state field accuracy. The
+ values are not interchangeable and represent different evaluation objectives.
+F. Model Size and Edge Constraints
+The BASR model contains 74,281 trainable parameters against a
+75,000-parameter budget, corresponding to 99.04% utilization. A simple
+32-bit storage calculation gives approximately 290 KB for the weights,
+while idealized 8-bit storage gives approximately 73 KB. These are
+storage estimates, not measurements of the complete runtime footprint.
+The reported 2.79 ms inference time is an edge-CPU measurement and
+should not be interpreted as proof that the entire Transformer runtime fits
+within an ESP32 memory budget without additional deployment
+measurements.
+G. CGFP Calibration/Test Separation
+The reported calibration and test sets contain 664 and 641 bursts,
+respectively, and are described as disjoint at the event level. This
+separation is important because threshold selection must not use the final
+test outcomes. The split provides a clear basis for auditing whether the
+calibrated threshold was selected independently of the final performance
+estimate.
+ Fig. 8. Reported event-level separation of the CGFP calibration and test sets.
+H. Threshold Interpretation
+The selected threshold should be interpreted as a communication-layer
+routing point rather than as a generic machine-learning hyperparameter.
+A higher threshold would generally be expected to reduce semantic
+acceptance while increasing exact fallback, whereas a lower threshold
+would admit more candidates and require careful monitoring of false
+acceptance. Because the complete sweep is not supplied, these
+directional effects are design expectations rather than measured curves.
+I. Evidence Boundary
+The continuous-burst simulation and the live hardware run answer
+different questions. The simulation provides the reported latency, UFER,
+and retransmission-avoidance measurements under controlled seeds and
+burst conditions. The hardware run establishes that the physical receiver,
+burst detector, BASR path, and fallback gate can operate together, but its
+15-frame size and universal fallback behavior do not support a hardware
+estimate of semantic acceptance efficiency.
+
+--- PAGE 16 ---
+16
+ XVIII. EXTENDED QUANTITATIVE ANALYSIS
+ (CONTINUED)
+H. Live-Hardware Decision Behavior
+The live evaluation contains 15 frames. The mean semantic confidence is
+approximately 0.46, below the calibrated threshold of 0.80, and all 15
+candidates were rejected. Consequently, the measured live result is 100%
+delivery with 0.00% UFER over the reported run, but it does not
+demonstrate hardware semantic-patch acceptance. The result is best
+interpreted as evidence that the gate can conservatively route
+low-confidence candidates to exact recovery under the tested conditions.
+ Fig. 9. Live-hardware CGFP decisions for the reported 15-frame run. No semantic
+ candidate was accepted; all frames used exact fallback.
+I. Burst-Profile Interpretation
+The physical study reports three servo-driven profiles. P1 corresponds to
+short blockages of approximately 15–40 ms, P2 to long blockages of
+approximately 150–380 ms, and P3 to mixed/randomized duration. The
+supplied record does not provide complete per-profile means or medians;
+therefore, only the reported ranges are visualized here. With a 1000 µs bit
+period, the duration range corresponds to approximately 15–40 bit
+intervals for P1 and 150–380 bit intervals for P2 before accounting for
+Manchester expansion and frame boundaries.
+ Fig. 10. Reported duration ranges for the short and long servo-driven obstruction
+profiles. P3 is mixed/randomized and is not assigned a single range in the supplied
+ record.
+J. Integrated Performance Summary
+ Metric
+Reported result
+Evidence type
+Clean-link latency
+449.0 ms mean; 443–455 ms range
+Hardware
+Clean-link errors
+0 bit errors; 100% CRC
+Hardware
+Occlusion campaign
+56 events; 10–25 contiguous bytes
+Hardware
+BASR exact accuracy
+42.63 ± 1.47%
+Simulation
+Motor-state accuracy
+100.0%
+Simulation
+CGFP patch precision
+97.13%
+Simulation
+Patch-error rate
+0.78%
+Simulation
+Retransmissions avoided
+27.15%
+Simulation
+Continuous-burst UFER
+1.00 ± 0.13%
+Simulation
+Metric
+Reported result
+Evidence type
+Live UFER
+0.00% for 15 frames
+Hardware
+K. Interpretation of the Evidence
+The quantitative record supports three distinct observations: the optical
+testbed can produce repeatable contiguous burst loss; BASR can
+reconstruct some structured telemetry and can preserve the evaluated
+motor-state field; and CGFP can reject low-confidence candidates and
+route them to exact recovery. The simulation demonstrates
+retransmission avoidance and lower reported latency under its stated
+conditions, whereas the live experiment demonstrates conservative
+fallback. These evidence types should remain separated in the final
+manuscript.
+ XIX. CONCLUSION
+This paper presented SemLiFi, a cross-layer framework for burst
+recovery on physically obstructed LiFi links. The architecture combines
+an ESP32-based optical testbed, controlled servo-driven occlusion,
+empirical burst characterization, a compact Burst-Aware Semantic
+Reconstruction model, and a Confidence-Gated Fallback Protocol. The
+central design principle is to treat semantic reconstruction as a
+conditional optimization of exact recovery rather than as a replacement
+for exact recovery.
+The reported clean-link experiment achieves 449.0 ms mean latency with
+zero bit errors and 100% CRC validation. The physical occlusion
+campaign contains 56 events and produces contiguous losses that can
+exceed the correction capability of the evaluated RS(33,25)
+configuration. BASR contains 74,281 parameters, reports 42.63 ± 1.47%
+exact reconstruction accuracy, 100.0% accuracy on the evaluated
+motor-state field, and 2.79 ms mean edge-CPU inference latency. At τ* =
+0.80, the reported simulation avoids 27.15% of retransmissions, with
+97.13% accepted-patch precision and a 0.78% patch-error rate.
+Under continuous-burst simulation, SemLiFi reports 100% delivery at
+790.7 ms and 1.00 ± 0.13% UFER, compared with 1560.0 ms for the
+reported Stop-and-Wait ARQ condition. The 15-frame live hardware
+experiment reaches 100% delivery and 0.00% UFER, but every semantic
+reconstruction is rejected. Thus, the live experiment provides evidence
+for conservative fallback behavior rather than hardware
+semantic-patching efficiency. Larger physical testing, complete
+threshold sweeps, component ablations, and broader obstruction
+conditions remain necessary before the simulation-level efficiency can
+be generalized to practical LiFi deployments.
+
+--- PAGE 17 ---
+17
+ APPENDIX A — COMPLETE FRAME AND DECISION
+ TABLES
+The appendix retains only the implementation tables needed to specify the
+frame format and CGFP routing rule. The submission-verification checklist has
+been omitted from the revised manuscript.
+TABLE XI — SEMLIFI FRAME BYTE LAYOUT
+ Field
+Description
+Sync word
+0xAA 0x55, 2 bytes
+LEN
+1-byte payload length
+SEQ
+1-byte frame sequence identifier
+PAYLOAD
+Variable-length structured telemetry string
+CRC-8
+Dallas/Maxim polynomial, 0x31
+Terminator
+\r\n, 2 bytes
+TABLE XII — CGFP DECISION LOGIC
+ Condition
+Decision
+S<sub>syntax</sub> = 0
+C = 0; fallback regardless of learned confidence
+S<sub>syntax</sub> = 1, C ≥ 0.80
+Accept semantic reconstruction
+S<sub>syntax</sub> = 1, C < 0.80
+NACK and exact retransmission
+ DATA AVAILABILITY AND REPRODUCIBILITY
+ STATEMENT
+The supplied manuscript identifies the principal firmware, logging,
+baseline, BASR, and CGFP components used by the study, including the
+burst-event log, model checkpoint, and evaluation scripts. The record
+provided for this revision does not establish a public archival repository
+or a complete raw-data release. Accordingly, the paper does not claim
+that all raw measurements are publicly available. For a reproducible
+journal submission, the authors should archive the 56-event burst log, the
+CGFP calibration/test split, the model checkpoint, configuration files,
+and evaluation scripts, together with version identifiers and hashes,
+subject to institutional and journal requirements.
+ FORMAL REPORTING NOTES
+The numerical results in this revision are restricted to values explicitly
+reported in the supplied manuscript or to direct arithmetic derived from
+those values. No missing threshold-sweep points, profile means, or
+hardware semantic-acceptance measurements have been fabricated.
+Simulation results and hardware results are labeled separately, and the
+15-frame live run is not used to support claims of semantic-patch
+efficiency.
+ NOMENCLATURE
+Symbol / term
+Meaning
+Y
+Transmitted structured payload
+B
+Binary corruption mask
+T<sub>B</sub>
+Measured burst duration
+N<sub>B</sub>
+Approximate affected-bit count
+ρ<sub>B</sub>
+Normalized burst span
+C
+CGFP combined confidence score
+τ<sup>*</sup>
+Calibrated CGFP threshold
+UFER
+Undetected frame error rate
+BASR
+Burst-Aware Semantic Reconstruction
+CGFP
+Confidence-Gated Fallback Protocol
+ARQ
+Automatic repeat request
+FEC
+Forward error correction
+ REFERENCES
+[1] T. Komine and M. Nakagawa, “Fundamental analysis for visible-light
+ communication system using LED lights,” IEEE Trans. Consumer Electronics,
+vol. 50, no. 1, pp. 100–107, Feb. 2004, doi: 10.1109/TCE.2004.1277847.
+[2] H. Elgala, R. Mesleh, and H. Haas, “Indoor optical wireless communication:
+ Potential and state-of-the-art,” IEEE Commun. Mag., vol. 49, no. 9, pp. 56–62,
+Sep. 2011, doi: 10.1109/MCOM.2011.6011734.
+[3] P. H. Pathak, X. Feng, P. Hu, and P. Mohapatra, “Visible light communication,
+ networking, and sensing: A survey, potential and challenges,” IEEE Commun.
+Surveys Tuts., vol. 17, no. 4, pp. 2047–2077, 2015, doi:
+10.1109/COMST.2015.2476474.
+[4] IEEE Standard for Local and Metropolitan Area Networks—Part 15.7:
+ Short-Range Optical Wireless Communications, IEEE Std. 802.15.7-2018,
+2018.
+[5] I. S. Reed and G. Solomon, “Polynomial codes over certain finite fields,” J.
+ Soc. Ind. Appl. Math., vol. 8, no. 2, pp. 300–304, Jun. 1960.
+[6] J. Chen and P. Owsley, “A burst-error-correcting algorithm for Reed–Solomon
+ codes,” IEEE Trans. Inf. Theory, vol. 38, no. 6, pp. 1807–1812, Nov. 1992, doi:
+10.1109/18.165456.
+[7] H. Xie, Z. Qin, G. Y. Li, and B.-H. Juang, “Deep learning enabled semantic
+ communication systems,” IEEE Trans. Signal Process., vol. 69, pp. 2663–2675,
+2021, doi: 10.1109/TSP.2021.3071210.
+[8] Z. Qin, X. Tao, J. Lu, W. Tong, and G. Y. Li, “Semantic communications:
+ Principles and challenges,” arXiv:2201.01389, 2022, doi:
+10.48550/arXiv.2201.01389.
+
+--- PAGE 18 ---
+18
+ REFERENCES (CONTINUED)
+ [9] D. Gündüz, Z. Qin, I. E. Aguerri, H. S. Dhillon, Z. Yang, A. Yener, K.-K.
+ Wong, and C.-B. Chae, “Beyond transmitting bits: Context, semantics, and
+task-oriented communications,” IEEE J. Sel. Areas Commun., vol. 41, no. 1,
+pp. 5–41, Jan. 2023, doi: 10.1109/JSAC.2022.3223408.
+[10] K. Ma, H. Abumarshoud, S. Hua, M. A. Imran, and Y. Sun, “Design and
+ demonstration of a visible light based semantic communication system,” IEEE
+Trans. Veh. Technol., vol. 75, no. 7, pp. 13683–13694, 2026, doi:
+10.1109/TVT.2026.3659747.
+[11] M. Nennouche, M. A. Khalighi, A. A. Dowhuszko, and D. Merad, “Semantic
+ underwater optical wireless communication using variational autoencoders,” in
+Proc. 8th Int. Conf. Advanced Communication Technologies and Networking
+(CommNet), 2025, doi: 10.1109/CommNet68224.2025.11288833.
+[12] OpenAI, “ChatGPT,” GPT-5.6, 2026. [Online]. Available:
+ https://chatgpt.com/
+ CLOSING EDITORIAL NOTE
+The revised manuscript removes the non-technical closing material,
+corrects the CGFP decision figure, and keeps the technical appendix
+limited to the frame and decision tables. The paper distinguishes
+measured hardware evidence from simulation evidence and from direct
+arithmetic derived from reported values. No unsupported
+threshold-sweep points, burst-profile statistics, or hardware
+semantic-acceptance results have been inserted.
+ SCOPE OF THE REPORTED EVIDENCE
+The reported results support the feasibility of the integrated SemLiFi
+architecture for the evaluated structured-telemetry and
+controlled-occlusion setting. They do not establish general-purpose LiFi
+reliability, universal semantic reconstruction accuracy, or hardware
+retransmission savings outside the tested conditions. These boundaries
+should remain explicit in the final journal submission.
+ SUBMISSION-READY FORMATTING PRINCIPLES
+The final layout uses a consistent two-column journal grid, uniform
+Times typography, compact table styling, centered figure captions,
+continuous section numbering, and page-level numbering. Figures are
+kept within column boundaries, captions are attached to their figures, and
+references use a consistent IEEE-style bibliographic format. The
+non-technical closing and checklist material have been omitted entirely.
+ REVIEWER-ORIENTED EVIDENCE MAP
+Claim
+Primary evidence
+Scope
+Clean optical operation
+449.0 ms; zero bit errors; 100% CRC
+Controlled hardware
+Burst impairment
+56 occlusion events; 10–25 bytes
+Controlled hardware
+Semantic reconstruction
+42.63 ± 1.47% exact accuracy
+Simulation
+Task-field preservation
+100.0% motor-state accuracy
+Simulation
+Confidence gating
+97.13% patch precision; 0.78% patch error
+Simulation
+Retransmission avoidance
+27.15% at τ*=0.80
+Simulation
+Conservative fallback
+15/15 frames rejected; 0.00% UFER
+Live hardware
+This matrix is intended to make the evidence boundary explicit:
+simulation-level efficiency claims are not presented as hardware
+measurements, and the small live run is not used to infer a
+population-level reliability guarantee.
+ FINAL VALIDATION PRIORITIES
+Before submission to a journal, the experimental record should be
+reconciled with the manuscript for the exact denominators used in each
+metric, the complete CGFP threshold sweep, the raw P1/P2/P3 burst
+statistics, the model-training protocol, and the live-hardware event log.
+These items are not substituted with inferred values in this revision
+because doing so would reduce rather than improve reproducibility. The
+final paper should also retain the distinction between a clean-link latency
+reference and a burst-recovery latency measurement.
+The revised presentation is intentionally conservative about claims. It
+reports the measured physical behavior, the reported simulation results,
+and the live fallback behavior as separate evidence classes. This
+organization makes the paper easier to audit and avoids implying that a
+simulation result has been reproduced on hardware when the available
+15-frame experiment did not accept any semantic patch.
+ INTERPRETATION OF THE FINAL RESULTS
+The principal contribution of the reported study is the integration of
+physical burst characterization, contextual reconstruction, and
+confidence-gated routing in a single recovery pipeline. The architecture
+does not require semantic reconstruction to succeed on every burst.
+Instead, it treats the semantic path as conditional: a candidate is useful
+only when its confidence and structural validity are sufficient; otherwise,
+exact recovery is requested. This operating principle explains why the
+live experiment can report zero undetected frame errors even though no
+semantic patch is accepted.
+For journal review, the distinction between feasibility and generalization
+is important. The physical testbed demonstrates that the targeted
+impairment can be generated and measured repeatably. The simulation
+provides the larger quantitative evaluation of BASR and CGFP. The
+hardware experiment demonstrates integrated fallback behavior. These
+three evidence layers complement one another, but they should not be
+merged into a single claim of deployment-level performance.
+The final manuscript should therefore retain the reported numerical
+values exactly, label derived quantities as calculations, and preserve the
+stated limitations. In particular, the small hardware sample, missing
+threshold sweep, incomplete ablation evidence, and controlled nature of
+the obstruction campaign should remain visible to reviewers. This
+presentation provides a clearer and more defensible account of what the
+current experimental record establishes.
