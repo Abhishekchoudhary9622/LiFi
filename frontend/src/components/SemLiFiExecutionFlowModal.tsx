@@ -811,6 +811,7 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playSpeed, setPlaySpeed] = useState<number>(1);
   const [copiedSummary, setCopiedSummary] = useState<boolean>(false);
+  const [mobileFlowTab, setMobileFlowTab] = useState<'nodes' | 'details'>('nodes');
 
   const scenario = SCENARIO_PRESETS[selectedScenarioKey];
   const steps = scenario.steps;
@@ -906,39 +907,39 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-5 select-none animate-in fade-in">
-      <div className="bg-[#0b111e] border border-[#1e2d4a] rounded-2xl max-w-5xl w-full h-[92vh] max-h-[860px] flex flex-col shadow-2xl overflow-hidden relative font-sans text-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-5 select-none animate-in fade-in">
+      <div className="bg-[#0b111e] border border-[#1e2d4a] rounded-2xl max-w-5xl w-full h-[95vh] sm:h-[92vh] max-h-[860px] flex flex-col shadow-2xl overflow-hidden relative font-sans text-xs">
         {/* ========================================================= */}
         {/* 1. TOP HEADER & METADATA BAR                              */}
         {/* ========================================================= */}
-        <div className="px-5 py-3.5 bg-[#0e1628] border-b border-[#1b2b48] flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
-              <Sparkles className="w-4 h-4 text-white" />
+        <div className="px-3.5 py-2.5 sm:px-5 sm:py-3.5 bg-[#0e1628] border-b border-[#1b2b48] flex items-center justify-between shrink-0">
+          <div className="flex items-center space-x-2.5 sm:space-x-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 shrink-0">
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-sm font-bold text-white font-mono tracking-wide">
-                  SemLiFi Cross-Layer Execution Trace
+                <h2 className="text-xs sm:text-sm font-bold text-white font-mono tracking-wide">
+                  SemLiFi Execution Trace
                 </h2>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950/80 border border-cyan-700/60 text-cyan-300">
-                  Step {currentStepIdx + 1} of {steps.length}
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950/80 border border-cyan-700/60 text-cyan-300">
+                  {currentStepIdx + 1}/{steps.length}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[10px] text-slate-400 hidden sm:block">
                 Synchronized pipeline from physical optical pulse to BASR Edge Transformer &amp; CGFP decision gate
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
             <button
               onClick={handleCopyTrace}
-              className="px-2.5 py-1.5 rounded-lg bg-[#141f36] hover:bg-[#1c2c4d] text-slate-300 hover:text-white border border-slate-700 text-xs font-mono flex items-center space-x-1.5 transition-all"
+              className="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-[#141f36] hover:bg-[#1c2c4d] text-slate-300 hover:text-white border border-slate-700 text-xs font-mono flex items-center space-x-1 transition-all"
               title="Copy complete trace and formulas to clipboard"
             >
               {copiedSummary ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{copiedSummary ? 'Copied!' : 'Copy Trace'}</span>
+              <span className="hidden sm:inline">{copiedSummary ? 'Copied!' : 'Copy'}</span>
             </button>
 
             <button
@@ -953,9 +954,9 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
         {/* ========================================================= */}
         {/* 2. SCENARIO SELECTOR TABS                                 */}
         {/* ========================================================= */}
-        <div className="px-5 py-2.5 bg-[#080d18] border-b border-[#16243d] flex flex-wrap items-center justify-between gap-2 shrink-0">
-          <div className="flex items-center space-x-1.5 overflow-x-auto scrollbar-none py-0.5">
-            <span className="text-[11px] font-mono text-slate-400 font-bold mr-1 shrink-0">
+        <div className="px-3 py-2 sm:px-5 sm:py-2.5 bg-[#080d18] border-b border-[#16243d] flex flex-wrap items-center justify-between gap-1.5 shrink-0">
+          <div className="flex items-center space-x-1.5 overflow-x-auto scrollbar-none py-0.5 max-w-full">
+            <span className="text-[10px] sm:text-[11px] font-mono text-slate-400 font-bold mr-1 shrink-0">
               SCENARIO:
             </span>
 
@@ -966,22 +967,22 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
                 <button
                   key={key}
                   onClick={() => handleSelectScenario(key)}
-                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all shrink-0 border ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition-all shrink-0 border whitespace-nowrap ${
                     isSelected
                       ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-600/30'
                       : 'bg-[#0f172a] text-slate-300 hover:text-white border-slate-700/80 hover:border-slate-500'
                   }`}
                 >
-                  {key === 'P2_FALLBACK' && 'P2: 250ms Fallback (User Flow)'}
-                  {key === 'P1_ACCEPTANCE' && 'P1: 80ms Fast Semantic (Accept)'}
-                  {key === 'P3_SYNTAX_FAIL' && 'P3: 500ms Syntax Veto (C=0)'}
-                  {key === 'P0_CLEAN' && 'P0: Clean LOS (0ms)'}
+                  {key === 'P2_FALLBACK' && 'P2: 250ms Fallback'}
+                  {key === 'P1_ACCEPTANCE' && 'P1: 80ms Semantic'}
+                  {key === 'P3_SYNTAX_FAIL' && 'P3: 500ms Syntax Veto'}
+                  {key === 'P0_CLEAN' && 'P0: Clean (0ms)'}
                 </button>
               );
             })}
           </div>
 
-          <div className="flex items-center space-x-2 text-[11px] font-mono">
+          <div className="hidden lg:flex items-center space-x-2 text-[11px] font-mono">
             <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${scenario.tagColor}`}>
               {scenario.tag}
             </span>
@@ -991,24 +992,24 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
         {/* ========================================================= */}
         {/* 3. PLAYBACK CONTROLS & TIMELINE STATUS BAR                */}
         {/* ========================================================= */}
-        <div className="px-5 py-2 bg-[#091020] border-b border-[#14223b] flex items-center justify-between text-xs font-mono shrink-0">
-          <div className="flex items-center space-x-2">
+        <div className="px-3 py-1.5 sm:px-5 sm:py-2 bg-[#091020] border-b border-[#14223b] flex flex-wrap items-center justify-between gap-2 text-xs font-mono shrink-0">
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
             <button
               onClick={handlePlayToggle}
-              className={`px-3 py-1 rounded-lg font-bold flex items-center space-x-1.5 shadow transition-all ${
+              className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold flex items-center space-x-1.5 shadow transition-all ${
                 isPlaying
                   ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/30'
                   : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
               }`}
             >
               {isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-              <span>{isPlaying ? 'Pause' : 'Auto Play'}</span>
+              <span>{isPlaying ? 'Pause' : 'Play'}</span>
             </button>
 
             <button
               onClick={() => handleStepChange(false)}
               disabled={currentStepIdx === 0}
-              className="p-1.5 rounded-lg bg-[#121c2e] hover:bg-[#1a2842] text-slate-300 disabled:opacity-40 border border-slate-700"
+              className="p-1 sm:p-1.5 rounded-lg bg-[#121c2e] hover:bg-[#1a2842] text-slate-300 disabled:opacity-40 border border-slate-700"
               title="Previous Step"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -1017,7 +1018,7 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
             <button
               onClick={() => handleStepChange(true)}
               disabled={currentStepIdx === steps.length - 1}
-              className="p-1.5 rounded-lg bg-[#121c2e] hover:bg-[#1a2842] text-slate-300 disabled:opacity-40 border border-slate-700"
+              className="p-1 sm:p-1.5 rounded-lg bg-[#121c2e] hover:bg-[#1a2842] text-slate-300 disabled:opacity-40 border border-slate-700"
               title="Next Step"
             >
               <ChevronRight className="w-4 h-4" />
@@ -1025,7 +1026,7 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
 
             <button
               onClick={handleReset}
-              className="px-2.5 py-1 rounded-lg bg-[#121c2e] hover:bg-[#1a2842] text-slate-300 border border-slate-700 flex items-center space-x-1"
+              className="px-2 py-1 rounded-lg bg-[#121c2e] hover:bg-[#1a2842] text-slate-300 border border-slate-700 flex items-center space-x-1"
               title="Reset Trace to Step 1"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -1034,7 +1035,7 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
           </div>
 
           {/* Speed Selector & Time Badge */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <div className="flex items-center space-x-1">
               <span className="text-slate-400 text-[10px]">Speed:</span>
               {[1, 2, 5].map((s) => (
@@ -1058,6 +1059,32 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
           </div>
         </div>
 
+        {/* Mobile View Toggle between Node List and Step Details (< md) */}
+        <div className="md:hidden flex border-b border-[#16233a] bg-[#070b16] text-[11px] font-mono shrink-0">
+          <button
+            onClick={() => setMobileFlowTab('nodes')}
+            className={`flex-1 py-1.5 text-center font-bold transition-all flex items-center justify-center space-x-1.5 ${
+              mobileFlowTab === 'nodes'
+                ? 'text-cyan-300 border-b-2 border-cyan-400 bg-cyan-950/40'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Nodes Chain ({steps.length})</span>
+          </button>
+          <button
+            onClick={() => setMobileFlowTab('details')}
+            className={`flex-1 py-1.5 text-center font-bold transition-all flex items-center justify-center space-x-1.5 ${
+              mobileFlowTab === 'details'
+                ? 'text-cyan-300 border-b-2 border-cyan-400 bg-cyan-950/40'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Step Details &amp; Math</span>
+          </button>
+        </div>
+
         {/* ========================================================= */}
         {/* 4. MAIN SPLIT: PIPELINE FLOWCHART (LEFT) + DETAILS (RIGHT)*/}
         {/* ========================================================= */}
@@ -1065,7 +1092,7 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
           {/* ------------------------------------------------------- */}
           {/* LEFT: INTERACTIVE STEPPING PIPELINE FLOWCHART           */}
           {/* ------------------------------------------------------- */}
-          <div className="w-full md:w-[48%] xl:w-[45%] border-r border-[#16233a] bg-[#070b16] flex flex-col min-h-0 overflow-hidden">
+          <div className={`w-full md:w-[48%] xl:w-[45%] border-r border-[#16233a] bg-[#070b16] flex-col min-h-0 overflow-hidden ${mobileFlowTab === 'nodes' ? 'flex' : 'hidden md:flex'}`}>
             <div className="p-3 border-b border-[#142036] flex justify-between items-center bg-[#090f1d] shrink-0">
               <span className="text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
                 <Layers className="w-3.5 h-3.5 text-cyan-400" />
@@ -1091,6 +1118,7 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
                         setIsPlaying(false);
                         setCurrentStepIdx(idx);
                         playTone(500 + idx * 60);
+                        setMobileFlowTab('details');
                       }}
                       className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                         isActive
@@ -1175,9 +1203,18 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
           {/* ------------------------------------------------------- */}
           {/* RIGHT: DEEP-DIVE STEP INSPECTOR & THEORETICAL PROOFS   */}
           {/* ------------------------------------------------------- */}
-          <div className="flex-1 bg-[#060a14] p-4 lg:p-5 overflow-y-auto space-y-4">
+          <div className={`w-full md:w-[52%] xl:w-[55%] bg-[#060a14] p-3 sm:p-4 lg:p-5 overflow-y-auto space-y-4 flex-col ${mobileFlowTab === 'details' ? 'flex' : 'hidden md:flex'}`}>
+            {/* Mobile Back Button */}
+            <button
+              onClick={() => setMobileFlowTab('nodes')}
+              className="md:hidden px-2.5 py-1 rounded-lg bg-[#0e182e] border border-slate-700 text-cyan-300 text-xs font-mono font-bold flex items-center space-x-1.5 self-start"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>Back to Nodes List</span>
+            </button>
+
             {/* Step Header Card */}
-            <div className="p-4 rounded-xl bg-[#0b1324] border border-[#1b2b48] shadow-lg space-y-2">
+            <div className="p-3 sm:p-4 rounded-xl bg-[#0b1324] border border-[#1b2b48] shadow-lg space-y-2">
               <div className="flex items-start justify-between">
                 <div>
                   <span

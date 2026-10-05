@@ -324,6 +324,11 @@ export const SemLiFiVirtualLab: React.FC<SemLiFiVirtualLabProps> = ({
   // Navigation active tab: 'simulation' | 'hardwareTwin' | 'transmission' | 'waveforms' | 'results' | 'docs'
   const [activeNavTab, setActiveNavTab] = useState<'simulation' | 'hardwareTwin' | 'transmission' | 'waveforms' | 'results' | 'docs'>('simulation');
 
+  // Mobile responsive views & drawer states
+  const [isCompLibMobileOpen, setIsCompLibMobileOpen] = useState<boolean>(false);
+  const [mobileSimView, setMobileSimView] = useState<'canvas' | 'params'>('canvas');
+  const [mobileBottomTab, setMobileBottomTab] = useState<'waveforms' | 'console' | 'results'>('waveforms');
+
   // Selected Microcontroller Target Profile: 'esp32' | 'stm32'
   const [mcuProfile, setMcuProfile] = useState<'esp32' | 'stm32'>('esp32');
 
@@ -600,118 +605,122 @@ export const SemLiFiVirtualLab: React.FC<SemLiFiVirtualLabProps> = ({
       {/* ========================================================= */}
       {/* 1. TOP HEADER NAVIGATION (Matching Image 1 & Image 2)     */}
       {/* ========================================================= */}
-      <header className={`h-[56px] ${isDarkMode ? 'bg-[#0b1324] border-[#182642]' : 'bg-white border-slate-200'} border-b px-4 flex items-center justify-between shrink-0 z-30 shadow-md`}>
+      <header className={`h-[56px] ${isDarkMode ? 'bg-[#0b1324] border-[#182642]' : 'bg-white border-slate-200'} border-b px-2 sm:px-4 flex items-center justify-between shrink-0 z-30 shadow-md gap-1 sm:gap-2`}>
         {/* Left Branding */}
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-400 p-[1.5px] shadow-lg shadow-blue-500/25">
+        <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-400 p-[1.5px] shadow-lg shadow-blue-500/25 shrink-0">
             <div className="w-full h-full bg-[#080f1e] rounded-[7px] flex items-center justify-center">
               <Zap className="w-4 h-4 text-cyan-400 fill-cyan-400/20" />
             </div>
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-base font-extrabold tracking-wide font-sans text-white">
-                SemLiFi Virtual Lab
+              <span className="text-sm sm:text-base font-extrabold tracking-wide font-sans text-white whitespace-nowrap">
+                SemLiFi<span className="hidden sm:inline"> Virtual Lab</span>
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 -mt-0.5">
+            <p className="text-[10px] text-slate-400 -mt-0.5 hidden md:block whitespace-nowrap">
               Design • Assemble • Simulate • Analyze
             </p>
           </div>
         </div>
 
         {/* Center: Mode Switcher Pills */}
-        <div className={`flex items-center ${isDarkMode ? 'bg-[#070c18] border-[#16243f]' : 'bg-slate-100 border-slate-300'} p-1 rounded-xl border space-x-1 text-xs font-semibold`}>
+        <nav className={`flex items-center ${isDarkMode ? 'bg-[#070c18] border-[#16243f]' : 'bg-slate-100 border-slate-300'} p-1 rounded-xl border space-x-1 text-xs font-semibold overflow-x-auto scrollbar-none max-w-[48vw] sm:max-w-[55vw] md:max-w-none shrink`}>
           <button
             onClick={() => setActiveNavTab('simulation')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 shrink-0 ${
               activeNavTab === 'simulation'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Zap className="w-3.5 h-3.5" />
-            <span>Circuit &amp; Simulation</span>
+            <Zap className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden md:inline">Circuit &amp; Simulation</span>
+            <span className="md:hidden">Circuit</span>
           </button>
 
           <button
             onClick={() => setActiveNavTab('hardwareTwin')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 shrink-0 ${
               activeNavTab === 'hardwareTwin'
                 ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-md font-bold'
                 : 'text-cyan-400 hover:text-white'
             }`}
           >
-            <Camera className="w-3.5 h-3.5" />
-            <span>Hardware Twin</span>
+            <Camera className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden md:inline">Hardware Twin</span>
+            <span className="md:hidden">Twin</span>
           </button>
 
           <button
             onClick={() => setActiveNavTab('transmission')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 shrink-0 ${
               activeNavTab === 'transmission'
                 ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md font-bold'
                 : 'text-indigo-400 hover:text-white'
             }`}
           >
-            <Radio className="w-3.5 h-3.5" />
-            <span>Message &amp; Bits</span>
+            <Radio className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden md:inline">Message &amp; Bits</span>
+            <span className="md:hidden">Bits</span>
           </button>
 
           <button
             onClick={() => setActiveNavTab('waveforms')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 shrink-0 ${
               activeNavTab === 'waveforms'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Activity className="w-3.5 h-3.5" />
+            <Activity className="w-3.5 h-3.5 shrink-0" />
             <span>Waveforms</span>
           </button>
 
           <button
             onClick={() => setActiveNavTab('results')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 shrink-0 ${
               activeNavTab === 'results'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <FileCode className="w-3.5 h-3.5" />
+            <FileCode className="w-3.5 h-3.5 shrink-0" />
             <span>Results</span>
           </button>
 
           <button
             onClick={() => setActiveNavTab('docs')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 shrink-0 ${
               activeNavTab === 'docs'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>Documentation</span>
+            <BookOpen className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden md:inline">Documentation</span>
+            <span className="md:hidden">Docs</span>
           </button>
-        </div>
+        </nav>
 
         {/* Right Tools: Execution Flow Modal Trigger, MCU Target, Audio, Settings */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
           {/* Execution Flow Trigger (Matching Image 3) */}
           <button
             onClick={() => setIsFlowModalOpen(true)}
-            className="px-2.5 py-1.5 rounded-lg bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 text-indigo-300 text-xs font-mono font-bold flex items-center space-x-1 transition-all"
+            className="px-2 sm:px-2.5 py-1.5 rounded-lg bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 text-indigo-300 text-xs font-mono font-bold flex items-center space-x-1 transition-all"
             title="View simulation step-by-step execution flowchart"
           >
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden sm:inline">Execution Flow</span>
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+            <span className="hidden lg:inline">Execution Flow</span>
           </button>
 
           {/* Microcontroller Profile Selector */}
-          <div className="flex items-center bg-[#070c18] rounded-lg border border-[#16243f] p-0.5 text-xs font-mono">
+          <div className="hidden sm:flex items-center bg-[#070c18] rounded-lg border border-[#16243f] p-0.5 text-xs font-mono">
             <button
               onClick={() => setMcuProfile('esp32')}
-              className={`px-2 py-1 rounded text-[11px] font-bold transition-all ${
+              className={`px-1.5 sm:px-2 py-1 rounded text-[11px] font-bold transition-all ${
                 mcuProfile === 'esp32'
                   ? 'bg-blue-600 text-white shadow'
                   : 'text-slate-400 hover:text-white'
@@ -721,7 +730,7 @@ export const SemLiFiVirtualLab: React.FC<SemLiFiVirtualLabProps> = ({
             </button>
             <button
               onClick={() => setMcuProfile('stm32')}
-              className={`px-2 py-1 rounded text-[11px] font-bold transition-all ${
+              className={`px-1.5 sm:px-2 py-1 rounded text-[11px] font-bold transition-all ${
                 mcuProfile === 'stm32'
                   ? 'bg-blue-600 text-white shadow'
                   : 'text-slate-400 hover:text-white'
@@ -737,38 +746,38 @@ export const SemLiFiVirtualLab: React.FC<SemLiFiVirtualLabProps> = ({
               setIsAudioEnabled(a => !a);
               playChime(1000);
             }}
-            className={`p-2 rounded-lg border text-xs transition-all ${
+            className={`p-1.5 sm:p-2 rounded-lg border text-xs transition-all ${
               isAudioEnabled
                 ? 'bg-cyan-950 text-cyan-300 border-cyan-700'
                 : 'bg-[#0f172a] text-slate-400 border-slate-700 hover:text-white'
             }`}
             title="Toggle Audio Feedback"
           >
-            {isAudioEnabled ? <Volume2 className="w-4 h-4 text-cyan-400" /> : <VolumeX className="w-4 h-4" />}
+            {isAudioEnabled ? <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" /> : <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
           </button>
 
           {/* Theme Toggle */}
           <button
             onClick={() => setIsDarkMode(d => !d)}
-            className="p-2 rounded-lg bg-[#0f172a] border border-slate-700 text-slate-400 hover:text-white transition-all"
+            className="p-1.5 sm:p-2 rounded-lg bg-[#0f172a] border border-slate-700 text-slate-400 hover:text-white transition-all"
             title="Toggle Light / Dark mode"
           >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            {isDarkMode ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
           </button>
 
           {/* Settings */}
           <button
-            className="p-2 rounded-lg bg-[#0f172a] border border-slate-700 text-slate-400 hover:text-white transition-all"
+            className="p-1.5 sm:p-2 rounded-lg bg-[#0f172a] border border-slate-700 text-slate-400 hover:text-white transition-all"
             title="Settings"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
 
           {/* Report Button */}
           {onOpenReport && (
             <button
               onClick={onOpenReport}
-              className="px-3 py-1.5 rounded-lg bg-[#111c30] hover:bg-[#1a2b4a] text-cyan-300 border border-cyan-800/40 text-xs font-mono font-bold transition-all hidden md:block"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#111c30] hover:bg-[#1a2b4a] text-cyan-300 border border-cyan-800/40 text-xs font-mono font-bold transition-all hidden xl:block"
             >
               Report
             </button>
@@ -794,18 +803,39 @@ export const SemLiFiVirtualLab: React.FC<SemLiFiVirtualLabProps> = ({
         </div>
       ) : (
         <div className="flex-1 flex min-h-0 overflow-hidden relative">
+          {/* Mobile backdrop for component library */}
+          {isCompLibMobileOpen && (
+            <div
+              onClick={() => setIsCompLibMobileOpen(false)}
+              className="fixed inset-0 z-30 bg-black/70 backdrop-blur-sm lg:hidden"
+            />
+          )}
+
           {/* ----------------------------------------------------- */}
           {/* LEFT PANEL: COMPONENT LIBRARY (Matching Image 1 & 2)  */}
           {/* ----------------------------------------------------- */}
-          <aside className={`w-[240px] xl:w-[260px] ${isDarkMode ? 'bg-[#0b1324] border-[#182642]' : 'bg-white border-slate-200'} border-r flex flex-col shrink-0 z-20 overflow-hidden`}>
+          <aside className={`
+            fixed inset-y-14 left-0 z-40 w-[280px] ${isDarkMode ? 'bg-[#0b1324] border-[#182642]' : 'bg-white border-slate-200'} border-r flex flex-col shadow-2xl transition-transform duration-200
+            ${isCompLibMobileOpen ? 'translate-x-0' : '-translate-x-full'}
+            lg:static lg:translate-x-0 lg:w-[240px] xl:w-[260px] lg:z-20 lg:shadow-none overflow-hidden
+          `}>
             {/* Header */}
             <div className="p-3 border-b border-[#182642] flex items-center justify-between">
               <span className="text-xs font-bold text-white tracking-wide">
                 Component Library
               </span>
-              <span className="text-[10px] text-slate-400 font-mono">
-                {COMPONENT_CATALOG.length} Items
-              </span>
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] text-slate-400 font-mono">
+                  {COMPONENT_CATALOG.length} Items
+                </span>
+                <button
+                  onClick={() => setIsCompLibMobileOpen(false)}
+                  className="lg:hidden p-1 rounded text-slate-400 hover:text-white"
+                  title="Close library"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Search Input */}
@@ -993,24 +1023,51 @@ export const SemLiFiVirtualLab: React.FC<SemLiFiVirtualLabProps> = ({
               /* ================================================= */
               <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                 {/* Upper Main Area: Schematic & Parameters */}
-                <div className="flex-1 flex min-h-0">
+                <div className="flex-1 flex min-h-0 relative">
                   {/* Schematic Canvas */}
-                  <div className="flex-1 flex flex-col min-h-0 bg-[#070b16] border-r border-[#182642]">
+                  <div className={`flex-1 flex-col min-h-0 bg-[#070b16] border-r border-[#182642] ${mobileSimView === 'params' ? 'hidden lg:flex' : 'flex'}`}>
                     {/* Schematic Toolbar */}
-                    <div className="p-2 px-3 bg-[#0d1527] border-b border-[#182642] flex items-center justify-between text-xs font-mono">
-                      <span className="font-bold text-white">Circuit Design Workspace</span>
-                      <div className="flex items-center space-x-1.5">
-                        <button className="px-2 py-0.5 rounded bg-blue-600 text-white font-bold">Select</button>
-                        <button className="px-2 py-0.5 rounded bg-[#131f36] text-slate-300">Wire</button>
-                        <button className="px-2 py-0.5 rounded bg-[#131f36] text-slate-300">Rotate</button>
-                        <button className="px-2 py-0.5 rounded bg-[#131f36] text-slate-300">Zoom In</button>
-                        <button className="px-2 py-0.5 rounded bg-[#131f36] text-slate-300">Reset</button>
+                    <div className="p-2 px-3 bg-[#0d1527] border-b border-[#182642] flex flex-wrap items-center justify-between gap-1.5 text-xs font-mono">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-white whitespace-nowrap">Circuit Workspace</span>
+
+                        {/* Mobile Drawer Trigger for Component Library */}
+                        <button
+                          onClick={() => setIsCompLibMobileOpen(true)}
+                          className="lg:hidden px-2 py-0.5 rounded bg-blue-900/60 hover:bg-blue-800 text-cyan-300 border border-cyan-700/60 flex items-center space-x-1 text-[11px]"
+                          title="Open Component Library"
+                        >
+                          <Layers className="w-3 h-3" />
+                          <span>Parts</span>
+                        </button>
+
+                        {/* Mobile Switch between Circuit and Parameters */}
+                        <button
+                          onClick={() => setMobileSimView('params')}
+                          className="lg:hidden px-2 py-0.5 rounded bg-purple-900/60 hover:bg-purple-800 text-purple-300 border border-purple-700/60 flex items-center space-x-1 text-[11px]"
+                          title="View Simulation Parameters"
+                        >
+                          <Sliders className="w-3 h-3" />
+                          <span>Params</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center space-x-1 sm:space-x-1.5 overflow-x-auto scrollbar-none">
+                        <button className="px-2 py-0.5 rounded bg-blue-600 text-white font-bold text-[11px]">Select</button>
+                        <button className="px-2 py-0.5 rounded bg-[#131f36] text-slate-300 text-[11px]">Wire</button>
+                        <button className="px-2 py-0.5 rounded bg-[#131f36] text-slate-300 text-[11px]">Rotate</button>
+                        <button className="px-2 py-0.5 rounded bg-[#131f36] text-slate-300 text-[11px]">Zoom In</button>
+                        <button className="px-2 py-0.5 rounded bg-[#131f36] text-slate-300 text-[11px]">Reset</button>
                       </div>
                     </div>
 
                     {/* Visual Schematic Diagram (Exact layout from Image 2) */}
-                    <div className="flex-1 relative overflow-auto p-4 flex flex-col items-center justify-center bg-[#050811] tech-grid">
-                      <div className="max-w-[840px] w-full flex items-center justify-between space-x-2 py-4">
+                    <div className="flex-1 relative overflow-auto p-3 sm:p-4 flex flex-col items-center justify-start lg:justify-center bg-[#050811] tech-grid">
+                      <div className="lg:hidden text-[10px] text-cyan-400/80 font-mono mb-1 flex items-center space-x-1 self-start">
+                        <Move className="w-3 h-3" />
+                        <span>← Swipe horizontally to view full circuit schematic →</span>
+                      </div>
+                      <div className="min-w-[780px] max-w-[840px] w-full flex items-center justify-between space-x-2 py-3">
                         {/* 1. ESP32 TX */}
                         <div className="bg-[#0b1324] border-2 border-blue-500 rounded-xl p-3 text-center shadow-lg w-28">
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-950 text-blue-300 font-bold block mb-1">ESP32 (TX)</span>
@@ -1092,7 +1149,7 @@ export const SemLiFiVirtualLab: React.FC<SemLiFiVirtualLabProps> = ({
                       </div>
 
                       {/* Communication Protocol Pipeline (Exact blocks from Image 2) */}
-                      <div className="w-full max-w-[840px] bg-[#080d19] border border-[#1b2b48] rounded-xl p-2.5 mt-2 shadow-lg">
+                      <div className="w-full min-w-[780px] max-w-[840px] bg-[#080d19] border border-[#1b2b48] rounded-xl p-2.5 mt-2 shadow-lg">
                         <span className="text-[10px] font-bold text-cyan-300 block uppercase tracking-wider mb-2">
                           Communication Protocol &amp; Semantic Architecture Pipeline:
                         </span>
@@ -1130,10 +1187,19 @@ export const SemLiFiVirtualLab: React.FC<SemLiFiVirtualLabProps> = ({
                   </div>
 
                   {/* Right Panel: Simulation Parameters (Matching Image 2 right) */}
-                  <div className="w-[300px] xl:w-[320px] bg-[#0a1020] flex flex-col shrink-0 p-3 space-y-3 font-sans text-xs">
-                    <span className="font-bold text-white text-xs uppercase tracking-wider border-b border-slate-800 pb-1">
-                      Simulation Parameters
-                    </span>
+                  <div className={`w-full lg:w-[300px] xl:w-[320px] bg-[#0a1020] flex-col shrink-0 p-3 space-y-3 font-sans text-xs ${mobileSimView === 'canvas' ? 'hidden lg:flex' : 'flex'} overflow-y-auto`}>
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+                      <span className="font-bold text-white text-xs uppercase tracking-wider">
+                        Simulation Parameters
+                      </span>
+                      {/* Mobile back to canvas button */}
+                      <button
+                        onClick={() => setMobileSimView('canvas')}
+                        className="lg:hidden px-2 py-0.5 rounded bg-blue-900/60 text-cyan-300 border border-cyan-700/60 text-[10px] font-mono flex items-center space-x-1"
+                      >
+                        <span>← Back to Circuit</span>
+                      </button>
+                    </div>
 
                     {/* Sub-Tabs: General, Channel, BASR, CGFP */}
                     <div className="flex border border-slate-800 rounded-lg p-0.5 text-[10px] font-mono bg-[#060a14]">
@@ -1247,9 +1313,45 @@ export const SemLiFiVirtualLab: React.FC<SemLiFiVirtualLabProps> = ({
                 </div>
 
                 {/* Bottom Row: 4 Waveforms, Console, Results & Metrics (Matching Image 2) */}
-                <div className="h-[230px] border-t border-[#182642] bg-[#070b16] grid grid-cols-1 md:grid-cols-3 divide-x divide-[#182642] shrink-0 font-mono text-xs">
+                <div className="min-h-[230px] max-h-[380px] md:h-[230px] border-t border-[#182642] bg-[#070b16] flex flex-col md:grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#182642] shrink-0 font-mono text-xs overflow-hidden">
+                  {/* Mobile Tab Switcher on < md */}
+                  <div className="md:hidden flex border-b border-[#182642] bg-[#090f1e] text-[11px] font-mono shrink-0">
+                    <button
+                      onClick={() => setMobileBottomTab('waveforms')}
+                      className={`flex-1 py-1.5 text-center font-bold transition-all flex items-center justify-center space-x-1 ${
+                        mobileBottomTab === 'waveforms'
+                          ? 'text-cyan-300 border-b-2 border-cyan-400 bg-cyan-950/40'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <Activity className="w-3 h-3" />
+                      <span>Waveforms</span>
+                    </button>
+                    <button
+                      onClick={() => setMobileBottomTab('console')}
+                      className={`flex-1 py-1.5 text-center font-bold transition-all flex items-center justify-center space-x-1 ${
+                        mobileBottomTab === 'console'
+                          ? 'text-emerald-300 border-b-2 border-emerald-400 bg-emerald-950/40'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <FileCode className="w-3 h-3" />
+                      <span>Console</span>
+                    </button>
+                    <button
+                      onClick={() => setMobileBottomTab('results')}
+                      className={`flex-1 py-1.5 text-center font-bold transition-all flex items-center justify-center space-x-1 ${
+                        mobileBottomTab === 'results'
+                          ? 'text-amber-300 border-b-2 border-amber-400 bg-amber-950/40'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <span>Results &amp; Metrics</span>
+                    </button>
+                  </div>
+
                   {/* Bottom Col 1: Signal Waveforms (4 Synchronized Traces) */}
-                  <div className="p-3 flex flex-col justify-between overflow-hidden">
+                  <div className={`p-3 flex-col justify-between overflow-hidden flex-1 ${mobileBottomTab === 'waveforms' ? 'flex' : 'hidden md:flex'}`}>
                     <span className="text-xs font-bold text-white uppercase tracking-wider border-b border-slate-800 pb-1 flex items-center space-x-1">
                       <Activity className="w-3.5 h-3.5 text-cyan-400" />
                       <span>Signal Waveforms (4 Channels)</span>
@@ -1312,13 +1414,13 @@ export const SemLiFiVirtualLab: React.FC<SemLiFiVirtualLabProps> = ({
                   </div>
 
                   {/* Bottom Col 2: Simulation Console (Matching Image 2 center) */}
-                  <div className="p-3 flex flex-col justify-between bg-[#050811]">
+                  <div className={`p-3 flex-col justify-between bg-[#050811] flex-1 ${mobileBottomTab === 'console' ? 'flex' : 'hidden md:flex'}`}>
                     <span className="text-xs font-bold text-white uppercase tracking-wider border-b border-slate-800 pb-1 flex items-center space-x-1">
                       <FileCode className="w-3.5 h-3.5 text-emerald-400" />
                       <span>Simulation Console</span>
                     </span>
 
-                    <div className="flex-1 overflow-y-auto space-y-0.5 text-[10px] font-mono p-1 bg-black/60 rounded border border-slate-900 mt-1">
+                    <div className="flex-1 overflow-y-auto space-y-0.5 text-[10px] font-mono p-1 bg-black/60 rounded border border-slate-900 mt-1 min-h-[100px]">
                       {consoleLogs.map((log, idx) => (
                         <div key={idx} className="leading-tight">
                           <span className="text-slate-500">{log.time} </span>
@@ -1329,7 +1431,7 @@ export const SemLiFiVirtualLab: React.FC<SemLiFiVirtualLabProps> = ({
                   </div>
 
                   {/* Bottom Col 3: Results & Metrics Panel (Matching Image 2 right) */}
-                  <div className="p-3 flex flex-col justify-between space-y-2 bg-[#090e1a]">
+                  <div className={`p-3 flex-col justify-between space-y-2 bg-[#090e1a] flex-1 ${mobileBottomTab === 'results' ? 'flex' : 'hidden md:flex'}`}>
                     <span className="text-xs font-bold text-white uppercase tracking-wider border-b border-slate-800 pb-1 flex items-center justify-between">
                       <span>Results &amp; Metrics</span>
                       <span className="text-[10px] text-emerald-400 font-mono">IEEE 802.15.7</span>

@@ -274,8 +274,8 @@ export const MessageTransmissionStudio: React.FC<MessageTransmissionStudioProps>
               className="w-36 sm:w-44 bg-[#080d19] border-2 border-cyan-500/80 rounded-xl px-3 py-1.5 text-white font-bold text-sm tracking-widest text-center focus:outline-none focus:border-cyan-400 shadow-inner"
             />
 
-            <div className="hidden sm:flex items-center space-x-1">
-              {['HII', 'SEMLIFI', 'OK', 'HELLO LIFI', 'SOS'].map((preset) => (
+            <div className="flex flex-wrap items-center gap-1">
+              {['HII', 'SEMLIFI', 'OK', 'SOS'].map((preset) => (
                 <button
                   key={preset}
                   onClick={() => {
@@ -283,7 +283,7 @@ export const MessageTransmissionStudio: React.FC<MessageTransmissionStudioProps>
                     setCurrentBitIdx(0);
                     setIsTransmitting(false);
                   }}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
+                  className={`px-2 py-0.5 rounded-lg text-xs font-bold border transition-all ${
                     messageInput === preset
                       ? 'bg-blue-600 text-white border-blue-400 shadow'
                       : 'bg-[#0f172a] text-slate-300 border-slate-700 hover:text-white'
@@ -296,24 +296,26 @@ export const MessageTransmissionStudio: React.FC<MessageTransmissionStudioProps>
           </div>
 
           {/* Framing Mode Toggle */}
-          <div className="flex items-center space-x-1.5 bg-[#080d19] p-1 rounded-xl border border-slate-800 text-xs">
+          <div className="flex items-center space-x-1 sm:space-x-1.5 bg-[#080d19] p-1 rounded-xl border border-slate-800 text-xs">
             <button
               onClick={() => {
                 setUseUartFraming(false);
                 setCurrentBitIdx(0);
               }}
-              className={`px-2.5 py-1 rounded-lg font-bold transition-all ${!useUartFraming ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`px-2 sm:px-2.5 py-1 rounded-lg font-bold transition-all text-[11px] sm:text-xs ${!useUartFraming ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white'}`}
             >
-              Raw 8-Bit Stream
+              <span className="hidden sm:inline">Raw 8-Bit Stream</span>
+              <span className="sm:hidden">8-Bit Raw</span>
             </button>
             <button
               onClick={() => {
                 setUseUartFraming(true);
                 setCurrentBitIdx(0);
               }}
-              className={`px-2.5 py-1 rounded-lg font-bold transition-all ${useUartFraming ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`px-2 sm:px-2.5 py-1 rounded-lg font-bold transition-all text-[11px] sm:text-xs ${useUartFraming ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white'}`}
             >
-              UART 10-Bit Frame (Start + 8 Data + Stop)
+              <span className="hidden sm:inline">UART 10-Bit Frame</span>
+              <span className="sm:hidden">10-Bit UART</span>
             </button>
           </div>
         </div>
@@ -324,16 +326,16 @@ export const MessageTransmissionStudio: React.FC<MessageTransmissionStudioProps>
             <button
               onClick={() => handleStep(false)}
               disabled={currentBitIdx <= 0}
-              className="px-3 py-1.5 rounded-lg bg-[#101b2e] hover:bg-[#182844] disabled:opacity-30 text-slate-300 border border-slate-700 flex items-center space-x-1"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#101b2e] hover:bg-[#182844] disabled:opacity-30 text-slate-300 border border-slate-700 flex items-center space-x-1"
             >
               <ChevronLeft className="w-4 h-4" />
-              <span>Prev Bit</span>
+              <span className="hidden sm:inline">Prev Bit</span>
             </button>
 
             {isTransmitting ? (
               <button
                 onClick={() => setIsTransmitting(false)}
-                className="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold flex items-center space-x-1.5 shadow-md shadow-rose-600/30"
+                className="px-3 sm:px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold flex items-center space-x-1.5 shadow-md shadow-rose-600/30"
               >
                 <Pause className="w-4 h-4 fill-current" />
                 <span>Pause</span>
@@ -341,19 +343,19 @@ export const MessageTransmissionStudio: React.FC<MessageTransmissionStudioProps>
             ) : (
               <button
                 onClick={handleStart}
-                className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold flex items-center space-x-1.5 shadow-md shadow-emerald-600/30"
+                className="px-3 sm:px-4 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold flex items-center space-x-1.5 shadow-md shadow-emerald-600/30"
               >
                 <Play className="w-4 h-4 fill-current" />
-                <span>Transmit "{messageInput}"</span>
+                <span>Transmit</span>
               </button>
             )}
 
             <button
               onClick={() => handleStep(true)}
               disabled={currentBitIdx >= transmissionBits.length - 1}
-              className="px-3 py-1.5 rounded-lg bg-[#101b2e] hover:bg-[#182844] disabled:opacity-30 text-slate-300 border border-slate-700 flex items-center space-x-1"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#101b2e] hover:bg-[#182844] disabled:opacity-30 text-slate-300 border border-slate-700 flex items-center space-x-1"
             >
-              <span>Next Bit</span>
+              <span className="hidden sm:inline">Next Bit</span>
               <ChevronRight className="w-4 h-4" />
             </button>
 
@@ -382,12 +384,12 @@ export const MessageTransmissionStudio: React.FC<MessageTransmissionStudioProps>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Active Bit Indicator */}
-            <div className="flex items-center space-x-2 bg-[#0c1424] px-3 py-1.5 rounded-lg border border-slate-800">
-              <span className="text-slate-400">ACTIVE BIT:</span>
+            <div className="flex items-center space-x-2 bg-[#0c1424] px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-800 text-[11px]">
+              <span className="text-slate-400">ACTIVE:</span>
               <span
-                className={`px-2.5 py-0.5 rounded-full font-bold text-xs ${
+                className={`px-2 py-0.5 rounded-full font-bold text-xs ${
                   isCurrentBitOne
                     ? 'bg-rose-950 text-rose-300 border border-rose-500 shadow-md shadow-rose-600/40 animate-pulse'
                     : 'bg-slate-800 text-slate-300 border border-slate-600'
@@ -398,8 +400,8 @@ export const MessageTransmissionStudio: React.FC<MessageTransmissionStudioProps>
             </div>
 
             {/* Decoded Output */}
-            <div className="flex items-center space-x-2 bg-[#0c1424] px-3 py-1.5 rounded-lg border border-slate-800">
-              <span className="text-slate-400">RX DECODED:</span>
+            <div className="flex items-center space-x-2 bg-[#0c1424] px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-800 text-[11px]">
+              <span className="text-slate-400">RX:</span>
               <strong className="text-emerald-300 font-bold text-sm tracking-wider">
                 "{reconstructedText}"
               </strong>

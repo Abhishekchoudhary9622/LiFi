@@ -871,17 +871,18 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
           {/* Link to Dedicated Message & Bits Page */}
           {onNavigateToBits && (
             <button
               onClick={onNavigateToBits}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-mono border transition-all flex items-center space-x-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-md shadow-blue-500/20"
+              className="px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-mono border transition-all flex items-center space-x-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-md shadow-blue-500/20"
               title="Open Dedicated Message & Bits Simulation Page"
             >
-              <Radio className="w-3.5 h-3.5 text-cyan-300" />
-              <span>Simulate Message "HII"</span>
-              <ArrowRight className="w-3 h-3 text-cyan-300" />
+              <Radio className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+              <span className="hidden sm:inline">Simulate Message "HII"</span>
+              <span className="sm:hidden">Bits</span>
+              <ArrowRight className="w-3 h-3 text-cyan-300 shrink-0" />
             </button>
           )}
 
@@ -891,7 +892,7 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
               setIsAudioEnabled(a => !a);
               triggerAudioChime(1000);
             }}
-            className={`px-2 py-1.5 rounded-lg text-xs font-mono border transition-all flex items-center space-x-1 ${
+            className={`p-1.5 sm:px-2 sm:py-1.5 rounded-lg text-xs font-mono border transition-all flex items-center space-x-1 ${
               isAudioEnabled
                 ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/80 shadow-md shadow-cyan-500/20'
                 : 'bg-[#0e1524] text-slate-400 border-[#1c2940] hover:text-slate-200'
@@ -899,14 +900,14 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
             title="Toggle LiFi Optical Carrier Audio Beeps"
           >
             {isAudioEnabled ? <Volume2 className="w-3.5 h-3.5 text-cyan-400" /> : <VolumeX className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">{isAudioEnabled ? 'Sound ON' : 'Mute'}</span>
+            <span className="hidden md:inline">{isAudioEnabled ? 'Sound ON' : 'Mute'}</span>
           </button>
 
           {/* Report Button */}
           {onOpenReport && (
             <button
               onClick={onOpenReport}
-              className="px-2.5 py-1.5 rounded-lg bg-[#0e1628] hover:bg-[#17233c] text-cyan-300 border border-cyan-800/40 text-xs font-mono transition-all hidden sm:block"
+              className="px-2.5 py-1.5 rounded-lg bg-[#0e1628] hover:bg-[#17233c] text-cyan-300 border border-cyan-800/40 text-xs font-mono transition-all hidden lg:block"
               title="Generate IEEE Project Report"
             >
               Report
@@ -914,7 +915,7 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
           )}
 
           {/* Layout Mode Selector (Docked / HUD / Hidden) */}
-          <div className="flex items-center bg-[#070c18] rounded-lg border border-[#18253d] p-0.5 text-xs font-mono">
+          <div className="hidden sm:flex items-center bg-[#070c18] rounded-lg border border-[#18253d] p-0.5 text-xs font-mono">
             <button
               onClick={() => setSidebarMode('docked')}
               className={`px-2 py-1 rounded text-[11px] transition-all ${
@@ -964,18 +965,18 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
         {/* ------------------------------------------------------- */}
         <section className="flex-1 flex flex-col min-h-0 overflow-hidden relative select-none">
           {/* Sub-Header Floating Control Overlay Bar */}
-          <div className="absolute top-3 left-3 z-20 flex items-center space-x-2 bg-[#080d19]/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-[#17243c] shadow-xl text-xs font-mono">
-            <Camera className="w-4 h-4 text-cyan-400" />
-            <span className="font-bold text-white tracking-wide text-[11px]">
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20 flex flex-wrap items-center gap-1.5 bg-[#080d19]/90 backdrop-blur-md px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-[#17243c] shadow-xl text-xs font-mono max-w-[calc(100vw-16px)]">
+            <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
+            <span className="font-bold text-white tracking-wide text-[10px] sm:text-[11px]">
               Hardware Twin
             </span>
 
-            <div className="h-3 w-[1px] bg-slate-700" />
+            <div className="h-3 w-[1px] bg-slate-700 hidden sm:block" />
 
             {/* Show / Hide Component Tags */}
             <button
               onClick={() => setShowTags(t => !t)}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-mono transition-all flex items-center space-x-1 border ${
+              className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[10px] font-mono transition-all flex items-center space-x-1 border ${
                 showTags
                   ? 'bg-indigo-950 text-indigo-300 border-indigo-600 font-bold'
                   : 'bg-[#0f172a] text-slate-400 border-slate-700 hover:text-white'
@@ -989,7 +990,7 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
             {/* Signal Flow Auto-Tour */}
             <button
               onClick={() => setIsAutoTouring(t => !t)}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-mono transition-all flex items-center space-x-1 border ${
+              className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[10px] font-mono transition-all flex items-center space-x-1 border ${
                 isAutoTouring
                   ? 'bg-emerald-950 text-emerald-300 border-emerald-600 font-bold'
                   : 'bg-[#0f172a] text-slate-400 border-slate-700 hover:text-white'
@@ -997,7 +998,18 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
               title="Step automatically through the 7 signal stages"
             >
               <Sparkles className="w-3 h-3" />
-              <span>Signal Flow {isAutoTouring ? 'ON' : 'OFF'}</span>
+              <span className="hidden sm:inline">Signal Flow</span>
+              <span>{isAutoTouring ? 'Touring' : 'Flow'}</span>
+            </button>
+
+            {/* Mobile Inspector Toggle */}
+            <button
+              onClick={() => setSidebarMode(m => m === 'hidden' ? 'docked' : 'hidden')}
+              className="lg:hidden px-2 py-0.5 rounded-lg text-[10px] font-mono transition-all flex items-center space-x-1 border bg-blue-900/60 text-cyan-300 border-cyan-500/60 font-bold"
+              title="Toggle Component Inspector Drawer"
+            >
+              <Sliders className="w-3 h-3" />
+              <span>Inspect</span>
             </button>
           </div>
 
@@ -1348,17 +1360,30 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
         {/* COMPONENT INSPECTOR: DOCKED SIDEBAR OR FLOATING HUD     */}
         {/* ------------------------------------------------------- */}
         {sidebarMode !== 'hidden' && (
-          <aside
-            className={`${
-              sidebarMode === 'docked'
-                ? 'w-[380px] xl:w-[420px] bg-[#070c18] border-l border-[#16233a] flex flex-col shadow-2xl shrink-0 z-20 overflow-hidden'
-                : `fixed top-16 right-4 z-40 bg-[#070c18]/95 backdrop-blur-xl border border-cyan-500/40 rounded-2xl shadow-2xl flex flex-col transition-all overflow-hidden ${
-                    isHudMinimized ? 'w-[260px] h-[52px]' : 'w-[390px] max-h-[82vh]'
-                  }`
-            }`}
-          >
-            {/* Inspector Header */}
-            <div className="p-2.5 px-3 border-b border-[#16233a] bg-[#0b1222] flex items-center justify-between shrink-0">
+          <>
+            {/* Mobile backdrop overlay */}
+            <div
+              onClick={() => setSidebarMode('hidden')}
+              className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
+            />
+            <aside
+              className={`
+                fixed inset-x-0 bottom-0 z-40 max-h-[75vh] bg-[#070c18]/98 backdrop-blur-2xl border-t border-cyan-500/50 rounded-t-2xl shadow-2xl flex flex-col overflow-hidden
+                lg:static lg:inset-auto lg:z-20 lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:border-[#16233a]
+                ${
+                  sidebarMode === 'docked'
+                    ? 'lg:w-[380px] xl:w-[420px]'
+                    : `lg:fixed lg:top-16 lg:right-4 lg:z-40 lg:bg-[#070c18]/95 lg:backdrop-blur-xl lg:border lg:border-cyan-500/40 lg:rounded-2xl lg:shadow-2xl ${
+                        isHudMinimized ? 'lg:w-[260px] lg:h-[52px]' : 'lg:w-[390px] lg:max-h-[82vh]'
+                      }`
+                }
+              `}
+            >
+              {/* Drag Handle on mobile */}
+              <div className="w-10 h-1 bg-slate-600 rounded-full mx-auto my-1.5 lg:hidden shrink-0" />
+
+              {/* Inspector Header */}
+              <div className="p-2.5 px-3 border-b border-[#16233a] bg-[#0b1222] flex items-center justify-between shrink-0">
               <div className="flex items-center space-x-2">
                 <Sliders className="w-4 h-4 text-cyan-400" />
                 <span className="text-xs font-bold text-white tracking-wide">
@@ -1682,8 +1707,9 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
               </>
             )}
           </aside>
-        )}
-      </main>
+        </>
+      )}
+    </main>
     </div>
   );
 };

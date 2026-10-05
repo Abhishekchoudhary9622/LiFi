@@ -20,13 +20,15 @@ import {
   Terminal,
   Calculator,
   Compass,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 
 export const SemLiFiDocumentationHub: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'abstract' | 'hardware' | 'burst' | 'basr' | 'cgfp' | 'results' | 'calculator'>('abstract');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copiedBibtex, setCopiedBibtex] = useState<boolean>(false);
+  const [isMobileTocOpen, setIsMobileTocOpen] = useState<boolean>(false);
 
   // Live CGFP Calculator Interactive States
   const [calcTokenConf, setCalcTokenConf] = useState<number>(0.93);
@@ -115,16 +117,57 @@ export const SemLiFiDocumentationHub: React.FC = () => {
       </header>
 
       {/* ========================================================= */}
-      {/* 2. DUAL-PANE BODY: SIDEBAR NAV + ARTICLE CANVAS           */}
+      {/* 2. MOBILE QUICK SECTION BAR (< lg)                        */}
       {/* ========================================================= */}
-      <div className="flex-1 flex min-h-0 overflow-hidden max-w-7xl w-full mx-auto">
+      <div className="lg:hidden px-3 py-2 bg-[#060a14] border-b border-[#142036] flex items-center justify-between gap-2 shrink-0">
+        <button
+          onClick={() => setIsMobileTocOpen(true)}
+          className="px-2.5 py-1.5 rounded-lg bg-[#0e182e] hover:bg-[#162544] text-cyan-300 border border-cyan-700/60 text-xs font-mono font-bold flex items-center space-x-1.5 shrink-0"
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          <span>Sections</span>
+        </button>
+
+        <div className="flex items-center space-x-1 overflow-x-auto scrollbar-none text-[11px] font-mono">
+          {navSections.map(s => (
+            <button
+              key={s.id}
+              onClick={() => setActiveSection(s.id as any)}
+              className={`px-2 py-1 rounded-lg shrink-0 transition-all font-bold ${
+                activeSection === s.id
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-[#0a101f] text-slate-400 hover:text-white'
+              }`}
+            >
+              {s.title.split('.')[0]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* 3. DUAL-PANE BODY: SIDEBAR NAV + ARTICLE CANVAS           */}
+      {/* ========================================================= */}
+      <div className="flex-1 flex min-h-0 overflow-hidden max-w-7xl w-full mx-auto relative">
+        {/* Mobile backdrop for Table of Contents */}
+        {isMobileTocOpen && (
+          <div
+            onClick={() => setIsMobileTocOpen(false)}
+            className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm lg:hidden"
+          />
+        )}
+
         {/* ------------------------------------------------------- */}
         {/* LEFT SIDEBAR: TABLE OF CONTENTS & QUICK SEARCH          */}
         {/* ------------------------------------------------------- */}
-        <aside className="w-[280px] xl:w-[320px] bg-[#060a14] border-r border-[#142036] flex flex-col shrink-0 overflow-hidden">
-          {/* Search Box */}
-          <div className="p-3 border-b border-[#142036]">
-            <div className="relative">
+        <aside className={`
+          fixed inset-y-0 left-0 z-50 w-[290px] bg-[#060a14] border-r border-[#142036] flex flex-col shadow-2xl transition-transform duration-200
+          ${isMobileTocOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:static lg:translate-x-0 lg:w-[280px] xl:w-[320px] lg:z-10 lg:shadow-none overflow-hidden
+        `}>
+          {/* Search Box & Mobile Close */}
+          <div className="p-3 border-b border-[#142036] flex items-center space-x-2">
+            <div className="relative flex-1">
               <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
               <input
                 type="text"
@@ -134,6 +177,12 @@ export const SemLiFiDocumentationHub: React.FC = () => {
                 className="w-full bg-[#0a101f] border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
               />
             </div>
+            <button
+              onClick={() => setIsMobileTocOpen(false)}
+              className="lg:hidden p-1.5 text-slate-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Section Navigation List */}
@@ -144,7 +193,10 @@ export const SemLiFiDocumentationHub: React.FC = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveSection(item.id as any)}
+                  onClick={() => {
+                    setActiveSection(item.id as any);
+                    setIsMobileTocOpen(false);
+                  }}
                   className={`w-full text-left p-2.5 rounded-xl transition-all flex items-start space-x-2.5 border ${
                     isActive
                       ? 'bg-[#0f1b33] border-cyan-500/70 text-white shadow-md shadow-cyan-950/40 ring-1 ring-cyan-500/30'
