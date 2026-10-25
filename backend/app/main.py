@@ -74,7 +74,11 @@ if os.path.exists(data_figures_dir):
 
 # Serve workspace root static files (like architecture_image.jpg)
 workspace_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-app.mount("/static/media", StaticFiles(directory=workspace_dir), name="media")
+if os.path.exists(workspace_dir):
+    try:
+        app.mount("/static/media", StaticFiles(directory=workspace_dir), name="media")
+    except Exception:
+        pass
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
