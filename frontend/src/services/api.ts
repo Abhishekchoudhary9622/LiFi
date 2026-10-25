@@ -11,7 +11,10 @@ import {
   PipelineRunResult,
 } from '../types/semlifi';
 
-const API_BASE = '/api';
+const rawEnvUrl = (import.meta.env.VITE_API_URL || '').trim();
+const API_BASE = rawEnvUrl
+  ? (rawEnvUrl.endsWith('/api') ? rawEnvUrl : `${rawEnvUrl.replace(/\/$/, '')}/api`)
+  : '/api';
 
 export const api = {
   // 1. Dashboard
