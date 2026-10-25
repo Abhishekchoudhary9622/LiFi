@@ -100,14 +100,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   <Play className="w-4 h-4 fill-current" />
                   <span>{isSimulating ? 'Simulation Active' : 'Start Simulation'}</span>
                 </button>
-
-                <button
-                  onClick={() => onNavigate('circuit')}
-                  className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-medium text-xs sm:text-sm transition backdrop-blur-sm"
-                >
-                  <FolderOpen className="w-4 h-4 text-slate-300" />
-                  <span>Open Last Project</span>
-                </button>
               </div>
             </div>
 

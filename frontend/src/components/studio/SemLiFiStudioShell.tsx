@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Cpu,
@@ -46,8 +46,21 @@ export const SemLiFiStudioShell: React.FC<SemLiFiStudioShellProps> = ({
   // Navigation tab state (starts on 'dashboard' exactly like top-left screenshot)
   const [activeTab, setActiveTab] = useState<StudioTab>('dashboard');
 
-  // Master light/dark theme state (defaults to false = light mode, matching "make a better ui ux bit light")
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  // Master light/dark theme state (defaults to true = dark mode)
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('semlifi_theme');
+    return saved ? saved === 'dark' : true;
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('semlifi_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('semlifi_theme', 'light');
+    }
+  }, [isDarkMode]);
 
   // Global simulation running state
   const [isSimulating, setIsSimulating] = useState<boolean>(true);
