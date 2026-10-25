@@ -47,7 +47,7 @@ export interface SignalFlowStage {
   actionLabel: string;
   color: string;
   glowColor: string;
-  type: 'ELECTRICAL' | 'OPTICAL';
+  type: 'ELECTRICAL' | 'OPTICAL' | 'ANALOG' | 'DIGITAL';
   startCoord: { x: number; y: number };
   controlCoord?: { x: number; y: number };
   endCoord: { x: number; y: number };
@@ -77,7 +77,7 @@ export const SIGNAL_FLOW_STAGES: SignalFlowStage[] = [
     actionLabel: 'Transmitting 10 kHz PWM Carrier',
     color: '#3b82f6', // Electric Blue
     glowColor: 'rgba(59, 130, 246, 0.45)',
-    type: 'ELECTRICAL',
+    type: 'DIGITAL',
     startCoord: { x: 250, y: 360 },
     controlCoord: { x: 360, y: 420 },
     endCoord: { x: 470, y: 430 },
@@ -187,7 +187,7 @@ export const SIGNAL_FLOW_STAGES: SignalFlowStage[] = [
     actionLabel: 'Generating Reverse Photocurrent',
     color: '#10b981', // Emerald Green
     glowColor: 'rgba(16, 185, 129, 0.45)',
-    type: 'ELECTRICAL',
+    type: 'ANALOG',
     startCoord: { x: 662, y: 202 },
     controlCoord: { x: 740, y: 160 },
     endCoord: { x: 830, y: 180 },
@@ -215,7 +215,7 @@ export const SIGNAL_FLOW_STAGES: SignalFlowStage[] = [
     actionLabel: 'Transimpedance Amplification (TIA)',
     color: '#06b6d4', // Cyan
     glowColor: 'rgba(6, 182, 212, 0.45)',
-    type: 'ELECTRICAL',
+    type: 'ANALOG',
     startCoord: { x: 830, y: 180 },
     controlCoord: { x: 865, y: 220 },
     endCoord: { x: 897, y: 190 },
@@ -243,7 +243,7 @@ export const SIGNAL_FLOW_STAGES: SignalFlowStage[] = [
     actionLabel: 'Mid-bit Sampling & Frame Recovery',
     color: '#8b5cf6', // Violet / Purple
     glowColor: 'rgba(139, 92, 246, 0.45)',
-    type: 'ELECTRICAL',
+    type: 'DIGITAL',
     startCoord: { x: 897, y: 190 },
     controlCoord: { x: 880, y: 290 },
     endCoord: { x: 800, y: 370 },
@@ -301,14 +301,6 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
   const [activeRightTab, setActiveRightTab] = useState<'components' | 'connections'>('components');
   const [zoomLevel, setZoomLevel] = useState<number>(100);
 
-  // -------------------------------------------------------------------------
-  // 2. SIGNAL FLOW ANIMATION ENGINE (Zero Leaks, Delta-time scaling)
-  // -------------------------------------------------------------------------
-  const [isFlowRunning, setIsFlowRunning] = useState<boolean>(true);
-  const [activeStageIdx, setActiveStageIdx] = useState<number>(0);
-  const [stageProgress, setStageProgress] = useState<number>(0.0); // 0.0 to 1.0 within stage
-  const [flowSpeed, setFlowSpeed] = useState<number>(1.0); // 0.5x, 1x, 2x
-
   // Reduced motion preference check
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false);
 
@@ -321,9 +313,8 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
   }, []);
 
   // -------------------------------------------------------------------------
-  // 3. BACKEND INTEGRATION & DATA PROVENANCE
+  // BACKEND INTEGRATION & DATA PROVENANCE (Hardware / Simulation Telemetry)
   // -------------------------------------------------------------------------
-  // Distinguishes: 'MEASURED HARDWARE DATA' | 'BACKEND SIMULATION' | 'SIMULATED SIGNAL FLOW'
   const [provenanceLabel, setProvenanceLabel] = useState<
     'MEASURED HARDWARE DATA' | 'BACKEND SIMULATION' | 'SIMULATED SIGNAL FLOW'
   >('SIMULATED SIGNAL FLOW');
@@ -407,82 +398,153 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
   }, []);
 
   // -------------------------------------------------------------------------
-  // 4. ANIMATION FRAME LOOP (Deterministic, Leak-Free, Pause-preserving)
+  // 2. SIGNAL FLOW ANIMATION ENGINE (Single Source of Truth, Race-Free)
   // -------------------------------------------------------------------------
+  // Priority 1 Playback State:
+  const [currentStageIndex, setCurrentStageIndex] = useState<number>(0); // Range: 0 to 6
+  const [isPlaying, setIsPlaying] = useState<boolean>(true); // Auto-advance state
+  const [speed, setSpeed] = useState<number>(1.0); // 0.5x, 1x, 2x
+  const [stageProgress, setStageProgress] = useState<number>(0.0); // 0.0 to 1.0 within stage
+
+  // Animation frame reference and timestamp tracker
   const animFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(performance.now());
 
+  // Single effect/timer for auto-advance, cleaned up on pause, stop, or unmount
   useEffect(() => {
-    if (!isFlowRunning) {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    if (!isPlaying) {
+      if (animFrameRef.current !== null) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
       return;
     }
 
-    const durationPerStageMs = 1400 / flowSpeed;
+    const durationPerStageMs = 1400 / speed;
+    lastTimeRef.current = performance.now();
 
     const animateLoop = (now: number) => {
       const dt = now - lastTimeRef.current;
       lastTimeRef.current = now;
 
-      setStageProgress((prev) => {
-        const next = prev + dt / durationPerStageMs;
-        if (next >= 1.0) {
-          // Advance to next stage cleanly
-          setActiveStageIdx((curStage) => {
-            const nextStage = (curStage + 1) % SIGNAL_FLOW_STAGES.length;
-            // Synchronize with right-hand detail panel
+      setStageProgress((prevProg) => {
+        const nextProg = prevProg + dt / durationPerStageMs;
+        if (nextProg >= 1.0) {
+          setCurrentStageIndex((curStage) => {
+            // Priority 1: At Stage 7 (index 6), Next/Auto-play must never wrap to Stage 1 (index 0)
+            if (curStage >= 6) {
+              setIsPlaying(false);
+              return 6;
+            }
+            const nextStage = curStage + 1;
+            // Synchronize with selected component in right details panel
             onSelectComponent(SIGNAL_FLOW_STAGES[nextStage].componentId);
             return nextStage;
           });
           return 0.0;
         }
-        return next;
+        return nextProg;
       });
 
       animFrameRef.current = requestAnimationFrame(animateLoop);
     };
 
-    lastTimeRef.current = performance.now();
     animFrameRef.current = requestAnimationFrame(animateLoop);
 
     return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (animFrameRef.current !== null) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
     };
-  }, [isFlowRunning, flowSpeed, onSelectComponent]);
+  }, [isPlaying, speed, onSelectComponent]);
 
-  const activeStage = SIGNAL_FLOW_STAGES[activeStageIdx];
+  const activeStage = SIGNAL_FLOW_STAGES[currentStageIndex];
 
-  // Manual flow controls
-  const handleToggleFlow = () => {
-    setIsFlowRunning((prev) => !prev);
-  };
+  // Manual flow controls (Cancel/restart active timer safely so updates cannot race)
+  const handleToggleFlow = useCallback(() => {
+    setIsPlaying((prev) => {
+      const nextPlay = !prev;
+      if (nextPlay) {
+        lastTimeRef.current = performance.now();
+        // If resuming when already at final stage 6, replay cleanly from stage 0
+        setCurrentStageIndex((cur) => {
+          if (cur >= 6) {
+            setStageProgress(0.0);
+            onSelectComponent(SIGNAL_FLOW_STAGES[0].componentId);
+            return 0;
+          }
+          return cur;
+        });
+      }
+      return nextPlay;
+    });
+  }, [onSelectComponent]);
 
-  const handleReplayFlow = () => {
-    setActiveStageIdx(0);
+  const handleReplayFlow = useCallback(() => {
+    if (animFrameRef.current !== null) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    setCurrentStageIndex(0);
     setStageProgress(0.0);
-    setIsFlowRunning(true);
+    setIsPlaying(true);
     onSelectComponent(SIGNAL_FLOW_STAGES[0].componentId);
-  };
+    lastTimeRef.current = performance.now();
+  }, [onSelectComponent]);
 
-  const handleStopFlow = () => {
-    setIsFlowRunning(false);
-    setActiveStageIdx(0);
+  const handleStopFlow = useCallback(() => {
+    if (animFrameRef.current !== null) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    setIsPlaying(false);
+    setCurrentStageIndex(0);
     setStageProgress(0.0);
-  };
+    onSelectComponent(SIGNAL_FLOW_STAGES[0].componentId);
+  }, [onSelectComponent]);
 
-  const handlePrevStage = () => {
-    const prev = (activeStageIdx - 1 + SIGNAL_FLOW_STAGES.length) % SIGNAL_FLOW_STAGES.length;
-    setActiveStageIdx(prev);
+  const handlePrevStage = useCallback(() => {
+    lastTimeRef.current = performance.now();
     setStageProgress(0.0);
-    onSelectComponent(SIGNAL_FLOW_STAGES[prev].componentId);
-  };
+    setCurrentStageIndex((prev) => {
+      // Clamped: At stage 0, Previous must not produce a negative index
+      const target = Math.max(0, prev - 1);
+      onSelectComponent(SIGNAL_FLOW_STAGES[target].componentId);
+      return target;
+    });
+  }, [onSelectComponent]);
 
-  const handleNextStage = () => {
-    const next = (activeStageIdx + 1) % SIGNAL_FLOW_STAGES.length;
-    setActiveStageIdx(next);
+  const handleNextStage = useCallback(() => {
+    lastTimeRef.current = performance.now();
     setStageProgress(0.0);
-    onSelectComponent(SIGNAL_FLOW_STAGES[next].componentId);
-  };
+    setCurrentStageIndex((prev) => {
+      // Clamped: At stage 6, Next must never wrap to stage 0
+      if (prev >= 6) {
+        return 6;
+      }
+      const target = prev + 1;
+      onSelectComponent(SIGNAL_FLOW_STAGES[target].componentId);
+      if (target === 6) {
+        // Pauses auto-play upon reaching the final stage
+        setIsPlaying(false);
+      }
+      return target;
+    });
+  }, [onSelectComponent]);
+
+  const handleSpeedChange = useCallback((newSpeed: number) => {
+    setSpeed(newSpeed);
+    lastTimeRef.current = performance.now();
+  }, []);
+
+  const handleSelectStage = useCallback((index: number) => {
+    const clamped = Math.max(0, Math.min(6, index));
+    lastTimeRef.current = performance.now();
+    setStageProgress(0.0);
+    setCurrentStageIndex(clamped);
+    onSelectComponent(SIGNAL_FLOW_STAGES[clamped].componentId);
+  }, [onSelectComponent]);
 
   // Keyboard shortcut listener (Space = play/pause)
   useEffect(() => {
@@ -495,7 +557,7 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [handleToggleFlow]);
 
   // Compute interpolated position along line or quadratic curve for the traveling packet
   const markerPos = useMemo(() => {
@@ -638,14 +700,14 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
           <button
             onClick={handleToggleFlow}
             className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-bold shadow transition-all ${
-              isFlowRunning
+              isPlaying
                 ? 'bg-amber-600 hover:bg-amber-500 text-white'
                 : 'bg-blue-600 hover:bg-blue-500 text-white'
             }`}
             title="Play / Pause Flow (Space)"
           >
-            {isFlowRunning ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-            <span>{isFlowRunning ? 'Pause Flow' : 'Start Flow'}</span>
+            {isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+            <span>{isPlaying ? 'Pause Flow' : 'Start Flow'}</span>
           </button>
 
           <button
@@ -669,9 +731,9 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
             {[0.5, 1.0, 2.0].map((s) => (
               <button
                 key={s}
-                onClick={() => setFlowSpeed(s)}
+                onClick={() => handleSpeedChange(s)}
                 className={`px-2 py-0.5 rounded-lg transition font-semibold ${
-                  flowSpeed === s ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                  speed === s ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 {s}×
@@ -724,20 +786,16 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
             {SIGNAL_FLOW_STAGES.map((stg, i) => (
               <div
                 key={stg.id}
-                onClick={() => {
-                  setActiveStageIdx(i);
-                  setStageProgress(0);
-                  onSelectComponent(stg.componentId);
-                }}
+                onClick={() => handleSelectStage(i)}
                 className={`h-2 rounded-full cursor-pointer transition-all ${
-                  i === activeStageIdx
+                  i === currentStageIndex
                     ? 'w-7'
-                    : i < activeStageIdx
+                    : i < currentStageIndex
                     ? 'w-3 bg-slate-600'
                     : 'w-3 bg-slate-800'
                 }`}
                 style={{
-                  backgroundColor: i === activeStageIdx ? stg.color : undefined
+                  backgroundColor: i === currentStageIndex ? stg.color : undefined
                 }}
                 title={`Stage ${stg.stageNumber}: ${stg.shortLabel}`}
               />
@@ -821,15 +879,11 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
                 {/* 7 Schematic Node Cards Along Pipeline */}
                 <div className="flex-1 flex items-center justify-between px-2 sm:px-6 py-6 relative z-10">
                   {SIGNAL_FLOW_STAGES.map((stg, i) => {
-                    const isCurrent = i === activeStageIdx;
+                    const isCurrent = i === currentStageIndex;
                     return (
                       <div
                         key={stg.id}
-                        onClick={() => {
-                          setActiveStageIdx(i);
-                          setStageProgress(0);
-                          onSelectComponent(stg.componentId);
-                        }}
+                        onClick={() => handleSelectStage(i)}
                         className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer z-20 ${
                           isCurrent
                             ? 'scale-110 shadow-2xl ring-2'
@@ -909,7 +963,7 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
 
                 {/* 1. All Connection Traces on the Physical Breadboard */}
                 {SIGNAL_FLOW_STAGES.map((stg, i) => {
-                  const isActive = i === activeStageIdx;
+                  const isActive = i === currentStageIndex;
                   return (
                     <g key={stg.id}>
                       {/* Base Physical Wire Trace */}
@@ -948,7 +1002,7 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
                     points="422,175 662,170 662,234 422,209"
                     fill="url(#opticalConeGrad)"
                     filter="url(#beamSpreadGlow)"
-                    opacity={activeStageIdx === 3 ? 0.75 : 0.2}
+                    opacity={currentStageIndex === 3 ? 0.75 : 0.2}
                   />
 
                   {/* Core Photon Line */}
@@ -960,12 +1014,12 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
                     stroke="#ffffff"
                     strokeWidth="2"
                     strokeDasharray="6 6"
-                    opacity={activeStageIdx === 3 ? 0.95 : 0.3}
+                    opacity={currentStageIndex === 3 ? 0.95 : 0.3}
                   />
                 </g>
 
                 {/* 3. Transmitter LED Radiant Burst (Stage 3 & 4) */}
-                {(activeStageIdx === 2 || activeStageIdx === 3) && (
+                {(currentStageIndex === 2 || currentStageIndex === 3) && (
                   <g className="transition-opacity duration-200">
                     <circle
                       cx="422"
@@ -979,7 +1033,7 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
                 )}
 
                 {/* 4. Receiver Photodiode Active Detection Spot (Stage 5) */}
-                {activeStageIdx === 4 && (
+                {currentStageIndex === 4 && (
                   <g className="transition-opacity duration-200">
                     <circle
                       cx="662"
@@ -1022,11 +1076,7 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
                     return (
                       <g
                         key={b.id}
-                        onClick={() => {
-                          onSelectComponent(b.id);
-                          setActiveStageIdx(b.flowStep - 1);
-                          setStageProgress(0);
-                        }}
+                        onClick={() => handleSelectStage(b.flowStep - 1)}
                         className="cursor-pointer pointer-events-auto group"
                       >
                         <rect
@@ -1099,10 +1149,19 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
                   </marker>
                 </defs>
 
-                {/* Connection Lines between schematic nodes */}
+                {/* Connection Lines between schematic nodes with distinct signal category visual styling */}
                 {SIGNAL_FLOW_STAGES.map((stg, i) => {
-                  const isActive = i === activeStageIdx;
+                  const isActive = i === currentStageIndex;
                   const { x1, y1, x2, y2, label } = stg.schematicWire;
+
+                  // Distinct visual stroke styles:
+                  // OPTICAL: dashed amber ray
+                  // DIGITAL: solid with square endpoints
+                  // ANALOG: solid wave with glow
+                  // ELECTRICAL: standard solid conductor
+                  const isOptical = stg.type === 'OPTICAL';
+                  const isDigital = stg.type === 'DIGITAL';
+                  const isAnalog = stg.type === 'ANALOG';
 
                   return (
                     <g key={stg.id}>
@@ -1112,26 +1171,26 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
                         y1={y1}
                         x2={x2}
                         y2={y2}
-                        stroke={isActive ? stg.color : '#475569'}
-                        strokeWidth={isActive ? '4' : '2'}
-                        strokeDasharray={stg.type === 'OPTICAL' ? '6 4' : undefined}
+                        stroke={isActive ? stg.color : isOptical ? '#78350f' : isDigital ? '#334155' : isAnalog ? '#0f766e' : '#475569'}
+                        strokeWidth={isActive ? (isOptical ? '5' : '4') : '2'}
+                        strokeDasharray={isOptical ? '8 4' : isDigital ? undefined : isAnalog ? '12 2' : undefined}
                         className={isActive && !prefersReducedMotion ? 'animate-pulse' : ''}
                       />
 
-                      {/* Direction Arrow */}
-                      <circle cx={x2} cy={y2} r="3" fill={isActive ? stg.color : '#64748b'} />
+                      {/* Direction Arrow / Node Dot */}
+                      <circle cx={x2} cy={y2} r={isOptical ? '4' : '3'} fill={isActive ? stg.color : '#64748b'} />
 
-                      {/* Signal Net Label */}
+                      {/* Signal Net Label with Type Badge */}
                       <text
                         x={(x1 + x2) / 2}
-                        y={y1 - 10}
+                        y={y1 - 12}
                         textAnchor="middle"
                         fill={isActive ? stg.color : '#94a3b8'}
                         fontSize="9"
                         fontFamily="monospace"
                         fontWeight="bold"
                       >
-                        {label}
+                        {label} {isOptical ? '⚡' : ''}
                       </text>
                     </g>
                   );
@@ -1267,11 +1326,7 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
                 return (
                   <div
                     key={item.id}
-                    onClick={() => {
-                      onSelectComponent(item.id);
-                      setActiveStageIdx(item.stage - 1);
-                      setStageProgress(0);
-                    }}
+                    onClick={() => handleSelectStage(item.stage - 1)}
                     className={`px-3 py-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition ${
                       isCurrentFlowStage
                         ? 'ring-2 shadow-md'
@@ -1338,15 +1393,11 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
 
               <div className="space-y-1.5">
                 {SIGNAL_FLOW_STAGES.map((stg, i) => {
-                  const isActive = i === activeStageIdx;
+                  const isActive = i === currentStageIndex;
                   return (
                     <div
                       key={stg.id}
-                      onClick={() => {
-                        setActiveStageIdx(i);
-                        setStageProgress(0);
-                        onSelectComponent(stg.componentId);
-                      }}
+                      onClick={() => handleSelectStage(i)}
                       className={`p-2.5 rounded-xl border cursor-pointer transition ${
                         isActive
                           ? 'ring-2 shadow-md'
