@@ -134,7 +134,7 @@ async def get_pin_mapping():
     return mapping
 
 @router.get("/wiring/export")
-async def export_wiring(format: str = Query("json", enum=["json", "csv"])):
+async def export_wiring(format: str = "json"):
     """Exports wiring report in JSON or CSV format."""
     if format == "csv":
         output = io.StringIO()
