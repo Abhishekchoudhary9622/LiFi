@@ -11,6 +11,7 @@ import { SimulationEngine, DEFAULT_LIFI_CONFIG } from './circuit/engine';
 import { validateCircuit } from './validation/ruleChecker';
 import { FullHardwareSetupStudio } from './components/FullHardwareSetupStudio';
 import { SemLiFiVirtualLab } from './components/SemLiFiVirtualLab';
+import { SemLiFiStudioShell } from './components/studio/SemLiFiStudioShell';
 import { SemLiFiCircuitsEditor } from './components/SemLiFiCircuitsEditor';
 import { RealHardwareTwinLab } from './components/RealHardwareTwinLab';
 import { GuidedBuildModal } from './components/GuidedBuildModal';
@@ -241,9 +242,9 @@ export const App: React.FC = () => {
   }, [components, wires, projectName, history, redoStack]);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#070b14] text-slate-100 font-sans">
+    <div className="flex flex-col h-screen w-screen overflow-hidden font-sans">
       {/* Flagship SemLiFi Virtual Lab Studio */}
-      <SemLiFiVirtualLab
+      <SemLiFiStudioShell
         projectName={projectName}
         onOpenReport={() => setShowReport(true)}
       />
