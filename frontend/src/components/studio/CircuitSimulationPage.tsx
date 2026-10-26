@@ -594,9 +594,11 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center shrink-0">
-                      <Cpu className="w-3.5 h-3.5 text-blue-500" />
-                    </div>
+                    <img
+                      src="/hardware/stm32_board.jpg"
+                      alt="STM32 TX"
+                      className="w-7 h-7 rounded-md object-cover border border-blue-500/30 shrink-0 shadow-sm"
+                    />
                     <div>
                       <div className="text-xs">STM32F103C8 (TX)</div>
                       <div className="text-[10px] text-slate-400 font-mono">PA9 PWM Modulator</div>
@@ -610,13 +612,15 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                     }}
                     className={`p-2 rounded-lg flex items-center space-x-2.5 cursor-pointer transition ${
                       normalizeComponentId(selectedComponentId) === 'stm32_rx'
-                        ? 'bg-blue-500/15 border border-blue-500/40 text-blue-600 dark:text-blue-400 font-semibold'
+                        ? 'bg-purple-500/15 border border-purple-500/40 text-purple-600 dark:text-purple-400 font-semibold'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="w-6 h-6 rounded bg-purple-500/20 flex items-center justify-center shrink-0">
-                      <Cpu className="w-3.5 h-3.5 text-purple-500" />
-                    </div>
+                    <img
+                      src="/hardware/stm32_board.jpg"
+                      alt="STM32 RX"
+                      className="w-7 h-7 rounded-md object-cover border border-purple-500/30 shrink-0 shadow-sm"
+                    />
                     <div>
                       <div className="text-xs">STM32F103C8 (RX)</div>
                       <div className="text-[10px] text-slate-400 font-mono">PA0 ADC / Capture</div>
@@ -660,9 +664,11 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]" />
-                    </div>
+                    <img
+                      src="/hardware/led_macro.jpg"
+                      alt="Red LED"
+                      className="w-7 h-7 rounded-md object-cover border border-red-500/30 shrink-0 shadow-sm"
+                    />
                     <div>
                       <div className="text-xs">Red LED</div>
                       <div className="text-[10px] text-slate-400 font-mono">650 nm Emitter</div>
@@ -680,9 +686,11 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center shrink-0">
-                      <Radio className="w-3.5 h-3.5 text-emerald-500" />
-                    </div>
+                    <img
+                      src="/hardware/photodiode_macro.jpg"
+                      alt="BPW34 Photodiode"
+                      className="w-7 h-7 rounded-md object-cover border border-emerald-500/30 shrink-0 shadow-sm"
+                    />
                     <div>
                       <div className="text-xs">BPW34 Photodiode</div>
                       <div className="text-[10px] text-slate-400 font-mono">PIN Sensor (7.5mm²)</div>
@@ -700,9 +708,11 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="w-6 h-6 rounded bg-amber-500/20 flex items-center justify-center shrink-0">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    </div>
+                    <img
+                      src="/hardware/optical_setup_3d.jpg"
+                      alt="Optical Channel"
+                      className="w-7 h-7 rounded-md object-cover border border-amber-500/30 shrink-0 shadow-sm"
+                    />
                     <div>
                       <div className="text-xs">Optical Channel</div>
                       <div className="text-[10px] text-slate-400 font-mono">{workingDistanceCm} cm Air Gap</div>
@@ -729,7 +739,7 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                   <span>Transistors &amp; Drivers</span>
                 </div>
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-mono">
-                  1
+                  2
                 </span>
               </button>
 
@@ -746,12 +756,36 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="w-6 h-6 rounded bg-orange-500/20 flex items-center justify-center shrink-0">
-                      <Zap className="w-3.5 h-3.5 text-orange-500" />
-                    </div>
+                    <img
+                      src="/hardware/transistor_2n2222.jpg"
+                      alt="2N2222 Transistor"
+                      className="w-7 h-7 rounded-md object-cover border border-orange-500/30 shrink-0 shadow-sm"
+                    />
                     <div>
                       <div className="text-xs">2N2222 NPN</div>
                       <div className="text-[10px] text-slate-400 font-mono">BJT 800mA Switch</div>
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => {
+                      onSelectComponent('resistor_220');
+                      if (activeCanvasTool === 'probe') handleProbeComponent('resistor_220');
+                    }}
+                    className={`p-2 rounded-lg flex items-center space-x-2.5 cursor-pointer transition ${
+                      normalizeComponentId(selectedComponentId) === 'resistor_220'
+                        ? 'bg-amber-500/15 border border-amber-500/40 text-amber-600 dark:text-amber-400 font-semibold'
+                        : 'hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <img
+                      src="/hardware/resistor_macro.jpg"
+                      alt="220Ω Resistor"
+                      className="w-7 h-7 rounded-md object-cover border border-amber-500/30 shrink-0 shadow-sm"
+                    />
+                    <div>
+                      <div className="text-xs">220 Ω Resistor</div>
+                      <div className="text-[10px] text-slate-400 font-mono">Current Limiter</div>
                     </div>
                   </div>
                 </div>
@@ -792,9 +826,11 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="w-6 h-6 rounded bg-cyan-500/20 flex items-center justify-center shrink-0">
-                      <Activity className="w-3.5 h-3.5 text-cyan-500" />
-                    </div>
+                    <img
+                      src="/hardware/lm358_amplifier.jpg"
+                      alt="LM358 Op-Amp"
+                      className="w-7 h-7 rounded-md object-cover border border-cyan-500/30 shrink-0 shadow-sm"
+                    />
                     <div>
                       <div className="text-xs">LM358 Op-Amp</div>
                       <div className="text-[10px] text-slate-400 font-mono">Dual TIA / Slicer</div>
@@ -1018,31 +1054,43 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
               ))}
 
               {/* Main Connected Blocks Row */}
-              <div className="py-8 flex flex-wrap items-center justify-between gap-3 relative">
+              <div className="py-6 flex flex-wrap items-center justify-between gap-2.5 relative">
                 {/* 1. STM32 (TX) */}
                 <div
                   onClick={() => {
                     onSelectComponent('stm32_tx');
                     if (activeCanvasTool === 'probe') handleProbeComponent('stm32_tx');
                   }}
-                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border cursor-pointer transition-all w-28 text-center relative ${
+                  className={`flex flex-col items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all w-32 min-h-[175px] text-center relative group ${
                     normalizeComponentId(selectedComponentId) === 'stm32_tx'
-                      ? 'bg-blue-500/20 border-blue-500 shadow-lg shadow-blue-500/20 ring-2 ring-blue-500/30'
+                      ? 'bg-blue-500/20 border-blue-500 shadow-lg shadow-blue-500/20 ring-2 ring-blue-500/40'
                       : isDarkMode
-                      ? 'bg-[#0e172a] border-slate-700 hover:border-slate-500'
+                      ? 'bg-[#0e172a] border-slate-700 hover:border-blue-400/60'
                       : 'bg-slate-50 border-slate-200 hover:border-blue-400 shadow-sm'
                   }`}
                 >
-                  <Cpu className="w-6 h-6 text-blue-500 mb-1.5" />
+                  <div className="w-full h-16 rounded-lg overflow-hidden relative border border-blue-500/30 mb-1.5 bg-black/40">
+                    <img
+                      src="/hardware/stm32_board.jpg"
+                      alt="STM32 TX"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-blue-900/90 text-blue-200 border border-blue-500/40">
+                      PA9
+                    </span>
+                  </div>
                   <div className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                     STM32 (TX)
                   </div>
-                  <div className="text-[9px] text-slate-400 font-mono mt-0.5">TIM1_CH2</div>
+                  <div className="text-[9px] text-slate-400 font-mono">TIM1_CH2 PWM</div>
+                  <div className="text-[9px] font-mono text-cyan-400 font-bold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/40 my-1">
+                    {isSimulating ? '10 kHz | 3.3V' : '0.00 V Idle'}
+                  </div>
 
                   {/* Terminal Pin Port */}
                   <button
                     onClick={(e) => handleTerminalPinClick('stm32_tx', { id: 'pa9', name: 'PA9', label: 'STM32 TX (PA9)', net: 'NET_CARRIER_PWM', type: 'OUT' }, e)}
-                    className={`mt-1.5 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
+                    className={`mt-1 px-2 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
                       wireStartPin?.pinId === 'pa9'
                         ? 'bg-cyan-500 text-black border-cyan-300 animate-ping'
                         : 'bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/25'
@@ -1053,9 +1101,14 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                   </button>
                 </div>
 
-                {/* Wire Arrow */}
-                <div className="flex items-center text-slate-400 dark:text-slate-600 font-bold text-xs">
-                  &rarr;
+                {/* Wire Flow Arrow */}
+                <div className="flex flex-col items-center justify-center px-0.5 shrink-0">
+                  <div className="w-6 h-1 rounded-full bg-slate-700/80 overflow-hidden relative">
+                    {isSimulating && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse" />
+                    )}
+                  </div>
+                  <span className="text-[8px] font-mono text-cyan-400 mt-1">&rarr;</span>
                 </div>
 
                 {/* 2. 2N2222 Driver */}
@@ -1064,24 +1117,36 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                     onSelectComponent('transistor_2n2222');
                     if (activeCanvasTool === 'probe') handleProbeComponent('transistor_2n2222');
                   }}
-                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border cursor-pointer transition-all w-28 text-center relative ${
+                  className={`flex flex-col items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all w-32 min-h-[175px] text-center relative group ${
                     normalizeComponentId(selectedComponentId) === 'transistor_2n2222'
-                      ? 'bg-orange-500/20 border-orange-500 shadow-lg shadow-orange-500/20 ring-2 ring-orange-500/30'
+                      ? 'bg-orange-500/20 border-orange-500 shadow-lg shadow-orange-500/20 ring-2 ring-orange-500/40'
                       : isDarkMode
-                      ? 'bg-[#0e172a] border-slate-700 hover:border-slate-500'
+                      ? 'bg-[#0e172a] border-slate-700 hover:border-orange-400/60'
                       : 'bg-slate-50 border-slate-200 hover:border-orange-400 shadow-sm'
                   }`}
                 >
-                  <Zap className="w-6 h-6 text-orange-500 mb-1.5" />
+                  <div className="w-full h-16 rounded-lg overflow-hidden relative border border-orange-500/30 mb-1.5 bg-black/40">
+                    <img
+                      src="/hardware/transistor_2n2222.jpg"
+                      alt="2N2222 Driver"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-orange-900/90 text-orange-200 border border-orange-500/40">
+                      TO-92
+                    </span>
+                  </div>
                   <div className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                     2N2222 Driver
                   </div>
-                  <div className="text-[9px] text-slate-400 font-mono mt-0.5">NPN BJT</div>
+                  <div className="text-[9px] text-slate-400 font-mono">NPN BJT Switch</div>
+                  <div className="text-[9px] font-mono text-orange-400 font-bold bg-orange-950/60 px-1.5 py-0.5 rounded border border-orange-800/40 my-1">
+                    {isSimulating ? 'Vce: 0.20V' : 'Cut-off'}
+                  </div>
 
                   {/* Terminal Pin Port */}
                   <button
                     onClick={(e) => handleTerminalPinClick('transistor_2n2222', { id: 'base', name: 'BASE', label: '2N2222 Base', net: 'NET_DRIVE_BASE', type: 'IN' }, e)}
-                    className={`mt-1.5 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
+                    className={`mt-1 px-2 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
                       wireStartPin?.pinId === 'base'
                         ? 'bg-cyan-500 text-black border-cyan-300 animate-ping'
                         : 'bg-orange-500/10 text-orange-400 border-orange-500/30 hover:bg-orange-500/25'
@@ -1092,9 +1157,14 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                   </button>
                 </div>
 
-                {/* Wire Arrow */}
-                <div className="flex items-center text-slate-400 dark:text-slate-600 font-bold text-xs">
-                  &rarr;
+                {/* Wire Flow Arrow */}
+                <div className="flex flex-col items-center justify-center px-0.5 shrink-0">
+                  <div className="w-6 h-1 rounded-full bg-slate-700/80 overflow-hidden relative">
+                    {isSimulating && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400 to-transparent animate-pulse" />
+                    )}
+                  </div>
+                  <span className="text-[8px] font-mono text-red-400 mt-1">&rarr;</span>
                 </div>
 
                 {/* 3. Red LED (650 nm) */}
@@ -1103,31 +1173,39 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                     onSelectComponent('led_tx');
                     if (activeCanvasTool === 'probe') handleProbeComponent('led_tx');
                   }}
-                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border cursor-pointer transition-all w-32 text-center relative ${
+                  className={`flex flex-col items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all w-32 min-h-[175px] text-center relative group ${
                     normalizeComponentId(selectedComponentId) === 'led_tx'
-                      ? 'bg-red-500/20 border-red-500 shadow-lg shadow-red-500/20 ring-2 ring-red-500/30'
+                      ? 'bg-red-500/20 border-red-500 shadow-lg shadow-red-500/20 ring-2 ring-red-500/40'
                       : isDarkMode
-                      ? 'bg-[#0e172a] border-slate-700 hover:border-slate-500'
+                      ? 'bg-[#0e172a] border-slate-700 hover:border-red-400/60'
                       : 'bg-slate-50 border-slate-200 hover:border-red-400 shadow-sm'
                   }`}
                 >
-                  <div className="relative mb-1.5">
-                    <span
-                      className={`w-4 h-4 rounded-full bg-red-500 inline-block ${
-                        isSimulating ? 'animate-ping opacity-75' : ''
-                      }`}
+                  <div className="w-full h-16 rounded-lg overflow-hidden relative border border-red-500/30 mb-1.5 bg-black/40">
+                    <img
+                      src="/hardware/led_macro.jpg"
+                      alt="Red LED"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <span className="w-4 h-4 rounded-full bg-red-600 shadow-[0_0_12px_#ef4444] absolute inset-0" />
+                    {isSimulating && (
+                      <span className="absolute inset-0 bg-red-600/30 animate-pulse pointer-events-none" />
+                    )}
+                    <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-red-900/90 text-red-200 border border-red-500/40">
+                      650nm
+                    </span>
                   </div>
                   <div className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                     Red LED
                   </div>
-                  <div className="text-[9px] text-red-500 font-mono mt-0.5 font-semibold">650 nm</div>
+                  <div className="text-[9px] text-red-400 font-mono">180 mcd Emitter</div>
+                  <div className="text-[9px] font-mono text-red-400 font-bold bg-red-950/60 px-1.5 py-0.5 rounded border border-red-800/40 my-1">
+                    {isSimulating ? '14.5 mA Active' : '0.0 mA Off'}
+                  </div>
 
                   {/* Terminal Pin Port */}
                   <button
                     onClick={(e) => handleTerminalPinClick('led_tx', { id: 'anode', name: 'ANODE', label: 'LED Anode (+)', net: 'NET_LED_ANODE', type: 'IN' }, e)}
-                    className={`mt-1.5 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
+                    className={`mt-1 px-2 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
                       wireStartPin?.pinId === 'anode'
                         ? 'bg-cyan-500 text-black border-cyan-300 animate-ping'
                         : 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/25'
@@ -1144,35 +1222,52 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                     onSelectComponent('optical_channel');
                     if (activeCanvasTool === 'probe') handleProbeComponent('optical_channel');
                   }}
-                  className={`px-3 py-2 rounded-xl border border-dashed flex flex-col items-center justify-center min-w-[130px] transition cursor-pointer ${
+                  className={`px-3 py-2.5 rounded-xl border border-dashed flex flex-col items-center justify-between min-w-[136px] min-h-[175px] transition cursor-pointer relative group ${
                     normalizeComponentId(selectedComponentId) === 'optical_channel'
                       ? 'border-amber-400 bg-amber-500/15 ring-2 ring-amber-400/30 shadow-lg'
                       : isSimulating
-                      ? 'border-red-500 bg-red-500/10'
+                      ? 'border-red-500/80 bg-red-500/10'
                       : isDarkMode
                       ? 'border-slate-700 bg-slate-900/40 text-slate-400'
                       : 'border-slate-300 bg-slate-50 text-slate-500'
                   }`}
                 >
-                  <div className="text-[10px] font-mono font-bold text-red-500 flex items-center space-x-1">
+                  <div className="w-full h-16 rounded-lg overflow-hidden relative border border-amber-500/30 mb-1 bg-black/40">
+                    <img
+                      src="/hardware/optical_setup_3d.jpg"
+                      alt="Optical Alignment"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-amber-900/90 text-amber-200 border border-amber-500/40">
+                      LOS
+                    </span>
+                    {isSimulating && (
+                      <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
+                        <div className="w-full h-1 bg-gradient-to-r from-red-500 via-amber-300 to-emerald-400 animate-pulse" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-[10px] font-mono font-bold text-amber-400 flex items-center space-x-1">
                     <span>Optical Air Gap</span>
                     <Sparkles className="w-3 h-3 text-amber-400" />
                   </div>
                   <div className="text-[9px] text-slate-400 font-mono">
-                    (~ {workingDistanceCm} cm LOS)
+                    {workingDistanceCm} cm &bull; {ambientLux} Lux
                   </div>
-                  {isSimulating && (
-                    <div className="flex space-x-1 mt-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-bounce" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-bounce [animation-delay:0.15s]" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-bounce [animation-delay:0.3s]" />
-                    </div>
-                  )}
+                  <div className="text-[9px] font-mono text-amber-300 font-bold bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-800/40 my-1">
+                    {isSimulating ? `${((180 / (workingDistanceCm * workingDistanceCm)) * 225).toFixed(0)} µW/cm²` : 'Dark'}
+                  </div>
+                  <span className="text-[8px] text-slate-500 font-mono">Loss ∝ 1/d²</span>
                 </div>
 
-                {/* Wire Arrow */}
-                <div className="flex items-center text-slate-400 dark:text-slate-600 font-bold text-xs">
-                  &rarr;
+                {/* Wire Flow Arrow */}
+                <div className="flex flex-col items-center justify-center px-0.5 shrink-0">
+                  <div className="w-6 h-1 rounded-full bg-slate-700/80 overflow-hidden relative">
+                    {isSimulating && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-400 to-transparent animate-pulse" />
+                    )}
+                  </div>
+                  <span className="text-[8px] font-mono text-emerald-400 mt-1">&rarr;</span>
                 </div>
 
                 {/* 5. BPW34 (RX) */}
@@ -1181,24 +1276,36 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                     onSelectComponent('bpw34_photodiode');
                     if (activeCanvasTool === 'probe') handleProbeComponent('bpw34_photodiode');
                   }}
-                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border cursor-pointer transition-all w-28 text-center relative ${
+                  className={`flex flex-col items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all w-32 min-h-[175px] text-center relative group ${
                     normalizeComponentId(selectedComponentId) === 'bpw34_photodiode'
-                      ? 'bg-emerald-500/20 border-emerald-500 shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/30'
+                      ? 'bg-emerald-500/20 border-emerald-500 shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/40'
                       : isDarkMode
-                      ? 'bg-[#0e172a] border-slate-700 hover:border-slate-500'
+                      ? 'bg-[#0e172a] border-slate-700 hover:border-emerald-400/60'
                       : 'bg-slate-50 border-slate-200 hover:border-emerald-400 shadow-sm'
                   }`}
                 >
-                  <Radio className="w-6 h-6 text-emerald-500 mb-1.5" />
+                  <div className="w-full h-16 rounded-lg overflow-hidden relative border border-emerald-500/30 mb-1.5 bg-black/40">
+                    <img
+                      src="/hardware/photodiode_macro.jpg"
+                      alt="BPW34 Photodiode"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-emerald-900/90 text-emerald-200 border border-emerald-500/40">
+                      7.5mm²
+                    </span>
+                  </div>
                   <div className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                     BPW34 (RX)
                   </div>
-                  <div className="text-[9px] text-slate-400 font-mono mt-0.5">PIN Detector</div>
+                  <div className="text-[9px] text-slate-400 font-mono">PIN Detector</div>
+                  <div className="text-[9px] font-mono text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/40 my-1">
+                    {isSimulating ? `Iph: ${(42.8 * (15 / workingDistanceCm)**2).toFixed(1)} µA` : '2.0 nA Dark'}
+                  </div>
 
                   {/* Terminal Pin Port */}
                   <button
                     onClick={(e) => handleTerminalPinClick('bpw34_photodiode', { id: 'pd_out', name: 'OUT', label: 'BPW34 Anode Out', net: 'NET_PD_INVERTING', type: 'OUT' }, e)}
-                    className={`mt-1.5 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
+                    className={`mt-1 px-2 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
                       wireStartPin?.pinId === 'pd_out'
                         ? 'bg-cyan-500 text-black border-cyan-300 animate-ping'
                         : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25'
@@ -1209,9 +1316,14 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                   </button>
                 </div>
 
-                {/* Wire Arrow */}
-                <div className="flex items-center text-slate-400 dark:text-slate-600 font-bold text-xs">
-                  &rarr;
+                {/* Wire Flow Arrow */}
+                <div className="flex flex-col items-center justify-center px-0.5 shrink-0">
+                  <div className="w-6 h-1 rounded-full bg-slate-700/80 overflow-hidden relative">
+                    {isSimulating && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse" />
+                    )}
+                  </div>
+                  <span className="text-[8px] font-mono text-cyan-400 mt-1">&rarr;</span>
                 </div>
 
                 {/* 6. LM358 Amplifier */}
@@ -1220,24 +1332,36 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                     onSelectComponent('lm358_amplifier');
                     if (activeCanvasTool === 'probe') handleProbeComponent('lm358_amplifier');
                   }}
-                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border cursor-pointer transition-all w-32 text-center relative ${
+                  className={`flex flex-col items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all w-32 min-h-[175px] text-center relative group ${
                     normalizeComponentId(selectedComponentId) === 'lm358_amplifier'
-                      ? 'bg-cyan-500/20 border-cyan-500 shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/30'
+                      ? 'bg-cyan-500/20 border-cyan-500 shadow-lg shadow-cyan-500/20 ring-2 ring-cyan-500/40'
                       : isDarkMode
-                      ? 'bg-[#0e172a] border-slate-700 hover:border-slate-500'
+                      ? 'bg-[#0e172a] border-slate-700 hover:border-cyan-400/60'
                       : 'bg-slate-50 border-slate-200 hover:border-cyan-400 shadow-sm'
                   }`}
                 >
-                  <Activity className="w-6 h-6 text-cyan-500 mb-1.5" />
-                  <div className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                    LM358 Amplifier
+                  <div className="w-full h-16 rounded-lg overflow-hidden relative border border-cyan-500/30 mb-1.5 bg-black/40">
+                    <img
+                      src="/hardware/lm358_amplifier.jpg"
+                      alt="LM358 Op-Amp"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-cyan-900/90 text-cyan-200 border border-cyan-500/40">
+                      TIA
+                    </span>
                   </div>
-                  <div className="text-[9px] text-slate-400 font-mono mt-0.5">TIA / Slicer</div>
+                  <div className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                    LM358 Op-Amp
+                  </div>
+                  <div className="text-[9px] text-slate-400 font-mono">TIA + 1.65V Slicer</div>
+                  <div className="text-[9px] font-mono text-cyan-400 font-bold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/40 my-1">
+                    {isSimulating ? '3.26 V Sliced' : '0.04 V Idle'}
+                  </div>
 
                   {/* Terminal Pin Port */}
                   <button
                     onClick={(e) => handleTerminalPinClick('lm358_amplifier', { id: 'amp_out', name: 'OUT', label: 'LM358 Pin 1 Out', net: 'NET_RX_CAPTURE', type: 'OUT' }, e)}
-                    className={`mt-1.5 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
+                    className={`mt-1 px-2 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
                       wireStartPin?.pinId === 'amp_out'
                         ? 'bg-cyan-500 text-black border-cyan-300 animate-ping'
                         : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/25'
@@ -1248,9 +1372,14 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                   </button>
                 </div>
 
-                {/* Wire Arrow */}
-                <div className="flex items-center text-slate-400 dark:text-slate-600 font-bold text-xs">
-                  &rarr;
+                {/* Wire Flow Arrow */}
+                <div className="flex flex-col items-center justify-center px-0.5 shrink-0">
+                  <div className="w-6 h-1 rounded-full bg-slate-700/80 overflow-hidden relative">
+                    {isSimulating && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-400 to-transparent animate-pulse" />
+                    )}
+                  </div>
+                  <span className="text-[8px] font-mono text-purple-400 mt-1">&rarr;</span>
                 </div>
 
                 {/* 7. STM32 (RX) */}
@@ -1259,24 +1388,36 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                     onSelectComponent('stm32_rx');
                     if (activeCanvasTool === 'probe') handleProbeComponent('stm32_rx');
                   }}
-                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border cursor-pointer transition-all w-28 text-center relative ${
+                  className={`flex flex-col items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all w-32 min-h-[175px] text-center relative group ${
                     normalizeComponentId(selectedComponentId) === 'stm32_rx'
-                      ? 'bg-purple-500/20 border-purple-500 shadow-lg shadow-purple-500/20 ring-2 ring-purple-500/30'
+                      ? 'bg-purple-500/20 border-purple-500 shadow-lg shadow-purple-500/20 ring-2 ring-purple-500/40'
                       : isDarkMode
-                      ? 'bg-[#0e172a] border-slate-700 hover:border-slate-500'
+                      ? 'bg-[#0e172a] border-slate-700 hover:border-purple-400/60'
                       : 'bg-slate-50 border-slate-200 hover:border-purple-400 shadow-sm'
                   }`}
                 >
-                  <Cpu className="w-6 h-6 text-purple-500 mb-1.5" />
+                  <div className="w-full h-16 rounded-lg overflow-hidden relative border border-purple-500/30 mb-1.5 bg-black/40">
+                    <img
+                      src="/hardware/stm32_board.jpg"
+                      alt="STM32 RX"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-purple-900/90 text-purple-200 border border-purple-500/40">
+                      PA0
+                    </span>
+                  </div>
                   <div className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                     STM32 (RX)
                   </div>
-                  <div className="text-[9px] text-slate-400 font-mono mt-0.5">PA0 Capture</div>
+                  <div className="text-[9px] text-slate-400 font-mono">TIM2_CH1 Capture</div>
+                  <div className="text-[9px] font-mono text-purple-400 font-bold bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-800/40 my-1">
+                    {isSimulating ? `ADC: ${Math.round(135 * (15 / workingDistanceCm)**2)} cnt` : '0 cnt Idle'}
+                  </div>
 
                   {/* Terminal Pin Port */}
                   <button
                     onClick={(e) => handleTerminalPinClick('stm32_rx', { id: 'rx_pa0', name: 'PA0', label: 'STM32 RX (PA0)', net: 'NET_RX_CAPTURE', type: 'IN' }, e)}
-                    className={`mt-1.5 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
+                    className={`mt-1 px-2 py-0.5 rounded text-[8px] font-mono font-bold border transition ${
                       wireStartPin?.pinId === 'rx_pa0'
                         ? 'bg-cyan-500 text-black border-cyan-300 animate-ping'
                         : 'bg-purple-500/10 text-purple-400 border-purple-500/30 hover:bg-purple-500/25'
@@ -1456,22 +1597,30 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
 
           {/* Component Details Card (Dynamically Keyed by Component ID) */}
           <div className="p-4 space-y-4">
-            <div className="flex items-center space-x-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border"
-                style={{
-                  backgroundColor: `${selectedComp.accentColor}20`,
-                  borderColor: `${selectedComp.accentColor}40`
-                }}
-              >
-                <div
-                  className="w-5 h-5 rounded-full"
-                  style={{
-                    backgroundColor: selectedComp.accentColor,
-                    boxShadow: `0 0 12px ${selectedComp.accentColor}`
-                  }}
+            <div className="space-y-3">
+              <div className="w-full h-36 rounded-xl overflow-hidden border border-slate-700/80 relative shadow-lg bg-black/40 group">
+                <img
+                  src={selectedComp.imageUrl}
+                  alt={selectedComp.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex items-end justify-between p-2.5 pointer-events-none">
+                  <span className="text-[10px] font-mono text-emerald-300 bg-black/70 px-2 py-0.5 rounded border border-emerald-500/40">
+                    Verified Hardware
+                  </span>
+                  <span
+                    className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border"
+                    style={{
+                      color: selectedComp.accentColor,
+                      borderColor: `${selectedComp.accentColor}50`,
+                      backgroundColor: `${selectedComp.accentColor}25`
+                    }}
+                  >
+                    {selectedComp.canonicalId}
+                  </span>
+                </div>
               </div>
+
               <div>
                 <h3
                   className={`text-sm font-bold tracking-tight ${

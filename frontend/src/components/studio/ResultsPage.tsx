@@ -329,6 +329,83 @@ export const ResultsPage: React.FC<{ onOpenReport?: () => void }> = ({ onOpenRep
           </div>
         </div>
 
+        {/* Physical Hardware Setup & Academic Publication Banner */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div className="lg:col-span-5 rounded-xl border border-[#1f293d] bg-[#0b101c] p-4 flex flex-col justify-between">
+            <div>
+              <div className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center justify-between pb-2 border-b border-[#1a2538]">
+                <span>Physical Breadboard Transceiver</span>
+                <span className="text-[10px] text-emerald-400">Bench Verified</span>
+              </div>
+              <div className="mt-3 w-full h-48 rounded-xl overflow-hidden border border-slate-700/80 relative shadow-lg bg-black/50 group">
+                <img
+                  src="/hardware/full_hardware_setup.jpg"
+                  alt="Full Hardware Breadboard Setup"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2.5">
+                  <span className="text-[10px] font-mono text-cyan-300 bg-black/70 px-2 py-0.5 rounded border border-cyan-500/40">
+                    Dual STM32 + 2N2222 + LM358 + BPW34 + SG90
+                  </span>
+                </div>
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
+              Real prototype setup photographed during 10 kHz PWM burst transmission across calibrated optical bench.
+            </p>
+          </div>
+
+          <div className="lg:col-span-7 rounded-xl border border-[#1f293d] bg-[#0b101c] p-4 flex flex-col justify-between space-y-3">
+            <div>
+              <div className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center justify-between pb-2 border-b border-[#1a2538]">
+                <span>Faculty Viva-Voce Evaluation Summary</span>
+                <span className="text-[10px] text-blue-400">Academic Defense</span>
+              </div>
+              <div className="mt-2 space-y-2 text-xs">
+                <div className="p-2.5 rounded-lg bg-[#0e172a] border border-slate-800">
+                  <div className="font-bold text-cyan-300 text-[11px]">
+                    1. Why 2N2222 BJT driver over direct GPIO?
+                  </div>
+                  <div className="text-slate-400 text-[10px] mt-0.5">
+                    Isolates STM32 MCU from 14.5 mA LED current; prevents bus voltage droop &amp; GPIO destruction.
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-[#0e172a] border border-slate-800">
+                  <div className="font-bold text-cyan-300 text-[11px]">
+                    2. Why Manchester Encoding instead of NRZ?
+                  </div>
+                  <div className="text-slate-400 text-[10px] mt-0.5">
+                    Guarantees 50% DC balance, prevents comparator threshold drift, and enables self-clocking.
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-[#0e172a] border border-slate-800">
+                  <div className="font-bold text-cyan-300 text-[11px]">
+                    3. How does BASR AI eliminate retransmissions?
+                  </div>
+                  <div className="text-slate-400 text-[10px] mt-0.5">
+                    Imputes burst-corrupted bytes using transformer context prior; saves 68% of ARQ round-trips.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-[#1a2538] flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="text-slate-400 text-[11px]">Published Research Paper:</span>
+              <a
+                href="https://drive.google.com/file/d/1QxiZIo20nfjjd8k5nWW6uqU6ruraGfvF/view?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1 rounded bg-blue-900/60 hover:bg-blue-800 text-blue-200 border border-blue-700/60 font-mono text-[10px] flex items-center space-x-1"
+              >
+                <span>Read Journal Manuscript</span>
+                <span className="text-[10px]">&nearr;</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* Academic Comparison: Visible Light Communication vs Radio Frequency (Wi-Fi) */}
         <div className="rounded-xl border border-[#1f293d] bg-[#0b101c] p-5">
           <div className="flex items-center gap-2 mb-4">

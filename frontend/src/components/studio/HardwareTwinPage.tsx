@@ -1046,25 +1046,59 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
                   </g>
                 )}
 
-                {/* 5. Traveling Signal Pulse Marker (Moving along current wire path) */}
+                {/* 5. Traveling Signal Pulse Marker (Directional Energy Wavefront & Reticle) */}
                 {!prefersReducedMotion && (
                   <g
                     transform={`translate(${markerPos.x}, ${markerPos.y})`}
-                    className="transition-transform duration-75"
+                    className="transition-transform duration-75 pointer-events-none"
                   >
+                    {/* Outer Rotating Radar Ring */}
                     <circle
-                      r="9"
+                      r="14"
+                      fill="none"
+                      stroke={activeStage.color}
+                      strokeWidth="1.5"
+                      strokeDasharray="4 2"
+                      opacity="0.75"
+                    />
+                    {/* Precision Crosshair Ticks */}
+                    <line x1="-11" y1="0" x2="-6" y2="0" stroke={activeStage.color} strokeWidth="1.5" />
+                    <line x1="6" y1="0" x2="11" y2="0" stroke={activeStage.color} strokeWidth="1.5" />
+                    <line x1="0" y1="-11" x2="0" y2="-6" stroke={activeStage.color} strokeWidth="1.5" />
+                    <line x1="0" y1="6" x2="0" y2="11" stroke={activeStage.color} strokeWidth="1.5" />
+                    {/* High-Tech Diamond Energy Core */}
+                    <polygon
+                      points="0,-6 6,0 0,6 -6,0"
                       fill={activeStage.color}
-                      opacity="0.4"
-                      className="animate-ping"
+                      filter="url(#activeGlow)"
+                      opacity="0.9"
                     />
                     <circle
-                      r="5.5"
+                      r="2.5"
                       fill="#ffffff"
-                      stroke={activeStage.color}
-                      strokeWidth="2.5"
                       filter="url(#activeGlow)"
                     />
+                    {/* Floating Micro Vector Tag */}
+                    <rect
+                      x="14"
+                      y="-10"
+                      width="72"
+                      height="19"
+                      rx="4"
+                      fill="rgba(6, 11, 24, 0.92)"
+                      stroke={activeStage.color}
+                      strokeWidth="1.2"
+                    />
+                    <text
+                      x="18"
+                      y="3"
+                      fill={activeStage.color}
+                      fontSize="8.5"
+                      fontFamily="monospace"
+                      fontWeight="bold"
+                    >
+                      PULSE S{activeStage.stageNumber}
+                    </text>
                   </g>
                 )}
 
@@ -1196,19 +1230,47 @@ export const HardwareTwinPage: React.FC<HardwareTwinPageProps> = ({
                   );
                 })}
 
-                {/* Traveling Signal Pulse Marker on Schematic Wire */}
+                {/* Traveling Signal Pulse Wavefront on Schematic Wire */}
                 {!prefersReducedMotion && (
                   <g
                     transform={`translate(${schematicMarkerPos.x}, ${schematicMarkerPos.y})`}
-                    className="transition-transform duration-75"
+                    className="transition-transform duration-75 pointer-events-none"
                   >
-                    <circle r="8" fill={activeStage.color} opacity="0.4" className="animate-ping" />
                     <circle
-                      r="5"
-                      fill="#ffffff"
+                      r="12"
+                      fill="none"
                       stroke={activeStage.color}
-                      strokeWidth="2.5"
+                      strokeWidth="1.5"
+                      strokeDasharray="4 2"
+                      opacity="0.8"
                     />
+                    <polygon
+                      points="0,-5 5,0 0,5 -5,0"
+                      fill={activeStage.color}
+                      filter="url(#activeGlow)"
+                      opacity="0.9"
+                    />
+                    <circle r="2.5" fill="#ffffff" />
+                    <rect
+                      x="10"
+                      y="-9"
+                      width="64"
+                      height="18"
+                      rx="4"
+                      fill="rgba(10, 16, 30, 0.94)"
+                      stroke={activeStage.color}
+                      strokeWidth="1.2"
+                    />
+                    <text
+                      x="14"
+                      y="3.5"
+                      fill="#ffffff"
+                      fontSize="8"
+                      fontFamily="monospace"
+                      fontWeight="bold"
+                    >
+                      FLOW &bull; S{activeStage.stageNumber}
+                    </text>
                   </g>
                 )}
               </svg>

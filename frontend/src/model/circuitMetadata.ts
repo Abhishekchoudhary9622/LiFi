@@ -34,6 +34,7 @@ export interface CircuitComponentMetadata {
   voltageReading: string;
   currentReading: string;
   signalType: string;
+  imageUrl: string;
 }
 
 /**
@@ -102,6 +103,7 @@ export function getCircuitComponentMetadata(
         type: 'STM32F103C8T6 ARM Cortex-M3 (72 MHz)',
         role: 'PWM Carrier Generation & Manchester Encoding',
         accentColor: '#3b82f6',
+        imageUrl: '/hardware/stm32_board.jpg',
         voltageReading: isSimulating ? '3.30 V TTL (PWM Out)' : '0.00 V (Standby)',
         currentReading: isSimulating ? '34.2 mA (Active)' : '4.1 mA (Sleep)',
         signalType: 'Digital 10 kHz PWM Carrier (50% Duty)',
@@ -132,6 +134,7 @@ export function getCircuitComponentMetadata(
         type: 'TO-92 NPN Silicon Switching BJT',
         role: 'High-Speed Sinking Current Switch for Red LED',
         accentColor: '#f97316',
+        imageUrl: '/hardware/transistor_2n2222.jpg',
         voltageReading: isSimulating ? 'V_CE = 0.20 V, V_BE = 0.72 V' : '0.00 V (Cut-off)',
         currentReading: isSimulating ? 'I_c = 14.5 mA (Switched)' : '0.0 µA (Cut-off)',
         signalType: 'Switched Ground Sinking Current',
@@ -163,6 +166,7 @@ export function getCircuitComponentMetadata(
         type: 'Carbon Film 0.25 W 5% Axial Resistor',
         role: 'Transmitter LED Current Limiter',
         accentColor: '#eab308',
+        imageUrl: '/hardware/resistor_macro.jpg',
         voltageReading: isSimulating ? '1.28 V Drop across leads' : '0.00 V Drop',
         currentReading: isSimulating ? '14.5 mA' : '0.0 mA',
         signalType: 'Linear DC Current Limiting',
@@ -191,6 +195,7 @@ export function getCircuitComponentMetadata(
         type: '5 mm High-Radiance Red LED (AlGaAs)',
         role: 'Electro-Optical Transceiver Emitter',
         accentColor: '#ef4444',
+        imageUrl: '/hardware/led_macro.jpg',
         voltageReading: isSimulating ? 'Forward Drop V_f = 1.85 V' : '0.00 V (Off)',
         currentReading: isSimulating ? 'Forward Current I_f = 14.5 mA' : '0.0 mA',
         signalType: 'Modulated Visible Red Radiant Flux',
@@ -222,6 +227,7 @@ export function getCircuitComponentMetadata(
         type: 'Atmospheric Free-Space Line-of-Sight (LOS)',
         role: 'Wireless Optical Transmission Medium',
         accentColor: '#eab308',
+        imageUrl: '/hardware/optical_setup_3d.jpg',
         voltageReading: isSimulating ? `Optical Irradiance: ${irradianceUwPerCm2.toFixed(1)} µW/cm²` : '0.0 µW/cm²',
         currentReading: isSimulating ? `Gain H(0) = ${pathGain.toExponential(2)}` : 'H(0) = 0.0',
         signalType: 'Free-Space Unshielded Optical Propagation',
@@ -251,6 +257,7 @@ export function getCircuitComponentMetadata(
         type: 'Silicon PIN Planar Photodiode',
         role: 'Optical-to-Electrical Transducer',
         accentColor: '#10b981',
+        imageUrl: '/hardware/photodiode_macro.jpg',
         voltageReading: isSimulating ? 'Reverse Bias = 3.30 V' : '0.00 V',
         currentReading: isSimulating ? `I_ph = ${photocurrentUA.toFixed(1)} µA (Reverse)` : '2.0 nA (Dark)',
         signalType: 'Microampere Reverse Photocurrent',
@@ -281,6 +288,7 @@ export function getCircuitComponentMetadata(
         type: 'Dual Low-Power Operational Amplifier',
         role: 'Transimpedance Amplification (TIA) & Voltage Slicing',
         accentColor: '#06b6d4',
+        imageUrl: '/hardware/lm358_amplifier.jpg',
         voltageReading: isSimulating ? `TIA Out: ${tiaVoltageOut.toFixed(2)} V | Sliced: 3.26 V TTL` : '0.04 V Low',
         currentReading: isSimulating ? 'I_in = ' + photocurrentUA.toFixed(1) + ' µA' : '0.0 µA',
         signalType: 'Conditioned Analog Waveform & Restored TTL',
@@ -315,6 +323,7 @@ export function getCircuitComponentMetadata(
         type: 'STM32F103C8T6 ARM Cortex-M3 (72 MHz)',
         role: 'ADC / Timer Capture & Packet Reconstructor',
         accentColor: '#8b5cf6',
+        imageUrl: '/hardware/stm32_board.jpg',
         voltageReading: isSimulating ? `3.26 V TTL | ADC Count: ${adcCount}` : '0.00 V (Idle)',
         currentReading: isSimulating ? '31.8 mA Active' : '3.8 mA Idle',
         signalType: '12-bit ADC / Timer Capture (1.0 MSPS)',
