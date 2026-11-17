@@ -237,21 +237,21 @@ export const LiveLinkPage: React.FC<LiveLinkPageProps> = ({ onNavigateToSignals 
           <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-64 h-64 bg-cyan-600/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-            {/* NODE 1: STM32 TX */}
+            {/* NODE 1: ESP32 TX */}
             <div className={`w-full md:w-56 p-4 rounded-xl border transition-all text-center ${
               isTransmitting ? 'bg-blue-950/60 border-blue-500 shadow-xl shadow-blue-500/20' : 'bg-[#070e20] border-[#162540]'
             }`}>
               <div className="w-12 h-12 mx-auto rounded-xl bg-blue-900/60 border border-blue-500/50 flex items-center justify-center text-cyan-300 mb-2">
                 <Cpu className="w-6 h-6" />
               </div>
-              <h4 className="text-sm font-bold text-white font-mono">STM32 TX</h4>
-              <span className="text-[10px] text-slate-400 font-mono block">Node 1: Transmitter</span>
+              <h4 className="text-sm font-bold text-white font-mono">ESP32 TX</h4>
+              <span className="text-[10px] text-slate-400 font-mono block">Node 1: Transmitter (GPIO 23)</span>
               <div className="mt-2 pt-2 border-t border-slate-800 text-[11px] font-mono">
                 <span className={`inline-flex items-center space-x-1 font-bold ${
                   isTransmitting ? 'text-blue-400' : 'text-slate-500'
                 }`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${isTransmitting ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
-                  <span>{isTransmitting ? '● MODULATING PA9' : '● READY'}</span>
+                  <span>{isTransmitting ? '● MODULATING GPIO 23' : '● READY'}</span>
                 </span>
               </div>
             </div>
@@ -315,21 +315,21 @@ export const LiveLinkPage: React.FC<LiveLinkPageProps> = ({ onNavigateToSignals 
               <span className="text-[10px] font-mono text-slate-400 mt-1">BPW34</span>
             </div>
 
-            {/* NODE 2: STM32 RX */}
+            {/* NODE 2: ESP32 RX */}
             <div className={`w-full md:w-56 p-4 rounded-xl border transition-all text-center ${
               isTransmitting ? 'bg-indigo-950/60 border-indigo-500 shadow-xl shadow-indigo-500/20' : 'bg-[#070e20] border-[#162540]'
             }`}>
               <div className="w-12 h-12 mx-auto rounded-xl bg-indigo-900/60 border border-indigo-500/50 flex items-center justify-center text-indigo-300 mb-2">
                 <Cpu className="w-6 h-6" />
               </div>
-              <h4 className="text-sm font-bold text-white font-mono">STM32 RX</h4>
-              <span className="text-[10px] text-slate-400 font-mono block">Node 2: Receiver</span>
+              <h4 className="text-sm font-bold text-white font-mono">ESP32 RX</h4>
+              <span className="text-[10px] text-slate-400 font-mono block">Node 2: Receiver (GPIO 34)</span>
               <div className="mt-2 pt-2 border-t border-slate-800 text-[11px] font-mono">
                 <span className={`inline-flex items-center space-x-1 font-bold ${
                   isTransmitting ? 'text-emerald-400' : 'text-slate-500'
                 }`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${isTransmitting ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
-                  <span>{isTransmitting ? '● SAMPLING PA0' : '● READY'}</span>
+                  <span>{isTransmitting ? '● SAMPLING GPIO 34' : '● READY'}</span>
                 </span>
               </div>
             </div>

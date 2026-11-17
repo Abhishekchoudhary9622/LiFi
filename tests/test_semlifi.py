@@ -141,5 +141,20 @@ class TestSemLiFiProtocol(unittest.TestCase):
         self.assertEqual(clean.mean_latency_ms, 449.0)
         self.assertEqual(clean.delivery_rate, 100.0)
 
+    def test_dynamic_experiment_runner(self):
+        config = ExperimentConfig(
+            experiment_id="test_run",
+            num_frames=20,
+            burst_probability=0.50,
+            burst_profile="P1",
+            recovery_method="SemLiFi (BASR + CGFP)",
+            tau_threshold=0.80,
+            channel_mode="SIMULATION",
+        )
+        res = run_experiment(config)
+        self.assertEqual(res.total_frames, 20)
+        self.assertTrue(res.delivery_rate >= 90.0)
+        self.assertEqual(res.source_label, "SIMULATED RESULT")
+
 if __name__ == "__main__":
     unittest.main()

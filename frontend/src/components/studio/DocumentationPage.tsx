@@ -18,7 +18,9 @@ import {
   Radio,
   Sliders,
   ChevronRight,
-  Bookmark
+  Bookmark,
+  HelpCircle,
+  GraduationCap
 } from 'lucide-react';
 
 interface DocumentationPageProps {
@@ -32,7 +34,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({
 }) => {
   const [copiedBibtex, setCopiedBibtex] = useState(false);
   const [showEmbeddedPdf, setShowEmbeddedPdf] = useState(true);
-  const [activeSection, setActiveSection] = useState<'paper' | 'architecture' | 'theory' | 'pinouts' | 'benchmarks'>('paper');
+  const [activeSection, setActiveSection] = useState<'paper' | 'theory' | 'pinouts' | 'viva'>('paper');
 
   const paperUrl = 'https://drive.google.com/file/d/1QxiZIo20nfjjd8k5nWW6uqU6ruraGfvF/view?usp=sharing';
   const paperPreviewUrl = 'https://drive.google.com/file/d/1QxiZIo20nfjjd8k5nWW6uqU6ruraGfvF/preview';
@@ -173,9 +175,9 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({
             <div className="text-[9px] text-slate-400">Zero false acceptances</div>
           </div>
           <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
-            <div className="text-[10px] font-mono text-slate-400 uppercase">Modulation Carrier</div>
-            <div className="text-base font-bold text-blue-400 mt-0.5">10.0 kHz</div>
-            <div className="text-[9px] text-slate-400">OOK Manchester PWM</div>
+            <div className="text-[10px] font-mono text-slate-400 uppercase">Signaling Rate</div>
+            <div className="text-base font-bold text-blue-400 mt-0.5">1000 bps</div>
+            <div className="text-[9px] text-slate-400">1000 &mu;s Manchester OOK</div>
           </div>
           <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
             <div className="text-[10px] font-mono text-slate-400 uppercase">Latency Reduction</div>
@@ -206,10 +208,39 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({
         </div>
       </div>
 
+      {/* Interactive Sub-Navigation Tabs */}
+      <div className="flex flex-wrap items-center gap-2 border-b pb-3 border-slate-700/50">
+        {[
+          { id: 'paper', label: 'Paper & PDF Viewer', icon: FileText },
+          { id: 'theory', label: 'Theoretical Formulations', icon: Zap },
+          { id: 'pinouts', label: 'Dual ESP32 Pinout Matrix', icon: Cpu },
+          { id: 'viva', label: 'Viva & Defense Q&A (Examiner Prep)', icon: GraduationCap }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeSection === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveSection(tab.id as any)}
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                isActive
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 font-bold'
+                  : isDarkMode
+                  ? 'bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'
+                  : 'bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* ========================================================= */}
       {/* 3. EMBEDDED GOOGLE DRIVE PDF VIEWER                       */}
       {/* ========================================================= */}
-      {showEmbeddedPdf && (
+      {showEmbeddedPdf && activeSection === 'paper' && (
         <div
           className={`rounded-2xl border overflow-hidden shadow-xl transition-all ${
             isDarkMode ? 'bg-[#090e1b] border-[#182744]' : 'bg-white border-slate-200'
@@ -253,6 +284,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({
       {/* ========================================================= */}
       {/* 4. THEORETICAL & MATHEMATICAL FORMULATIONS                */}
       {/* ========================================================= */}
+      {(activeSection === 'paper' || activeSection === 'theory') && (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Card 1: Lambertian Optical Link Model */}
         <div
@@ -336,10 +368,12 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({
           </div>
         </div>
       </div>
+      )}
 
       {/* ========================================================= */}
       {/* 5. HARDWARE ARCHITECTURE & PINOUT MATRIX                  */}
       {/* ========================================================= */}
+      {(activeSection === 'paper' || activeSection === 'pinouts') && (
       <div
         className={`rounded-2xl border p-5 sm:p-6 space-y-4 shadow-sm ${
           isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200/90'
@@ -351,7 +385,7 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({
           </div>
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-              Dual STM32 Hardware Pinout &amp; Peripheral Configuration
+              Dual ESP32 Hardware Pinout &amp; Peripheral Configuration
             </h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
               Complete Transceiver Wiring Specifications
@@ -373,12 +407,12 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70 text-[11px]">
               <tr>
-                <td className="py-2.5 px-3 font-bold text-blue-400">STM32 TX (U1)</td>
-                <td className="py-2.5 px-3 font-semibold text-white">PA9</td>
-                <td className="py-2.5 px-3 text-cyan-400">TIM1_CH2</td>
-                <td className="py-2.5 px-3 text-slate-300">3.3V TTL Push-Pull</td>
+                <td className="py-2.5 px-3 font-bold text-blue-400">ESP32 TX (U1)</td>
+                <td className="py-2.5 px-3 font-semibold text-white">GPIO 23</td>
+                <td className="py-2.5 px-3 text-cyan-400">GPIO Output</td>
+                <td className="py-2.5 px-3 text-slate-300">3.3V CMOS Push-Pull</td>
                 <td className="py-2.5 px-3 text-slate-300">1 kΩ Base Resistor &rarr; 2N2222</td>
-                <td className="py-2.5 px-3 text-slate-400">10 kHz PWM Carrier Modulator</td>
+                <td className="py-2.5 px-3 text-slate-400">1000 bps Manchester OOK Modulator</td>
               </tr>
               <tr>
                 <td className="py-2.5 px-3 font-bold text-orange-400">Driver (Q1)</td>
@@ -417,21 +451,135 @@ export const DocumentationPage: React.FC<DocumentationPageProps> = ({
                 <td className="py-2.5 px-3 font-semibold text-white">Output (Pin 1)</td>
                 <td className="py-2.5 px-3 text-cyan-400">LM358 Dual</td>
                 <td className="py-2.5 px-3 text-slate-300">R_f = 47 kΩ, 3.26 V Sliced</td>
-                <td className="py-2.5 px-3 text-slate-300">STM32 RX Pin PA0 Header</td>
+                <td className="py-2.5 px-3 text-slate-300">ESP32 RX Pin GPIO 34 Header</td>
                 <td className="py-2.5 px-3 text-slate-400">TIA Gain + Slicing Comparator</td>
               </tr>
               <tr>
-                <td className="py-2.5 px-3 font-bold text-purple-400">STM32 RX (U3)</td>
-                <td className="py-2.5 px-3 font-semibold text-white">PA0</td>
-                <td className="py-2.5 px-3 text-cyan-400">TIM2_CH1 / ADC1</td>
-                <td className="py-2.5 px-3 text-slate-300">1.0 MSPS Timer Input Capture</td>
+                <td className="py-2.5 px-3 font-bold text-purple-400">ESP32 RX (U3)</td>
+                <td className="py-2.5 px-3 font-semibold text-white">GPIO 34</td>
+                <td className="py-2.5 px-3 text-cyan-400">ADC1_CH6</td>
+                <td className="py-2.5 px-3 text-slate-300">12-bit SAR ADC (~50 Count Threshold)</td>
                 <td className="py-2.5 px-3 text-slate-300">Internal Manchester Decoder</td>
-                <td className="py-2.5 px-3 text-slate-400">Edge Capture &amp; CRC-8 Dallas Check</td>
+                <td className="py-2.5 px-3 text-slate-400">Mid-Bit Slicing (450–550 µs) &amp; CRC-8 Dallas</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 6. VIVA & DEFENSE Q&A HUB (EXAMINER PREP)                 */}
+      {/* ========================================================= */}
+      {activeSection === 'viva' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-indigo-950/60 via-purple-950/40 to-slate-900/60 p-5 rounded-2xl border border-indigo-500/30">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-white">SemLiFi Academic Defense &amp; Viva Voce Preparation Hub</h2>
+                <p className="text-xs text-indigo-300 font-mono mt-0.5">
+                  Comprehensive mathematical, physical, and protocol defenses for final-year thesis examination
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Viva Card 1: CGFP Formula & Structural Validity */}
+            <div className={`p-5 rounded-2xl border space-y-3 ${isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200'}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 font-bold">VIVA TOPIC 1</span>
+                <span className="text-[10px] font-mono text-slate-400">Section VI &amp; Table XII</span>
+              </div>
+              <h3 className="text-sm font-bold text-white">Why is S_syntax a non-negotiable hard gate in the CGFP confidence formula?</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                The CGFP equation is defined as: <code className="text-cyan-400 bg-slate-900 px-1 py-0.5 rounded font-mono">C = C_token &bull; C_phys &bull; Penalty_burst &bull; S_syntax</code>.
+              </p>
+              <div className="p-3 rounded-xl bg-[#070b14] border border-slate-800 text-xs text-slate-300 space-y-1.5 font-sans">
+                <p><strong className="text-emerald-400">Defense:</strong> In cyber-physical telemetry (e.g., <code className="text-cyan-300">MOTOR=ON</code>, <code className="text-cyan-300">TEMP=27.4</code>), an invalid syntax presents an acute operational hazard. Even if a deep learning model has high softmax token confidence (<code className="text-cyan-300">C_token &gt; 0.95</code>), accepting syntactically malformed sensor fields could crash physical actuators. Therefore, <code className="text-amber-400">S_syntax = 0</code> strictly collapses confidence to <code className="text-rose-400">C = 0</code>, unconditionally triggering exact ARQ fallback.</p>
+              </div>
+            </div>
+
+            {/* Viva Card 2: Calibrated Threshold tau* = 0.80 */}
+            <div className={`p-5 rounded-2xl border space-y-3 ${isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200'}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">VIVA TOPIC 2</span>
+                <span className="text-[10px] font-mono text-slate-400">Section VII-C &amp; Table VII</span>
+              </div>
+              <h3 className="text-sm font-bold text-white">How was the optimal threshold tau* = 0.80 calibrated and justified?</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Threshold sweeps across <code className="text-cyan-400 bg-slate-900 px-1 py-0.5 rounded font-mono">&tau; &in; [0.50, 0.95]</code> evaluated the trade-off between undetected error rate (UFER) and avoided retransmissions:
+              </p>
+              <div className="p-3 rounded-xl bg-[#070b14] border border-slate-800 text-xs text-slate-300 space-y-1.5 font-sans">
+                <p><strong className="text-emerald-400">Defense:</strong> At <code className="text-cyan-300">&tau; = 0.70</code>, retransmissions avoided was 34.2%, but UFER rose to an unsafe 4.8%. At <code className="text-cyan-300">&tau; = 0.90</code>, UFER dropped to 0%, but retransmission savings collapsed to 11.4%. The calibrated threshold <code className="text-amber-400">&tau;* = 0.80</code> achieves the optimal Pareto boundary: guaranteeing <code className="text-emerald-400">0.00% live hardware UFER</code> (N=15) and 1.00% simulated UFER, while preserving <code className="text-cyan-300">27.15% retransmissions avoided</code>.</p>
+              </div>
+            </div>
+
+            {/* Viva Card 3: Reed-Solomon Failure Mechanism */}
+            <div className={`p-5 rounded-2xl border space-y-3 ${isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200'}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">VIVA TOPIC 3</span>
+                <span className="text-[10px] font-mono text-slate-400">Section II &amp; Table VII</span>
+              </div>
+              <h3 className="text-sm font-bold text-white">Why does classical Reed-Solomon FEC fail on real LiFi optical bursts?</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Comparison of block coding error boundaries vs physical obstruction durations:
+              </p>
+              <div className="p-3 rounded-xl bg-[#070b14] border border-slate-800 text-xs text-slate-300 space-y-1.5 font-sans">
+                <p><strong className="text-emerald-400">Defense:</strong> An <code className="text-cyan-300">RS(33, 25)</code> code adds 8 parity bytes, correcting at most <code className="text-cyan-300">t = &lfloor;8/2&rfloor; = 4</code> symbol errors per frame. Real optical burst occlusions (servo flaps, hands, airborne particulates) block light for 30–500 ms, corrupting 10–25 contiguous bytes. Because burst length far exceeds 4 bytes, RS-FEC achieves only <code className="text-rose-400">37.5% empirical recovery</code> on 56 recorded bursts, while imposing 32% constant transmission overhead on clean frames.</p>
+              </div>
+            </div>
+
+            {/* Viva Card 4: Unvalidated BASR Safety Risk */}
+            <div className={`p-5 rounded-2xl border space-y-3 ${isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200'}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold">VIVA TOPIC 4</span>
+                <span className="text-[10px] font-mono text-slate-400">Section V &amp; Table VI</span>
+              </div>
+              <h3 className="text-sm font-bold text-white">What critical failure occurs if BASR is deployed without CGFP gating?</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Analysis of standalone edge Transformer semantic reconstruction (74,281 parameters):
+              </p>
+              <div className="p-3 rounded-xl bg-[#070b14] border border-slate-800 text-xs text-slate-300 space-y-1.5 font-sans">
+                <p><strong className="text-emerald-400">Defense:</strong> Edge Transformer BASR achieves <code className="text-cyan-300">42.63 &plusmn; 1.47%</code> exact reconstruction accuracy under burst occlusion. Without CGFP gating, the receiver accepts all predictions blindly, causing an undetected frame error rate (UFER) of <code className="text-rose-400">57.37%</code>. CGFP serves as the vital safety gate: by filtering through <code className="text-cyan-300">&tau;* = 0.80</code>, it eliminates undetected hallucinations, yielding 0.00% live hardware UFER.</p>
+              </div>
+            </div>
+
+            {/* Viva Card 5: Dual ESP32 Pinout Justification */}
+            <div className={`p-5 rounded-2xl border space-y-3 ${isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200'}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 font-bold">VIVA TOPIC 5</span>
+                <span className="text-[10px] font-mono text-slate-400">Section IV &amp; Table II</span>
+              </div>
+              <h3 className="text-sm font-bold text-white">Why are GPIO 23 and GPIO 34 specifically chosen on the ESP32 microcontrollers?</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Architectural and electrical pinout considerations on the ESP32-WROOM-32D:
+              </p>
+              <div className="p-3 rounded-xl bg-[#070b14] border border-slate-800 text-xs text-slate-300 space-y-1.5 font-sans">
+                <p><strong className="text-emerald-400">Defense:</strong> On the TX side, <code className="text-cyan-300">GPIO 23</code> provides push-pull CMOS drive with &lt;15 ns switching to cleanly saturate the 2N2222 BJT driver. On the RX side, <code className="text-cyan-300">GPIO 34</code> belongs to <code className="text-amber-400">ADC1 (ADC1_CH6)</code>, which remains operational when Wi-Fi/BT RF is active (unlike ADC2 channels). Additionally, GPIO 34 is an input-only pin without internal pull-up/down resistors, preventing DC bias distortion at the sensitive LM358 TIA output.</p>
+              </div>
+            </div>
+
+            {/* Viva Card 6: Mid-Bit Window Sampling */}
+            <div className={`p-5 rounded-2xl border space-y-3 ${isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200'}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-bold">VIVA TOPIC 6</span>
+                <span className="text-[10px] font-mono text-slate-400">Section IV &amp; Section XI</span>
+              </div>
+              <h3 className="text-sm font-bold text-white">Why sample in the mid-bit 450–550 µs window for Manchester OOK?</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Signal conditioning and symbol timing synchronization:
+              </p>
+              <div className="p-3 rounded-xl bg-[#070b14] border border-slate-800 text-xs text-slate-300 space-y-1.5 font-sans">
+                <p><strong className="text-emerald-400">Defense:</strong> Manchester encoding guarantees a transition at the exact center of every 1000 µs bit (500 µs half-chip). Restricting ADC sampling to the 450–550 µs window allows the firmware to verify clock synchronization and transition polarity while avoiding switching transients, optical capacitive decay, and op-amp slew rounding at symbol boundaries.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

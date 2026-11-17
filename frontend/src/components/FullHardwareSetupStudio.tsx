@@ -92,9 +92,9 @@ export interface HardwareComponentItem {
 export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
   {
     id: 'stm32_tx',
-    name: 'STM32F103C8 (Transmitter - TX)',
-    shortName: 'STM32 TX (PA9)',
-    subtitle: 'ARM Cortex-M3 32-bit Microcontroller',
+    name: 'ESP32-WROOM-32D (Transmitter - TX)',
+    shortName: 'ESP32 TX (GPIO 23)',
+    subtitle: 'Xtensa Dual-Core 32-bit Microcontroller',
     category: 'mcu_tx',
     badge: 'Transmitter MCU',
     badgeColor: 'bg-blue-950/80 border-blue-500/60 text-blue-300',
@@ -105,42 +105,42 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
       y: 235,
       width: 215,
       height: 255,
-      label: 'STM32F103C8 (Transmitter - TX)',
+      label: 'ESP32-WROOM-32D (Transmitter - TX)',
       color: '#3b82f6'
     },
     center: { x: 182, y: 362 },
     pinoutCallout: {
-      title: 'STM32F103C8 Pinout (Transmitter - TX)',
+      title: 'ESP32-WROOM-32D Pinout (Transmitter - TX)',
       pins: [
-        { name: 'PA9 (PWM Output)', wireColor: 'Yellow / Orange Wire', role: 'Outputs 10.0 kHz high-speed OOK carrier', voltage: '0.00 V / 3.30 V' },
+        { name: 'GPIO 23 (TX Output)', wireColor: 'Yellow / Orange Wire', role: 'Outputs 1000 bps Manchester OOK modulated drive', voltage: '0.00 V / 3.30 V' },
         { name: '3.3V (VCC Out)', wireColor: 'Red Wire', role: 'Powers breadboard positive rail from onboard LDO', voltage: '+3.30 V DC' },
         { name: 'GND (Ground)', wireColor: 'Black Wire', role: 'Common ground return tied to breadboard negative bus', voltage: '0.00 V (Ref)' }
       ]
     },
     specs: [
-      { label: 'Processor Architecture', value: 'ARM Cortex-M3 32-bit RISC' },
-      { label: 'System Clock Speed', value: '72 MHz SysTick PLL' },
-      { label: 'PWM Output Pin', value: 'PA9 (Timer1 Channel 2 / USART1 TX)' },
-      { label: 'Carrier Frequency', value: '10.0 kHz (OOK Modulated)' },
+      { label: 'Processor Architecture', value: 'Tensilica Xtensa Dual-Core 32-bit LX6' },
+      { label: 'System Clock Speed', value: '240 MHz Crystal Oscillator' },
+      { label: 'OOK Output Pin', value: 'GPIO 23 (Digital Output / Transistor Drive)' },
+      { label: 'Raw Signaling Rate', value: '1000 bps Manchester (1000 µs bit period)' },
       { label: 'Logic Voltage Level', value: '3.3 V CMOS Logic' },
-      { label: 'Flash / SRAM', value: '64 KB Flash, 20 KB SRAM' }
+      { label: 'Flash / SRAM', value: '4 MB Flash, 520 KB SRAM' }
     ],
     connectionsExplanation: [
       {
-        step: 'Pin PA9 (PWM Out)',
-        from: 'STM32 Pin PA9 (Header Pin)',
+        step: 'Pin GPIO 23 (TX Out)',
+        from: 'ESP32 Pin GPIO 23 (Header Pin)',
         to: 'Base of 2N2222 Transistor via 1 kΩ base resistor & 220 Ω limiter',
-        why: 'Hardware timer outputs continuous high-speed optical carrier pulses without blocking CPU software execution.'
+        why: 'Hardware timer/GPIO outputs Manchester-encoded bit pulses (1000 µs bit duration) switching the 2N2222 BJT driver without DC bias.'
       },
       {
         step: 'Pin 3.3V',
-        from: 'STM32 Pin 3.3V',
+        from: 'ESP32 Pin 3.3V',
         to: 'Breadboard Red Positive Rail (+ Bus)',
         why: 'Powers active circuitry across the breadboard from the onboard RT9193 voltage regulator.'
       },
       {
         step: 'Pin GND',
-        from: 'STM32 Pin GND',
+        from: 'ESP32 Pin GND',
         to: 'Breadboard Blue Ground Rail (- Bus)',
         why: 'Ties digital and analog ground together to prevent floating reference noise.'
       }
@@ -148,13 +148,13 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
     liveProbe: {
       voltage: '3.30 V (Square Wave)',
       currentOrPower: '8.4 mA',
-      frequency: '10.0 kHz (OOK)',
+      frequency: '1000 bps Manchester',
       logicState: 'PULSING'
     },
-    professorExplanation: 'The transmitter MCU runs the SemLiFi firmware. It takes payload bytes, packetizes them with frame headers and burst check bits, and modulates Pin PA9 at 10 kHz.',
+    professorExplanation: 'The transmitter MCU runs the SemLiFi firmware. It takes payload bytes, packetizes them with Dallas CRC-8 check bytes and sequence counters, and Manchester-modulates Pin GPIO 23 at 1000 bps.',
     vivaQuestion: {
-      question: 'Why is Pin PA9 selected for the PWM output?',
-      answer: 'Pin PA9 is mapped to internal hardware Timer1 Channel 2 (and USART1_TX), allowing deterministic nanosecond-precise square-wave generation directly in hardware.'
+      question: 'Why is Pin GPIO 23 selected for the optical transmitter output?',
+      answer: 'Pin GPIO 23 is a dedicated low-noise digital output pin on the ESP32-WROOM-32D, providing clean 3.3V CMOS edges with nanosecond rise times to cleanly switch the 2N2222 optical driver.'
     },
     whatIfDisconnected: 'The entire transmission halts. The LED turns off and zero light pulses reach the receiver.'
   },
@@ -180,7 +180,7 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
     pinoutCallout: {
       title: '220 Ω Series Resistor (R1)',
       pins: [
-        { name: 'Lead 1 (Input)', wireColor: 'Connected to PA9 PWM', role: 'Receives switched drive current', voltage: '3.30 V' },
+        { name: 'Lead 1 (Input)', wireColor: 'Connected to GPIO 23 Driver', role: 'Receives switched drive current', voltage: '3.30 V' },
         { name: 'Lead 2 (Output)', wireColor: 'Direct to LED Anode', role: 'Drops 1.35 V to limit current', voltage: '1.95 V (Vf)' }
       ]
     },
@@ -202,7 +202,7 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
     liveProbe: {
       voltage: '1.35 V (Drop)',
       currentOrPower: '14.2 mA',
-      frequency: '10.0 kHz',
+      frequency: '1000 bps',
       logicState: 'ANALOG'
     },
     professorExplanation: 'Calculated via Ohm’s Law: R = (Vcc - Vf) / I_led = (3.3V - 1.95V) / 0.014A ≈ 96 Ω minimum. 220 Ω provides robust thermal margin and ensures thousands of operating hours.',
@@ -235,7 +235,7 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
       title: 'IR / Red LED (Transmitter) Pinout',
       pins: [
         { name: 'Anode (+) [Long Leg]', wireColor: 'Resistor Bridge', role: 'Connects to 220 Ω resistor output', voltage: '1.95 V' },
-        { name: 'Cathode (-) [Short Leg]', wireColor: 'Blue Wire', role: 'Connects to Collector of 2N2222 Transistor', voltage: '0.20 V (Vce_sat)' },
+        { name: 'Cathode (-) [Short Leg]', wireColor: 'Blue Wire', role: 'Connects to Collector of S8050 / 2N2222 Transistor', voltage: '0.20 V (Vce_sat)' },
         { name: 'Optical Lens Dome', wireColor: 'Free-Space Photons', role: 'Radiates 630nm/850nm beam toward photodiode', voltage: 'Radiant Power' }
       ]
     },
@@ -256,14 +256,14 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
       {
         step: 'Cathode (-)',
         from: 'Breadboard Row 29',
-        to: 'Collector of 2N2222 Transistor',
+        to: 'Collector of S8050 / 2N2222 Transistor',
         why: 'Switched to ground by the transistor driver to rapidly modulate optical pulses.'
       }
     ],
     liveProbe: {
       voltage: '1.95 V (Forward)',
       currentOrPower: '18.5 mW Radiant Flux',
-      frequency: '10.0 kHz (Optical Pulse)',
+      frequency: '1000 bps (Optical Pulse)',
       logicState: 'PULSING'
     },
     professorExplanation: 'The LED is the physical electro-optical transducer in the LiFi transmitter. When forward-biased, electron-hole recombination in the semiconductor bandgap emits photons.',
@@ -275,9 +275,9 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
   },
   {
     id: 'transistor_2n2222',
-    name: '2N2222 (NPN Transistor) (LED Driver)',
-    shortName: '2N2222 Driver',
-    subtitle: 'High-Speed BJT Current Driver & Buffer',
+    name: 'S8050 / 2N2222 (NPN Transistor) (LED Driver)',
+    shortName: 'S8050 / 2N2222 Driver',
+    subtitle: 'High-Speed BJT Current Driver (Paper Spec: S8050; Benchtop Alt: 2N2222)',
     category: 'transistor',
     badge: 'LED Driver',
     badgeColor: 'bg-purple-950/80 border-purple-500/60 text-purple-300',
@@ -288,41 +288,41 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
       y: 370,
       width: 260,
       height: 125,
-      label: '2N2222 (NPN Transistor) [LED Driver]',
+      label: 'S8050 / 2N2222 (NPN Transistor) [LED Driver]',
       color: '#a855f7'
     },
     center: { x: 520, y: 432 },
     pinoutCallout: {
-      title: '2N2222 NPN Transistor Pinout (Front View)',
+      title: 'S8050 / 2N2222 NPN Transistor Pinout (Front View)',
       pins: [
         { name: 'E - Emitter [Pin 1]', wireColor: 'Black Wire', role: 'Tied to Breadboard Ground Rail (- Bus)', voltage: '0.00 V' },
-        { name: 'B - Base [Pin 2]', wireColor: 'Yellow Wire', role: 'Driven by STM32 PA9 via 1 kΩ base resistor', voltage: '0.70 V (Vbe_on)' },
+        { name: 'B - Base [Pin 2]', wireColor: 'Yellow Wire', role: 'Driven by ESP32 GPIO 23 via 1 kΩ base resistor', voltage: '0.70 V (Vbe_on)' },
         { name: 'C - Collector [Pin 3]', wireColor: 'Blue Wire', role: 'Connected to LED Cathode to sink current', voltage: '0.20 V (Vce_sat)' }
       ]
     },
     specs: [
-      { label: 'Transistor Type', value: 'NPN Silicon BJT (TO-92 Package)' },
-      { label: 'Collector Current (Ic Max)', value: '800 mA Continuous' },
-      { label: 'DC Current Gain (hFE)', value: '100 – 300' },
-      { label: 'Transition Frequency (fT)', value: '300 MHz High-Speed Switching' },
-      { label: 'Vce Saturation Voltage', value: '0.2 V at Saturation' }
+      { label: 'Paper Primary Specification', value: 'S8050 NPN BJT (Ic = 120 mA, hFE ≈ 200, fT = 150 MHz)' },
+      { label: 'Benchtop Alternate Model', value: '2N2222 NPN BJT (Ic = 800 mA, hFE ≈ 100-300, fT = 300 MHz)' },
+      { label: 'Package Type', value: 'TO-92 Through-Hole Bipolar Junction Transistor' },
+      { label: 'Base Drive Network', value: '1 kΩ Resistor connected to ESP32 TX GPIO 23' },
+      { label: 'Vce Saturation Voltage', value: '0.20 V at Saturation (Switches 14.5 mA)' }
     ],
     connectionsExplanation: [
       {
         step: 'Base (B) Control',
-        from: 'STM32 Pin PA9 through 1 kΩ Base Resistor',
-        to: 'Center Pin of 2N2222',
+        from: 'ESP32 Pin GPIO 23 through 1 kΩ Base Resistor',
+        to: 'Center Pin of S8050 / 2N2222 Transistor',
         why: 'A small base current (~1.5 mA) saturates the transistor, turning it on.'
       },
       {
         step: 'Collector (C) Sink',
         from: 'LED Cathode Lead',
-        to: 'Right Pin of 2N2222',
+        to: 'Right Pin of S8050 / 2N2222 Transistor',
         why: 'Sinks forward current from the LED to complete the circuit loop.'
       },
       {
         step: 'Emitter (E) Ground',
-        from: 'Left Pin of 2N2222',
+        from: 'Left Pin of S8050 / 2N2222 Transistor',
         to: 'Breadboard Ground Rail',
         why: 'Provides the common low-resistance return path to ground.'
       }
@@ -330,13 +330,13 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
     liveProbe: {
       voltage: 'Vbe: 0.70V | Vce: 0.20V',
       currentOrPower: 'Ic: 14.2 mA | Ib: 1.5 mA',
-      frequency: '10.0 kHz Switching',
+      frequency: '1000 bps Switching',
       logicState: 'PULSING'
     },
-    professorExplanation: 'Acts as an open-collector electronic switch. The STM32 GPIO pin only needs to supply a tiny base current (~1 mA), protecting the microcontroller while the transistor easily sinks the full LED current.',
+    professorExplanation: 'The research paper specifies the S8050 NPN BJT for the LED driver, while the physical benchtop hardware prototype also verified the 2N2222 as a functionally interchangeable alternate. Acts as an open-collector electronic switch driven via a 1 kΩ base resistor from ESP32 GPIO 23.',
     vivaQuestion: {
-      question: 'In which region does the 2N2222 operate in this circuit?',
-      answer: 'It switches strictly between the Cutoff region (transistor OFF, Vce = Vcc, LED off) and the Saturation region (transistor fully ON, Vce ≈ 0.2V, LED on).'
+      question: 'Why does the research paper specify S8050 while benchtop setups may use 2N2222?',
+      answer: 'Both are complementary high-speed NPN switching transistors in TO-92 packages with identical Vce_sat (< 0.2V) and pinouts. The paper specifies S8050 (Ic = 120 mA, hFE ~200), whereas 2N2222 (Ic = 800 mA) serves as an interchangeable benchtop alternate.'
     },
     whatIfDisconnected: 'The LED current path is broken; the LED will not illuminate.'
   },
@@ -446,7 +446,7 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
     liveProbe: {
       voltage: 'Reverse Bias: -3.30 V',
       currentOrPower: 'I_photo: 42.8 µA',
-      frequency: '10.0 kHz Optical',
+      frequency: '1000 bps Optical',
       logicState: 'ANALOG'
     },
     professorExplanation: 'The photodiode operates in photoconductive mode. Incident photons generate electron-hole pairs in the depletion region, producing a reverse photocurrent proportional to light intensity.',
@@ -482,7 +482,7 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
         { name: '1 kΩ (Input Resistor)', wireColor: 'Resistor Bridge', role: 'Input current-limiting & filter stage', voltage: 'Rin = 1 kΩ' },
         { name: 'Pin 8 (VCC)', wireColor: 'Red Wire', role: 'Connected to +3.3V Power Rail', voltage: '+3.30 V' },
         { name: 'Pin 4 (GND)', wireColor: 'Black Wire', role: 'Connected to Common Ground Rail', voltage: '0.00 V' },
-        { name: 'Pin 1 (Output)', wireColor: 'Purple / Green Wire', role: 'Carries amplified 0–3.3V waveform to STM32 RX Pin PA0', voltage: '0.00 V – 3.30 V' }
+        { name: 'Pin 1 (Output)', wireColor: 'Purple / Green Wire', role: 'Carries amplified 0–3.3V waveform to ESP32 RX Pin GPIO 34 (ADC1_CH6)', voltage: '0.00 V – 3.30 V' }
       ]
     },
     specs: [
@@ -502,7 +502,7 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
       {
         step: 'Output to Microcontroller',
         from: 'LM358 Output Pin 1',
-        to: 'STM32 (RX) Pin PA0 (ADC Input)',
+        to: 'ESP32 (RX) Pin GPIO 34 (ADC1_CH6 Input)',
         why: 'Feeds conditioned full-scale 0–3.3V signal into ADC for digital sampling.'
       }
     ],
@@ -521,9 +521,9 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
   },
   {
     id: 'stm32_rx',
-    name: 'STM32F103C8 (Receiver - RX)',
-    shortName: 'STM32 RX (PA0)',
-    subtitle: 'ARM Cortex-M3 32-bit Microcontroller',
+    name: 'ESP32-WROOM-32D (Receiver - RX)',
+    shortName: 'ESP32 RX (GPIO 34)',
+    subtitle: 'Xtensa Dual-Core 32-bit Microcontroller',
     category: 'mcu_rx',
     badge: 'Receiver MCU',
     badgeColor: 'bg-emerald-950/80 border-emerald-500/60 text-emerald-300',
@@ -534,49 +534,50 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
       y: 355,
       width: 280,
       height: 155,
-      label: 'STM32F103C8 (Receiver - RX)',
+      label: 'ESP32-WROOM-32D (Receiver - RX)',
       color: '#10b981'
     },
     center: { x: 850, y: 432 },
     pinoutCallout: {
-      title: 'STM32F103C8 Pinout (Receiver - RX)',
+      title: 'ESP32-WROOM-32D Pinout (Receiver - RX)',
       pins: [
-        { name: 'PA0 (ADC Input)', wireColor: 'Purple Wire', role: 'Samples amplified analog/digital signal from LM358', voltage: '0.00 V – 3.30 V' },
+        { name: 'GPIO 34 (ADC1_CH6)', wireColor: 'Purple Wire', role: 'Samples amplified analog/digital signal from LM358 in mid-bit window', voltage: '0.00 V – 3.30 V' },
         { name: '3.3V (VCC In)', wireColor: 'Red Wire', role: 'Powers MCU from shared positive power rail', voltage: '+3.30 V' },
         { name: 'GND (Ground)', wireColor: 'Black Wire', role: 'Shared system ground plane reference', voltage: '0.00 V (Ref)' }
       ]
     },
     specs: [
-      { label: 'Processor Architecture', value: 'ARM Cortex-M3 32-bit' },
-      { label: 'ADC Resolution', value: '12-bit Successive Approximation (0–4095 levels)' },
-      { label: 'ADC Step Voltage', value: '3.3 V / 4096 ≈ 0.8 mV per LSB' },
-      { label: 'ADC Sampling Rate', value: '1 MSPS Maximum Conversion' },
-      { label: 'Demodulation Algorithm', value: 'SemLiFi Dynamic Threshold Demodulator' }
+      { label: 'Processor Architecture', value: 'Tensilica Xtensa Dual-Core 32-bit LX6' },
+      { label: 'ADC Resolution', value: '12-bit SAR ADC (0–4095 levels)' },
+      { label: 'ADC Input Pin', value: 'GPIO 34 (ADC1_CH6 - Input Only, Low Noise)' },
+      { label: 'Sampling Window', value: 'Mid-bit 450 µs – 550 µs within 1000 µs symbol' },
+      { label: 'Decision Threshold', value: '~50 ADC counts dynamic boundary' },
+      { label: 'Demodulation Algorithm', value: 'SemLiFi Mid-Bit Manchester Demodulator' }
     ],
     connectionsExplanation: [
       {
-        step: 'Pin PA0 (ADC In)',
+        step: 'Pin GPIO 34 (ADC In)',
         from: 'LM358 Pin 1 Output',
-        to: 'STM32 Pin PA0 (ADC1_IN0)',
-        why: 'Digitizes the incoming optical waveform to detect High (1) vs Low (0) bitstates.'
+        to: 'ESP32 Pin GPIO 34 (ADC1_CH6)',
+        why: 'Digitizes the incoming optical waveform to detect Manchester transitions and sample mid-bit logic levels.'
       },
       {
         step: 'Pin 3.3V & GND',
         from: 'Breadboard Power Rails',
-        to: 'STM32 3.3V and GND pins',
+        to: 'ESP32 3.3V and GND pins',
         why: 'Powers the receiver microcontroller and provides shared ground plane.'
       }
     ],
     liveProbe: {
       voltage: 'ADC: 2656 / 4095 (2.14 V)',
       currentOrPower: 'BER: 0.000% (Clean)',
-      frequency: 'Demod: 115.2 kbps',
+      frequency: 'Demod: 1000 bps',
       logicState: 'HIGH'
     },
-    professorExplanation: 'The receiver MCU samples Pin PA0 using its 12-bit ADC. Firmware performs burst error detection and applies SemLiFi confidence gating to decide whether to accept data or trigger fallback recovery.',
+    professorExplanation: 'The receiver MCU samples Pin GPIO 34 (ADC1_CH6) in the mid-bit window (450–550 µs). Firmware performs Manchester decoding, CRC-8 validation, contiguous burst error detection, and applies SemLiFi confidence gating (tau* = 0.80) to decide whether to accept BASR semantic reconstruction or trigger selective NACK fallback recovery.',
     vivaQuestion: {
-      question: 'How does the receiver microcontroller convert the analog light back into data bytes?',
-      answer: 'The ADC samples the signal at 1 MSPS. Firmware compares the sample against a dynamic threshold (midpoint of High and Low levels). A transition state machine decodes the 10 kHz OOK pulses into UART bytes.'
+      question: 'Why is Pin GPIO 34 used for the receiver ADC input instead of other pins?',
+      answer: 'GPIO 34 belongs to ADC1 (ADC1_CH6), which remains fully functional when Wi-Fi/BT is active (unlike ADC2 pins), and is an input-only pin without internal pull-up/down resistors that could introduce parasitic bias to the analog photocurrent signal.'
     },
     whatIfDisconnected: 'The optical data is converted into voltage by the LM358, but never digitized or processed into text/telemetry.'
   },
@@ -617,7 +618,7 @@ export const HARDWARE_COMPONENTS: HardwareComponentItem[] = [
         step: 'VCC Power Bus',
         from: '3.3V Bench Supply / USB Regulator',
         to: 'Top Red Breadboard Rail (+ Bus)',
-        why: 'Supplies power to STM32 TX, STM32 RX, LM358, and LED drive.'
+        why: 'Supplies power to ESP32 TX, ESP32 RX, LM358, and LED drive.'
       },
       {
         step: 'Common Ground',
@@ -826,13 +827,13 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
         <div className="hidden xl:flex items-center bg-[#050914] p-1 rounded-xl border border-[#162238] space-x-1 shadow-inner text-[11px] font-mono">
           <span className="text-slate-400 px-1.5 font-bold text-[10px] uppercase tracking-wider">FLOW:</span>
           {[
-            { step: 1, label: '1. STM32 TX', color: '#3b82f6', compId: 'stm32_tx' },
+            { step: 1, label: '1. ESP32 TX', color: '#3b82f6', compId: 'stm32_tx' },
             { step: 2, label: '2. 2N2222', color: '#a855f7', compId: 'transistor_2n2222' },
             { step: 3, label: '3. Red LED (TX)', color: '#ef4444', compId: 'led_tx' },
             { step: 4, label: '4. Optical Link', color: '#f43f5e', compId: 'optical_link' },
             { step: 5, label: '5. Photodiode (RX)', color: '#10b981', compId: 'photodiode_rx' },
             { step: 6, label: '6. LM358 Pre-Amp', color: '#06b6d4', compId: 'lm358_amplifier' },
-            { step: 7, label: '7. STM32 RX', color: '#8b5cf6', compId: 'stm32_rx' }
+            { step: 7, label: '7. ESP32 RX', color: '#8b5cf6', compId: 'stm32_rx' }
           ].map((item, idx, arr) => (
             <React.Fragment key={item.step}>
               <button
@@ -1339,7 +1340,7 @@ export const FullHardwareSetupStudio: React.FC<FullHardwareSetupStudioProps> = (
 
               <div className="hidden md:flex items-center space-x-3 text-[11px]">
                 <span className="text-emerald-400">
-                  CARRIER: <strong className="text-white">10.0 kHz OOK</strong>
+                  SIGNALING: <strong className="text-white">1000 bps Manchester OOK</strong>
                 </span>
                 <span className="text-amber-400">
                   AIR GAP: <strong className="text-white">15.0 cm</strong>

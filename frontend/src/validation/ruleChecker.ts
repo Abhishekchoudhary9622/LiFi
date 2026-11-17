@@ -72,38 +72,38 @@ export function validateCircuit(components: CircuitComponent[], wires: Wire[]): 
     });
   }
 
-  // 4. STM32 VOLTAGE CHECK
-  const stm32 = getComp('stm32');
-  if (stm32) {
-    const stm32Vcc = wires.some(w =>
-      (w.fromComponentId === stm32.id && w.fromPinId === 'vcc_3v3') ||
-      (w.toComponentId === stm32.id && w.toPinId === 'vcc_3v3')
+  // 4. MCU VOLTAGE CHECK (ESP32 / 3.3V Logic)
+  const mcu = getComp('esp32') || getComp('stm32') || getComp('mcu');
+  if (mcu) {
+    const mcuVcc = wires.some(w =>
+      (w.fromComponentId === mcu.id && (w.fromPinId === 'vcc_3v3' || w.fromPinId === '3v3')) ||
+      (w.toComponentId === mcu.id && (w.toPinId === 'vcc_3v3' || w.toPinId === '3v3'))
     );
-    const has5vDirect = wires.some(w => w.fromPinId === '5v' && (w.toComponentId === stm32.id));
+    const has5vDirect = wires.some(w => w.fromPinId === '5v' && (w.toComponentId === mcu.id));
 
     if (has5vDirect) {
       rules.push({
-        id: 'STM32_VOLTAGE_CHECK',
-        title: '⚠ STM32 VOLTAGE CHECK: GPIO Overvoltage Detected',
-        description: 'STM32 PA0/PA1 is receiving 5.0V. The ARM Cortex-M3 operating limit is 3.3V.',
+        id: 'MCU_VOLTAGE_CHECK',
+        title: '⚠ MCU VOLTAGE CHECK: GPIO Overvoltage Detected',
+        description: 'Microcontroller GPIO/ADC pin is receiving 5.0V directly. The operating limit is 3.3V.',
         status: 'error',
         recommendation: 'Use 3.3V logic or add a resistor voltage divider.'
       });
-    } else if (stm32Vcc) {
+    } else if (mcuVcc) {
       rules.push({
-        id: 'STM32_VOLTAGE_CHECK',
-        title: '✓ STM32 VOLTAGE CHECK: 3.3V Logic Compliant',
-        description: 'ARM Cortex-M3 supply is correctly powered from the regulated 3.3V domain.',
+        id: 'MCU_VOLTAGE_CHECK',
+        title: '✓ MCU VOLTAGE CHECK: 3.3V Logic Compliant',
+        description: 'Microcontroller supply is correctly powered from the regulated 3.3V domain.',
         status: 'pass',
-        relatedComponentIds: [stm32.id]
+        relatedComponentIds: [mcu.id]
       });
     } else {
       rules.push({
-        id: 'STM32_VOLTAGE_CHECK',
-        title: '✕ STM32 VOLTAGE CHECK: STM32 Unpowered',
-        description: 'STM32 VCC pin has no active connection to 3.3V.',
+        id: 'MCU_VOLTAGE_CHECK',
+        title: '✕ MCU VOLTAGE CHECK: MCU Unpowered',
+        description: 'Microcontroller 3.3V VCC pin has no active connection.',
         status: 'error',
-        recommendation: 'Wire 3.3V supply to STM32 pin VCC.'
+        recommendation: 'Wire 3.3V supply to microcontroller VCC pin.'
       });
     }
   }
@@ -135,37 +135,37 @@ export function validateCircuit(components: CircuitComponent[], wires: Wire[]): 
       rules.push({
         id: 'LED_CURRENT_CHECK',
         title: '⚠ LED CURRENT CHECK: Missing Current Limiting Resistor',
-        description: 'Driving the optical LED directly from GPIO PA0 without a series resistor risks burning out the LED and GPIO driver.',
+        description: 'Driving the optical LED directly from ESP32 GPIO 23 without a series resistor risks burning out the LED and GPIO driver.',
         status: 'warning',
-        recommendation: 'Place a 220 Ω resistor in series between STM32 PA0 and the LED anode.',
+        recommendation: 'Place a 220 Ω resistor in series between ESP32 GPIO 23 and the LED anode.',
         relatedComponentIds: [led.id]
       });
     }
   }
 
   // 6. ADC CONNECTION CHECK (Floating Pin Check)
-  if (stm32) {
+  if (mcu) {
     const adcWired = wires.some(w =>
-      (w.fromComponentId === stm32.id && w.fromPinId === 'pa1') ||
-      (w.toComponentId === stm32.id && w.toPinId === 'pa1')
+      (w.fromComponentId === mcu.id && (w.fromPinId === 'pa1' || w.fromPinId === 'gpio34' || w.fromPinId === 'adc')) ||
+      (w.toComponentId === mcu.id && (w.toPinId === 'pa1' || w.toPinId === 'gpio34' || w.toPinId === 'adc'))
     );
 
     if (adcWired) {
       rules.push({
         id: 'ADC_CONNECTION_CHECK',
         title: '✓ ADC CONNECTION CHECK: Receiver Signal Path Linked',
-        description: 'STM32 ADC1 (PA1) is connected to optical signal conditioning output for symbol sampling.',
+        description: 'Microcontroller ADC input (GPIO 34) is connected to optical signal conditioning output for symbol sampling.',
         status: 'pass',
-        relatedComponentIds: [stm32.id]
+        relatedComponentIds: [mcu.id]
       });
     } else {
       rules.push({
         id: 'ADC_CONNECTION_CHECK',
-        title: '⚠ FLOATING PIN CHECK: Floating ADC1 Pin',
-        description: 'STM32 PA1 (ADC1) is floating without an analog input. High impedance will pick up spurious noise.',
+        title: '⚠ FLOATING PIN CHECK: Floating ADC Input Pin',
+        description: 'Receiver ADC input is floating without an analog signal connection. High impedance will pick up spurious noise.',
         status: 'warning',
-        recommendation: 'Wire the transimpedance amplifier output to STM32 PA1.',
-        relatedComponentIds: [stm32.id]
+        recommendation: 'Wire the transimpedance amplifier output to the receiver ADC input (GPIO 34).',
+        relatedComponentIds: [mcu.id]
       });
     }
   }

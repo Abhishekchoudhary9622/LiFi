@@ -163,15 +163,15 @@ export const SchematicView: React.FC<SchematicViewProps> = ({ components, wires 
               </g>
 
               {/* -------------------------------------------------- */}
-              {/* SCHEMATIC SYMBOL 1: STM32F103C8 Microcontroller   */}
+              {/* SCHEMATIC SYMBOL 1: ESP32-WROOM-32D MCU            */}
               {/* -------------------------------------------------- */}
               <g transform="translate(80, 140)">
                 <rect x={0} y={0} width={130} height={180} fill="#0d1424" stroke="#38bdf8" strokeWidth={2} rx={2} />
                 <text x={65} y={22} fill="#38bdf8" fontSize={11} fontWeight="bold" textAnchor="middle">
-                  U1: STM32F103
+                  U1: ESP32-WROOM
                 </text>
                 <text x={65} y={35} fill="#64748b" fontSize={8} textAnchor="middle">
-                  ARM CORTEX-M3
+                  XTENSA DUAL-CORE
                 </text>
 
                 {/* VCC Pin Top */}
@@ -184,13 +184,13 @@ export const SchematicView: React.FC<SchematicViewProps> = ({ components, wires 
                 <circle cx={65} cy={280} r={3} fill="#64748b" />
                 <text x={65} y={174} fill="#94a3b8" fontSize={9} textAnchor="middle">GND</text>
 
-                {/* PA0 TX Pin */}
+                {/* GPIO 23 TX Pin */}
                 <line x1={130} y1={70} x2={165} y2={70} stroke="#06b6d4" strokeWidth={1.5} />
-                <text x={122} y={73} fill="#06b6d4" fontSize={9} textAnchor="end">PA0 (PWM TX)</text>
+                <text x={122} y={73} fill="#06b6d4" fontSize={9} textAnchor="end">GPIO 23 (TX OOK)</text>
 
-                {/* PA1 RX Pin */}
+                {/* GPIO 34 RX Pin */}
                 <line x1={130} y1={120} x2={165} y2={120} stroke="#10b981" strokeWidth={1.5} />
-                <text x={122} y={123} fill="#10b981" fontSize={9} textAnchor="end">PA1 (ADC1 RX)</text>
+                <text x={122} y={123} fill="#10b981" fontSize={9} textAnchor="end">GPIO 34 (ADC1 RX)</text>
               </g>
 
               {/* -------------------------------------------------- */}

@@ -84,7 +84,7 @@ export const SchematicPage: React.FC<SchematicPageProps> = ({
               <text x="60" y="580" fill="#3b82f6" fontSize="11" fontFamily="monospace" fontWeight="bold">GND (COMMON 0V REFERENCE BUS)</text>
 
               {/* ======================================================= */}
-              {/* STAGE 1: STM32 TX (U1)                                  */}
+              {/* STAGE 1: ESP32 TX (U1)                                  */}
               {/* ======================================================= */}
               <g
                 onClick={() => onSelectComponent('stm32_tx')}
@@ -102,13 +102,13 @@ export const SchematicPage: React.FC<SchematicPageProps> = ({
                   filter={selectedComponentId === 'stm32_tx' ? 'url(#schematicGlow)' : undefined}
                 />
                 <rect x="80" y="180" width="150" height="30" rx="8" fill="#0d1b38" />
-                <text x="155" y="200" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold" fontFamily="monospace">U1: STM32 TX</text>
-                <text x="155" y="224" textAnchor="middle" fill="#38bdf8" fontSize="10" fontFamily="monospace">STM32F103C8</text>
+                <text x="155" y="200" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold" fontFamily="monospace">U1: ESP32 TX</text>
+                <text x="155" y="224" textAnchor="middle" fill="#38bdf8" fontSize="10" fontFamily="monospace">ESP32-WROOM-32D</text>
 
                 {/* Pins */}
                 <text x="95" y="260" fill="#94a3b8" fontSize="10" fontFamily="monospace">3.3V (VCC)</text>
                 <text x="95" y="415" fill="#94a3b8" fontSize="10" fontFamily="monospace">GND</text>
-                <text x="215" y="325" textAnchor="end" fill="#34d399" fontSize="11" fontWeight="bold" fontFamily="monospace">PA9 (PWM Out)</text>
+                <text x="215" y="325" textAnchor="end" fill="#34d399" fontSize="11" fontWeight="bold" fontFamily="monospace">GPIO 23 (Manchester)</text>
 
                 {/* Power wires to rails */}
                 <line x1="120" y1="180" x2="120" y2="60" stroke="#ef4444" strokeWidth="2" />
@@ -118,7 +118,7 @@ export const SchematicPage: React.FC<SchematicPageProps> = ({
                 <circle cx="120" cy="560" r="3.5" fill="#3b82f6" />
               </g>
 
-              {/* Wire from PA9 to Base Resistor */}
+              {/* Wire from GPIO 23 to Base Resistor */}
               <line x1="230" y1="320" x2="270" y2="320" stroke="#38bdf8" strokeWidth="2.5" />
 
               {/* 1k Base Resistor */}
@@ -330,7 +330,7 @@ export const SchematicPage: React.FC<SchematicPageProps> = ({
               <line x1="820" y1="340" x2="890" y2="340" stroke="#6366f1" strokeWidth="2.5" />
 
               {/* ======================================================= */}
-              {/* STAGE 7: STM32 RX (U3)                                  */}
+              {/* STAGE 7: ESP32 RX (U3)                                  */}
               {/* ======================================================= */}
               <g
                 onClick={() => onSelectComponent('stm32_rx')}
@@ -348,11 +348,11 @@ export const SchematicPage: React.FC<SchematicPageProps> = ({
                   filter={selectedComponentId === 'stm32_rx' ? 'url(#schematicGlow)' : undefined}
                 />
                 <rect x="890" y="180" width="150" height="30" rx="8" fill="#0d1b38" />
-                <text x="965" y="200" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold" fontFamily="monospace">U3: STM32 RX</text>
-                <text x="965" y="224" textAnchor="middle" fill="#38bdf8" fontSize="10" fontFamily="monospace">STM32F103C8</text>
+                <text x="965" y="200" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold" fontFamily="monospace">U3: ESP32 RX</text>
+                <text x="965" y="224" textAnchor="middle" fill="#38bdf8" fontSize="10" fontFamily="monospace">ESP32-WROOM-32D</text>
 
                 {/* Input Pins */}
-                <text x="905" y="345" fill="#34d399" fontSize="11" fontWeight="bold" fontFamily="monospace">PA0 (ADC1 / Timer)</text>
+                <text x="905" y="345" fill="#34d399" fontSize="11" fontWeight="bold" fontFamily="monospace">GPIO 34 (ADC1_CH6)</text>
                 <text x="905" y="260" fill="#94a3b8" fontSize="10" fontFamily="monospace">3.3V (VCC)</text>
                 <text x="905" y="415" fill="#94a3b8" fontSize="10" fontFamily="monospace">GND</text>
 

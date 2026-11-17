@@ -90,12 +90,12 @@ export const LiFiView: React.FC<LiFiViewProps> = ({
             <div className="lg:col-span-4 bg-[#111827] border border-cyan-900/60 rounded p-3 space-y-2">
               <div className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider flex items-center justify-between border-b border-[#1f293d] pb-1">
                 <span>1. Transmitter Stage</span>
-                <span>STM32 TX (PA0)</span>
+                <span>ESP32 TX (GPIO 23)</span>
               </div>
               <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
                 <div className="p-1.5 bg-[#0a0e17] rounded border border-cyan-950">
                   <div className="text-slate-400 text-[9px]">MCU Core</div>
-                  <div className="font-bold text-white">72 MHz</div>
+                  <div className="font-bold text-white">240 MHz</div>
                 </div>
                 <div className="p-1.5 bg-[#0a0e17] rounded border border-cyan-950">
                   <div className="text-slate-400 text-[9px]">Modulation</div>
@@ -154,7 +154,7 @@ export const LiFiView: React.FC<LiFiViewProps> = ({
             <div className="lg:col-span-4 bg-[#111827] border border-indigo-900/60 rounded p-3 space-y-2">
               <div className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider flex items-center justify-between border-b border-[#1f293d] pb-1">
                 <span>2. Receiver Stage</span>
-                <span>STM32 RX (PA1)</span>
+                <span>ESP32 RX (GPIO 34)</span>
               </div>
               {/* Photodiode Window */}
               <div className="flex items-center justify-between p-2 bg-[#0d1326] rounded border border-indigo-800/40">
@@ -369,7 +369,7 @@ export const LiFiView: React.FC<LiFiViewProps> = ({
                 <div className="text-base font-bold text-cyan-300">
                   {config.dataRateKbps} kbps
                 </div>
-                <div className="text-[10px] text-slate-400 mt-1">STM32 Timer2 Hardware PWM</div>
+                <div className="text-[10px] text-slate-400 mt-1">ESP32 RMT / Timer OOK</div>
               </div>
             </div>
 

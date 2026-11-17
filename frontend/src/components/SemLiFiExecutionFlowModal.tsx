@@ -21,8 +21,11 @@ import {
   RefreshCw,
   Info,
   Layers,
-  ArrowDown
+  ArrowDown,
+  Database
 } from 'lucide-react';
+import { api } from '../services/api';
+import { PipelineRunResult } from '../types/semlifi';
 
 export interface SemLiFiExecutionFlowModalProps {
   isOpen: boolean;
@@ -160,7 +163,7 @@ export const SCENARIO_PRESETS: Record<ExecutionScenario, {
         },
         payloadState: {
           prefix: 'PHOTONS EMITTED',
-          corruptedOrPatched: '10.0 kHz CARRIER',
+          corruptedOrPatched: '1000 bps MANCHESTER',
           suffix: 'LOS CONE ACTIVE',
           label: 'Lambertian radiant beam emitted across 15.0 cm free-space gap'
         },
@@ -388,7 +391,7 @@ export const SCENARIO_PRESETS: Record<ExecutionScenario, {
         status: 'PENDING',
         waveformType: 'square',
         pinTelemetry: {
-          pin: 'ESP32 TX (PA9 / GPIO 23)',
+          pin: 'ESP32 TX (GPIO 23)',
           voltage: '3.30 V',
           state: 'RETRANSMIT_OK',
           note: 'Servo flap cleared: optical path restored (Clean SNR 28.4 dB)'
@@ -482,13 +485,13 @@ export const SCENARIO_PRESETS: Record<ExecutionScenario, {
         phaseColor: '#3b82f6',
         title: 'LED Modulation',
         shortLabel: 'LED modulation',
-        subtitle: '10.0 kHz OOK optical pulse',
+        subtitle: '1000 bps Manchester OOK optical pulse',
         timestampMs: 25.0,
         status: 'PENDING',
         waveformType: 'optical',
-        pinTelemetry: { pin: 'LED Driver', voltage: '1.95V', state: 'PULSING', note: '120 mA peak current' },
-        payloadState: { prefix: 'OPTICAL', corruptedOrPatched: 'PULSE', suffix: 'BEAM', label: '10 kHz Light Pulses' },
-        theoryCard: { formula: 'I_{\\text{LED}} = 120\\text{ mA}', description: 'Optical modulation', paperRef: 'Sec. IV-A' }
+        pinTelemetry: { pin: 'LED Driver', voltage: '1.95V', state: 'PULSING', note: '14.5 mA switched current' },
+        payloadState: { prefix: 'OPTICAL', corruptedOrPatched: 'PULSE', suffix: 'BEAM', label: '1000 bps Light Pulses' },
+        theoryCard: { formula: 'I_{\\text{LED}} = 14.5\\text{ mA}', description: 'Optical modulation', paperRef: 'Sec. IV-A' }
       },
       {
         id: 3,
@@ -812,10 +815,44 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
   const [playSpeed, setPlaySpeed] = useState<number>(1);
   const [copiedSummary, setCopiedSummary] = useState<boolean>(false);
   const [mobileFlowTab, setMobileFlowTab] = useState<'nodes' | 'details'>('nodes');
+  const [isExecutingLive, setIsExecutingLive] = useState<boolean>(false);
+  const [livePipelineResult, setLivePipelineResult] = useState<PipelineRunResult | null>(null);
+  const [executionModeBadge, setExecutionModeBadge] = useState<'STATIC_PRESET' | 'LIVE_BACKEND_TRACE'>('STATIC_PRESET');
 
   const scenario = SCENARIO_PRESETS[selectedScenarioKey];
   const steps = scenario.steps;
   const activeStep = steps[Math.min(currentStepIdx, steps.length - 1)];
+
+  const handleExecuteLivePipeline = async () => {
+    setIsExecutingLive(true);
+    try {
+      const burstMap: Record<ExecutionScenario, number> = {
+        P0_CLEAN: 0,
+        P1_ACCEPTANCE: 30,
+        P2_FALLBACK: 250,
+        P3_SYNTAX_FAIL: 150
+      };
+      const res = await api.runPipeline({
+        payload: 'TEMP=27.4,HUM=61,MOTOR=ON',
+        sequence_id: 1,
+        inject_burst: selectedScenarioKey !== 'P0_CLEAN',
+        burst_duration_ms: burstMap[selectedScenarioKey],
+        force_low_confidence: selectedScenarioKey === 'P2_FALLBACK',
+        threshold: 0.80
+      });
+      if (res && res.pipeline_steps) {
+        setLivePipelineResult(res);
+        setExecutionModeBadge('LIVE_BACKEND_TRACE');
+      }
+    } catch {
+      setExecutionModeBadge('STATIC_PRESET');
+    } finally {
+      setIsExecutingLive(false);
+      setCurrentStepIdx(0);
+      setIsPlaying(true);
+      playTone(900);
+    }
+  };
 
   // Audio tone feedback
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -925,6 +962,18 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950/80 border border-cyan-700/60 text-cyan-300">
                   {currentStepIdx + 1}/{steps.length}
                 </span>
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border ${
+                  executionModeBadge === 'LIVE_BACKEND_TRACE'
+                    ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300'
+                    : 'bg-slate-800 border-slate-700 text-slate-300'
+                }`}>
+                  {executionModeBadge}
+                </span>
+                {livePipelineResult && (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-950/80 border border-purple-700 text-purple-300">
+                    {livePipelineResult.transit_latency_ms} ms
+                  </span>
+                )}
               </div>
               <p className="text-[10px] text-slate-400 hidden sm:block">
                 Synchronized pipeline from physical optical pulse to BASR Edge Transformer &amp; CGFP decision gate
@@ -1350,6 +1399,20 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
 
           <div className="flex items-center space-x-2">
             <button
+              onClick={handleExecuteLivePipeline}
+              disabled={isExecutingLive}
+              className={`px-3 py-2 rounded-xl border text-xs font-mono font-bold flex items-center space-x-1.5 transition-all ${
+                isExecutingLive
+                  ? 'bg-amber-950 border-amber-600 text-amber-300 cursor-wait'
+                  : 'bg-[#141f36] hover:bg-[#1e2e50] text-cyan-300 border-cyan-700/50'
+              }`}
+              title="Execute live 22-step pipeline via FastAPI backend (/api/simulation/run-pipeline)"
+            >
+              {isExecutingLive ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
+              <span>{isExecutingLive ? 'Querying Backend...' : 'Run Live Backend Trace'}</span>
+            </button>
+
+            <button
               onClick={() => {
                 if (onStartSimulation) {
                   onClose();
@@ -1361,7 +1424,7 @@ export const SemLiFiExecutionFlowModal: React.FC<SemLiFiExecutionFlowModalProps>
               className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 flex items-center space-x-1.5 transition-all text-xs font-mono"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
-              <span>Run Execution Trace</span>
+              <span>{isPlaying ? 'Pause Trace' : 'Step / Play Trace'}</span>
             </button>
           </div>
         </div>

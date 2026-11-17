@@ -395,7 +395,7 @@ export const STARTER_CIRCUITS: StarterCircuit[] = [
   {
     id: 'starter_7_complete_semlifi',
     title: 'Starter 7: Complete SemLiFi System',
-    description: 'Full physical breadboard topology: STM32 transmitter + optical beam + photodiode receiver + TIA ADC.',
+    description: 'Full physical breadboard topology: ESP32 transmitter + optical beam + photodiode receiver + TIA ADC.',
     difficulty: 'Advanced',
     ...createDemoCircuit()
   }

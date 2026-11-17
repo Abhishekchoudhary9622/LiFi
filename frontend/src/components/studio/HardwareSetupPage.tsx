@@ -51,7 +51,7 @@ export const HardwareSetupPage: React.FC<HardwareSetupPageProps> = ({
             Hardware Setup
           </h2>
           <p className="text-[11px] text-slate-400 font-mono -mt-0.5 hidden sm:block">
-            Dual STM32F103C8 Transceiver Nodes on Physical Breadboard
+            Dual ESP32 Transceiver Nodes on Physical Breadboard
           </p>
         </div>
 
@@ -107,13 +107,13 @@ export const HardwareSetupPage: React.FC<HardwareSetupPageProps> = ({
         <div className="hidden xl:flex items-center space-x-1 bg-[#040814] px-2.5 py-1 rounded-lg border border-[#14233c] text-[10px] font-mono">
           <span className="text-slate-500 font-bold uppercase mr-1">Signal Path:</span>
           {[
-            { id: 'stm32_tx', label: 'STM32 TX' },
+            { id: 'stm32_tx', label: 'ESP32 TX' },
             { id: 'transistor_2n2222', label: 'DRIVER' },
             { id: 'led_tx', label: 'LED' },
             { id: 'optical_channel', label: 'OPTICAL' },
             { id: 'photodiode_rx', label: 'PHOTODIODE' },
             { id: 'signal_conditioning', label: 'AMPLIFIER' },
-            { id: 'stm32_rx', label: 'STM32 RX' }
+            { id: 'stm32_rx', label: 'ESP32 RX' }
           ].map((item, idx, arr) => (
             <React.Fragment key={item.id}>
               <button
@@ -173,7 +173,7 @@ export const HardwareSetupPage: React.FC<HardwareSetupPageProps> = ({
               {isConnectionsOn && (
                 <g className="transition-opacity duration-300">
                   {/* Electrical Wires (Solid Crisp Lines) */}
-                  {/* STM32 TX (220, 360) -> 2N2222 Driver (310, 372) */}
+                  {/* ESP32 TX (220, 360) -> 2N2222 Driver (310, 372) */}
                   <line
                     x1="220"
                     y1="360"
@@ -217,7 +217,7 @@ export const HardwareSetupPage: React.FC<HardwareSetupPageProps> = ({
                     strokeLinecap="round"
                   />
 
-                  {/* LM358 (540, 300) -> STM32 RX (630, 360) */}
+                  {/* LM358 (540, 300) -> ESP32 RX (630, 360) */}
                   <line
                     x1="540"
                     y1="300"

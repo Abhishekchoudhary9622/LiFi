@@ -54,15 +54,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
 **System Status:** ALL HARDWARE STAGES VERIFIED (PASS)
 **Research Paper:** https://drive.google.com/file/d/1QxiZIo20nfjjd8k5nWW6uqU6ruraGfvF/view?usp=sharing
 
-## 1. System Architecture: Dual-STM32 VLC Transceiver
-- Transmitter MCU: STM32F103C8T6 ARM Cortex-M3 @ 72 MHz (TIM1_CH2 PA9 10 kHz PWM Modulator)
+## 1. System Architecture: Dual-ESP32 VLC Transceiver
+- Transmitter MCU: ESP32-WROOM-32D Xtensa Dual-Core @ 240 MHz (GPIO 23 1000 bps Manchester OOK Modulator)
 - Driver Stage: 2N2222 NPN BJT in common-emitter configuration (1kΩ base drive, 220Ω collector current limiter)
 - Optical Emitter: 5mm High-Radiance Red LED (650 nm, 180 mcd radiant flux, 14.5 mA forward current)
 - Optical Channel: Free-space unguided line-of-sight (LOS) link (10–40 cm air gap)
-- Occlusion Mechanism: SG90 micro-servo motor with 3D-printed physical shutter flap (P0=0ms, P1=80ms, P2=250ms, P3=500ms)
+- Occlusion Mechanism: SG90 micro-servo motor with physical shutter flap (0°, 30°, 60°, 90°)
 - Optical Detector: BPW34 silicon PIN planar photodiode (7.5 mm² active die area, 0.62 A/W responsivity @ 650nm)
 - Signal Conditioning: LM358 dual op-amp (Stage 1: 47kΩ TIA, Stage 2: 1.65V potentiometer voltage slicer)
-- Receiver MCU: STM32F103C8T6 (PA0 Timer 2 Channel 1 input capture & 12-bit ADC1)
+- Receiver MCU: ESP32-WROOM-32D (GPIO 34 ADC1_CH6 mid-bit sampling 450–550 µs & SAR ADC)
 - Recovery Engine: Burst-Aware Semantic Reconstruction (BASR) AI + Confidence-Gated Fallback Policy (CGFP) ARQ
 
 ## 2. Mathematical Derivations & Circuit Proofs
@@ -89,7 +89,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               Official Hardware Engineering &amp; Academic Project Report
             </h1>
             <p className="text-xs text-slate-400">
-              Complete dual-STM32 hardware evaluation package, empirical measurements, circuit derivations &amp; viva voce guide
+              Complete dual-ESP32 hardware evaluation package, empirical measurements, circuit derivations &amp; viva voce guide
             </p>
           </div>
         </div>
@@ -155,7 +155,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
           <p className="text-xs text-slate-300 print:text-slate-800 leading-relaxed">
             This report documents the end-to-end design, breadboard hardware construction, mixed-signal verification,
             and software AI pipeline for the <strong>SemLiFi (Semantic Light Fidelity)</strong> wireless optical communication platform.
-            The physical apparatus implements an asymmetric optical link between two ARM Cortex-M3 (STM32F103C8T6) microcontrollers,
+            The physical apparatus implements an asymmetric optical link between two Xtensa Dual-Core (ESP32-WROOM-32D) microcontrollers,
             incorporating a high-speed BJT driver (2N2222), visible red optical emitter (650 nm), free-space atmospheric line-of-sight link,
             precision silicon PIN photodiode (BPW34), and dual-stage analog conditioning (LM358 TIA and comparator slicer).
           </p>
@@ -197,15 +197,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
               <tbody className="divide-y divide-[#1f293d] print:divide-slate-200 text-slate-400 print:text-slate-800">
                 <tr>
                   <td className="p-2.5 font-bold text-white print:text-black">1. Master Transmitter</td>
-                  <td className="p-2.5">STM32F103C8T6 (72MHz)</td>
-                  <td className="p-2.5 font-mono text-cyan-300">PA9 (TIM1_CH2)</td>
-                  <td className="p-2.5">3.30 V TTL PWM (10 kHz)</td>
-                  <td className="p-2.5">PWM carrier modulation &amp; Manchester packet framing</td>
+                  <td className="p-2.5">ESP32-WROOM-32D (240MHz)</td>
+                  <td className="p-2.5 font-mono text-cyan-300">GPIO 23</td>
+                  <td className="p-2.5">3.30 V CMOS (1000 bps)</td>
+                  <td className="p-2.5">1000 bps Manchester OOK &amp; Dallas CRC-8 packet framing</td>
                 </tr>
                 <tr>
                   <td className="p-2.5 font-bold text-white print:text-black">2. BJT Driver Stage</td>
                   <td className="p-2.5">2N2222 NPN BJT (TO-92)</td>
-                  <td className="p-2.5 font-mono text-cyan-300">Pin 2 Base ← 1kΩ ← PA9</td>
+                  <td className="p-2.5 font-mono text-cyan-300">Pin 2 Base ← 1kΩ ← GPIO 23</td>
                   <td className="p-2.5">V_BE = 0.72V, V_CE = 0.20V</td>
                   <td className="p-2.5">Saturating ground sink switch (800mA peak limit)</td>
                 </tr>
@@ -226,7 +226,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <tr>
                   <td className="p-2.5 font-bold text-white print:text-black">5. Optical Occlusion</td>
                   <td className="p-2.5">SG90 9g Micro-Servo</td>
-                  <td className="p-2.5 font-mono text-cyan-300">PB0 (TIM3_CH3 PWM 50Hz)</td>
+                  <td className="p-2.5 font-mono text-cyan-300">PWM Control Line</td>
                   <td className="p-2.5">5.0 V Supply, 1.0–2.0 ms pulse</td>
                   <td className="p-2.5">Moves shutter flap (0°, 30°, 60°, 90°) for burst tests</td>
                 </tr>
@@ -240,16 +240,16 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <tr>
                   <td className="p-2.5 font-bold text-white print:text-black">7. Signal Conditioning</td>
                   <td className="p-2.5">LM358P Dual Op-Amp</td>
-                  <td className="p-2.5 font-mono text-cyan-300">Pin 1 (Out) → STM32 PA0</td>
+                  <td className="p-2.5 font-mono text-cyan-300">Pin 1 (Out) → ESP32 GPIO 34</td>
                   <td className="p-2.5">Stage 1 TIA 47kΩ, Stage 2 Slicer</td>
                   <td className="p-2.5">TIA boosts photocurrent; comparator slices to 3.3V TTL</td>
                 </tr>
                 <tr>
                   <td className="p-2.5 font-bold text-white print:text-black">8. Slave Receiver MCU</td>
-                  <td className="p-2.5">STM32F103C8T6 (72MHz)</td>
-                  <td className="p-2.5 font-mono text-cyan-300">PA0 (TIM2_CH1 / ADC1_IN0)</td>
+                  <td className="p-2.5">ESP32-WROOM-32D (240MHz)</td>
+                  <td className="p-2.5 font-mono text-cyan-300">GPIO 34 (ADC1_CH6)</td>
                   <td className="p-2.5">3.26 V Sliced TTL Capture</td>
-                  <td className="p-2.5">Timer input capture, Manchester decoding, CRC-8 check</td>
+                  <td className="p-2.5">ADC mid-bit sampling (450–550 µs), Manchester decoding, CRC-8 check</td>
                 </tr>
               </tbody>
             </table>
@@ -329,7 +329,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 HD = 4 (Detects all 1-bit, 2-bit &amp; odd-bit errors, bursts up to 8 bits)
               </div>
               <p className="text-[10px] text-slate-400">
-                Hardware CRC verified in STM32 USART receiver before handing to BASR AI agent.
+                Hardware CRC verified in ESP32 receiver before handing to BASR AI agent.
               </p>
             </div>
           </div>
@@ -353,7 +353,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               </thead>
               <tbody className="divide-y divide-[#1f293d] print:divide-slate-200 text-slate-400 print:text-slate-800">
                 <tr>
-                  <td className="p-2 font-bold text-white print:text-black">STM32 PA9 High Level (V_OH)</td>
+                  <td className="p-2 font-bold text-white print:text-black">ESP32 GPIO 23 High Level (V_OH)</td>
                   <td className="p-2 font-mono">3.30 V</td>
                   <td className="p-2 font-mono text-cyan-300">3.28 V</td>
                   <td className="p-2 text-emerald-400">-0.61%</td>
@@ -406,7 +406,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   <td className="p-2 font-mono">1.82 ms</td>
                   <td className="p-2 font-mono text-cyan-300">1.84 ms</td>
                   <td className="p-2 text-emerald-400">+1.09%</td>
-                  <td className="p-2">STM32 Timer 2 Timestamp Capture</td>
+                  <td className="p-2">ESP32 SAR ADC Timestamp Capture</td>
                 </tr>
               </tbody>
             </table>
@@ -473,10 +473,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
           <div className="space-y-3 text-xs leading-relaxed">
             <div className="p-3.5 rounded-xl bg-[#0e172a] border border-slate-800 space-y-1">
               <div className="font-bold text-cyan-300">
-                Q1: Why did you incorporate a 2N2222 BJT driver stage rather than connecting the LED directly to the STM32 GPIO?
+                Q1: Why did you incorporate a 2N2222 BJT driver stage rather than connecting the LED directly to the ESP32 GPIO?
               </div>
               <p className="text-slate-300 print:text-slate-800">
-                <strong>Answer:</strong> STM32F103 GPIO pins are rated for a safe continuous sink/source limit of ≤ 8 mA (absolute maximum 25 mA across short transients). Driving our high-radiance LED directly causes severe voltage droop on the internal 3.3V power bus and risks latch-up or permanent GPIO driver failure. The 2N2222 NPN BJT operates as an external current sinking switch with an 800 mA continuous rating and 300 MHz transition frequency. With 2.58 mA base current from PA9, it is driven into deep saturation (V_CE ≈ 0.20V), allowing 14.5 mA through the LED without drawing power from the STM32's internal rail.
+                <strong>Answer:</strong> ESP32 GPIO pins are rated for a safe continuous sink/source limit of ≤ 12 mA (absolute maximum 20 mA across short transients). Driving our high-radiance LED directly causes severe voltage droop on the internal 3.3V power bus and risks latch-up or permanent GPIO driver failure. The 2N2222 NPN BJT operates as an external current sinking switch with an 800 mA continuous rating and 300 MHz transition frequency. With 2.58 mA base current from GPIO 23, it is driven into deep saturation (V_CE ≈ 0.20V), allowing 14.5 mA through the LED without drawing power from the ESP32's internal rail.
               </p>
             </div>
 
@@ -498,7 +498,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <br />
                 <strong>Stage 1 (Transimpedance Amplifier - TIA):</strong> The BPW34 photodiode operates in reverse-biased photoconductive mode, generating microampere reverse current (I_ph ≈ 42.8 µA). Op-Amp 1 uses a 47 kΩ feedback resistor (R_f) to convert this minute current into a measurable analog voltage: V_TIA = I_ph &bull; R_f ≈ 2.01 V.
                 <br />
-                <strong>Stage 2 (Voltage Slicer / Comparator):</strong> Op-Amp 2 compares V_TIA against a clean 1.65V reference voltage generated by a 10 kΩ multi-turn potentiometer. When optical photons arrive, V_TIA exceeds 1.65V, driving the output to 3.26V (High TTL). When dark, it drops to 0.04V (Low TTL), eliminating optical ambient noise and restoring sharp digital edges for the STM32 PA0 timer input.
+                <strong>Stage 2 (Voltage Slicer / Comparator):</strong> Op-Amp 2 compares V_TIA against a clean 1.65V reference voltage generated by a 10 kΩ multi-turn potentiometer. When optical photons arrive, V_TIA exceeds 1.65V, driving the output to 3.26V (High TTL). When dark, it drops to 0.04V (Low TTL), eliminating optical ambient noise and restoring sharp digital edges for the ESP32 GPIO 34 ADC input.
               </p>
             </div>
 

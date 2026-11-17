@@ -11,9 +11,16 @@ import {
   Eye,
   Info,
   Layers,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck,
+  AlertTriangle,
+  Radio,
+  FileCode,
+  Sparkles
 } from 'lucide-react';
 import { DIGITAL_TWIN_COMPONENTS, DigitalTwinComponent } from '../../model/digitalTwin';
+
+import { SharedExperimentResult } from '../../model/experimentModel';
 
 interface ChannelConfig {
   id: string;
@@ -38,79 +45,178 @@ interface ChannelConfig {
 interface SignalsPageProps {
   onSelectComponent?: (comp: DigitalTwinComponent) => void;
   onNavigateToHardware?: () => void;
+  initialServoAngle?: number;
+  activeExperiment?: SharedExperimentResult;
 }
 
 export const SignalsPage: React.FC<SignalsPageProps> = ({
   onSelectComponent,
-  onNavigateToHardware
+  onNavigateToHardware,
+  initialServoAngle = 0,
+  activeExperiment
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isRunning, setIsRunning] = useState<boolean>(true);
-  const [timeDiv, setTimeDiv] = useState<number>(100); // microseconds per division (50, 100, 200, 500)
+  const [timeDiv, setTimeDiv] = useState<number>(100); // microseconds per division (50, 100, 200, 500, 1000)
   const [zoom, setZoom] = useState<number>(1.0);
   const [triggerLevel, setTriggerLevel] = useState<number>(1.65); // Volts
   const [selectedChannelId, setSelectedChannelId] = useState<string>('ch1');
-  const [activeBitPattern, setActiveBitPattern] = useState<string>('10110010');
+  const [servoAngle, setServoAngle] = useState<number>(
+    activeExperiment ? activeExperiment.servo_angle_deg : initialServoAngle
+  );
+  const [activeBitPattern, setActiveBitPattern] = useState<string>(
+    activeExperiment?.encoded_bitstream ? activeExperiment.encoded_bitstream.slice(0, 32) : '10110010'
+  );
 
-  // Channels setup
-  const [channels, setChannels] = useState<ChannelConfig[]>([
-    {
-      id: 'ch1',
-      name: 'CH1: STM32 TX Carrier (PWM)',
-      shortLabel: 'CH1 TX PWM',
-      color: '#3b82f6', // Electric blue
-      glowColor: 'rgba(59, 130, 246, 0.4)',
-      unit: 'V',
-      vDiv: 1.0,
-      offset: 2.2,
-      visible: true,
-      componentId: 'stm32_tx',
-      sourcePin: 'PA9 (TIM1_CH2)',
-      measurements: { vpp: '3.30 V', vmax: '3.30 V', freq: '10.0 kHz', duty: '50.0%' }
-    },
-    {
-      id: 'ch2',
-      name: 'CH2: Optical Intensity / Photocurrent',
-      shortLabel: 'CH2 OPTICAL',
-      color: '#ef4444', // Red (optical photon flux)
-      glowColor: 'rgba(239, 68, 68, 0.4)',
-      unit: 'mA / µA',
-      vDiv: 0.5,
-      offset: 0.8,
-      visible: true,
-      componentId: 'led_tx',
-      sourcePin: 'LED & BPW34 Diode',
-      measurements: { vpp: '42.8 µA', vmax: '44.0 µA', freq: '10.0 kHz', duty: '49.8%' }
-    },
-    {
-      id: 'ch3',
-      name: 'CH3: LM358 Conditioned Analog Waveform',
-      shortLabel: 'CH3 CONDITIONED',
-      color: '#06b6d4', // Cyan
-      glowColor: 'rgba(6, 182, 212, 0.4)',
-      unit: 'V',
-      vDiv: 1.0,
-      offset: -0.8,
-      visible: true,
-      componentId: 'signal_conditioning',
-      sourcePin: 'LM358 Pin 1 (TIA Out)',
-      measurements: { vpp: '2.40 V', vmax: '2.85 V', freq: '10.0 kHz', duty: '50.2%' }
-    },
-    {
-      id: 'ch4',
-      name: 'CH4: RX ADC / Sliced Digital Logic',
-      shortLabel: 'CH4 RX LOGIC',
-      color: '#10b981', // Green
-      glowColor: 'rgba(16, 185, 129, 0.4)',
-      unit: 'V',
-      vDiv: 1.0,
-      offset: -2.2,
-      visible: true,
-      componentId: 'stm32_rx',
-      sourcePin: 'PA0 (Timer 2 Input Capture)',
-      measurements: { vpp: '3.26 V', vmax: '3.26 V', freq: '10.0 kHz', duty: '50.0%' }
+  useEffect(() => {
+    if (activeExperiment?.encoded_bitstream) {
+      setActiveBitPattern(activeExperiment.encoded_bitstream.slice(0, 32));
     }
-  ]);
+    if (activeExperiment) {
+      setServoAngle(activeExperiment.servo_angle_deg);
+    }
+  }, [activeExperiment]);
+
+  // Channel visibility & vertical sensitivity state
+  const [channelVisibility, setChannelVisibility] = useState<Record<string, boolean>>({
+    ch1: true,
+    ch2: true,
+    ch3: true,
+    ch4: true
+  });
+
+  const [channelVDiv, setChannelVDiv] = useState<Record<string, number>>({
+    ch1: 1.0,
+    ch2: 0.5,
+    ch3: 1.0,
+    ch4: 1.0
+  });
+
+  const toggleChannelVisibility = (id: string) => {
+    setChannelVisibility((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const updateChannelVDiv = (id: string, delta: number) => {
+    setChannelVDiv((prev) => {
+      const current = prev[id] || 1.0;
+      const updated = Math.max(0.2, Math.min(5.0, current + delta));
+      return { ...prev, [id]: Number(updated.toFixed(1)) };
+    });
+  };
+
+  // Helper to parse binary, hex, or ASCII text into binary chips
+  const parsedBits = useMemo(() => {
+    const raw = activeBitPattern.trim();
+    if (raw.startsWith('0x') || raw.startsWith('0X')) {
+      const hex = raw.slice(2);
+      let bits: number[] = [];
+      for (let i = 0; i < hex.length; i++) {
+        const val = parseInt(hex[i], 16);
+        if (!isNaN(val)) {
+          for (let b = 3; b >= 0; b--) {
+            bits.push((val >> b) & 1);
+          }
+        }
+      }
+      return bits.length > 0 ? bits : [1, 0, 1, 1, 0, 0, 1, 0];
+    }
+    const cleanBin = raw.replace(/[^01]/g, '');
+    if (cleanBin.length > 0) {
+      return cleanBin.split('').map(Number);
+    }
+    let asciiBits: number[] = [];
+    for (let i = 0; i < raw.length; i++) {
+      const code = raw.charCodeAt(i);
+      for (let b = 7; b >= 0; b--) {
+        asciiBits.push((code >> b) & 1);
+      }
+    }
+    return asciiBits.length > 0 ? asciiBits : [1, 0, 1, 1, 0, 0, 1, 0];
+  }, [activeBitPattern]);
+
+  // Dynamic channel model with physics telemetry coupled to SG90 servo angle
+  const channels: ChannelConfig[] = useMemo(() => {
+    const servoTransmission = servoAngle === 0 ? 1.0 : servoAngle === 30 ? 0.60 : servoAngle === 60 ? 0.05 : 0.0;
+
+    return [
+      {
+        id: 'ch1',
+        name: 'CH1: ESP32 TX Manchester Drive (GPIO 23)',
+        shortLabel: 'CH1 TX OOK',
+        color: '#3b82f6', // Electric blue
+        glowColor: 'rgba(59, 130, 246, 0.4)',
+        unit: 'V',
+        vDiv: channelVDiv.ch1 ?? 1.0,
+        offset: 2.2,
+        visible: channelVisibility.ch1 ?? true,
+        componentId: 'stm32_tx',
+        sourcePin: 'ESP32 GPIO 23',
+        measurements: {
+          vpp: '3.30 V',
+          vmax: '3.30 V',
+          freq: '1000 bps',
+          duty: '50.0%'
+        }
+      },
+      {
+        id: 'ch2',
+        name: 'CH2: Optical Intensity / Photocurrent',
+        shortLabel: 'CH2 OPTICAL',
+        color: '#ef4444', // Red
+        glowColor: 'rgba(239, 68, 68, 0.4)',
+        unit: 'µA',
+        vDiv: channelVDiv.ch2 ?? 0.5,
+        offset: 0.8,
+        visible: channelVisibility.ch2 ?? true,
+        componentId: 'led_tx',
+        sourcePin: 'LED & BPW34 Diode',
+        measurements: {
+          vpp: `${(42.8 * servoTransmission).toFixed(1)} µA`,
+          vmax: `${(44.0 * servoTransmission).toFixed(1)} µA`,
+          freq: servoAngle >= 60 ? '0 bps (Blocked)' : '1000 bps',
+          duty: servoAngle >= 60 ? '0.0%' : '49.8%'
+        }
+      },
+      {
+        id: 'ch3',
+        name: 'CH3: LM358 Conditioned Analog Waveform',
+        shortLabel: 'CH3 CONDITIONED',
+        color: '#06b6d4', // Cyan
+        glowColor: 'rgba(6, 182, 212, 0.4)',
+        unit: 'V',
+        vDiv: channelVDiv.ch3 ?? 1.0,
+        offset: -0.8,
+        visible: channelVisibility.ch3 ?? true,
+        componentId: 'signal_conditioning',
+        sourcePin: 'LM358 Pin 1 (TIA Out)',
+        measurements: {
+          vpp: `${Math.max(0.04, 2.40 * servoTransmission).toFixed(2)} V`,
+          vmax: `${Math.max(0.04, 2.85 * servoTransmission).toFixed(2)} V`,
+          freq: servoAngle >= 60 ? '0 bps (Floor)' : '1000 bps',
+          duty: servoAngle >= 60 ? '0.0%' : '50.2%'
+        }
+      },
+      {
+        id: 'ch4',
+        name: 'CH4: ESP32 RX ADC Mid-Bit Logic (GPIO 34)',
+        shortLabel: 'CH4 RX ADC',
+        color: '#10b981', // Green
+        glowColor: 'rgba(16, 185, 129, 0.4)',
+        unit: 'V',
+        vDiv: channelVDiv.ch4 ?? 1.0,
+        offset: -2.2,
+        visible: channelVisibility.ch4 ?? true,
+        componentId: 'stm32_rx',
+        sourcePin: 'GPIO 34 (ADC1_CH6)',
+        measurements: {
+          vpp: servoAngle >= 60 ? '0.00 V' : '3.26 V',
+          vmax: servoAngle >= 60 ? '0.04 V' : '3.26 V',
+          freq: servoAngle >= 60 ? '0 bps (Burst Loss)' : '1000 bps',
+          duty: servoAngle >= 60 ? '0.0%' : '50.0%'
+        }
+      }
+    ];
+  }, [servoAngle, channelVisibility, channelVDiv]);
 
   const activeChannel = useMemo(
     () => channels.find((c) => c.id === selectedChannelId) || channels[0],
@@ -120,24 +226,6 @@ export const SignalsPage: React.FC<SignalsPageProps> = ({
   const linkedComponent = useMemo(() => {
     return DIGITAL_TWIN_COMPONENTS.find((c) => c.id === activeChannel.componentId);
   }, [activeChannel]);
-
-  const toggleChannelVisibility = (id: string) => {
-    setChannels((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, visible: !c.visible } : c))
-    );
-  };
-
-  const updateChannelVDiv = (id: string, delta: number) => {
-    setChannels((prev) =>
-      prev.map((c) => {
-        if (c.id === id) {
-          const newVDiv = Math.max(0.2, Math.min(5.0, c.vDiv + delta));
-          return { ...c, vDiv: Number(newVDiv.toFixed(1)) };
-        }
-        return c;
-      })
-    );
-  };
 
   // Canvas Oscilloscope Renderer Loop
   useEffect(() => {
@@ -223,7 +311,7 @@ export const SignalsPage: React.FC<SignalsPageProps> = ({
       ctx.lineTo(centerX, height);
       ctx.stroke();
 
-      // Trigger line indicator
+      // Trigger line indicator (1.65V comparator slicing threshold)
       const triggerY = centerY - (triggerLevel / 1.0) * (dy / 2);
       ctx.strokeStyle = 'rgba(234, 179, 8, 0.35)';
       ctx.setLineDash([4, 4]);
@@ -236,11 +324,15 @@ export const SignalsPage: React.FC<SignalsPageProps> = ({
       // Draw trigger label
       ctx.fillStyle = '#eab308';
       ctx.font = '10px monospace';
-      ctx.fillText(`TRIG: ${triggerLevel.toFixed(2)}V`, width - 90, triggerY - 4);
+      ctx.fillText(`TRIG: ${triggerLevel.toFixed(2)}V (Slicer Ref)`, width - 140, triggerY - 4);
 
       if (isRunning) {
+        // Sweep progression matches physical 1000 bps timing
         phase += 0.04 * (100 / timeDiv) * zoom;
       }
+
+      const totalWindowUs = timeDiv * 10;
+      const servoTransmission = servoAngle === 0 ? 1.0 : servoAngle === 30 ? 0.60 : servoAngle === 60 ? 0.05 : 0.0;
 
       // Render Active Channels
       channels.forEach((ch) => {
@@ -255,33 +347,41 @@ export const SignalsPage: React.FC<SignalsPageProps> = ({
         const baselineY = centerY - ch.offset * dy;
 
         for (let px = 0; px < width; px++) {
-          const t = (px / width) * 12 * zoom + phase;
+          const tUs = (px / width) * (totalWindowUs / zoom) + (phase * 150);
+
+          // IEEE 802.3 Manchester line coding:
+          // Bit period Tb = 1000 µs (1000 bps raw), Chip interval Tc = 500 µs
+          // Bit 1: High-to-Low (1 then 0), Bit 0: Low-to-High (0 then 1)
+          const bitIndex = Math.floor(tUs / 1000);
+          const dataBit = parsedBits[((bitIndex % parsedBits.length) + parsedBits.length) % parsedBits.length];
+
+          const chipIndex = Math.floor(tUs / 500);
+          const isSecondHalf = (chipIndex % 2) !== 0;
+          const chipVal = dataBit === 1 ? (isSecondHalf ? 0 : 1) : (isSecondHalf ? 1 : 0);
+
+          // RC analog rise/fall transitions (40 µs time constant)
+          const tChip = tUs % 500;
+          const rcRise = 1 - Math.exp(-tChip / 40);
+          const rcFall = Math.exp(-tChip / 40);
+          const rcFactor = chipVal === 1 ? rcRise : rcFall;
+          const noise = (Math.sin(tUs * 0.08) * 0.03 + Math.cos(tUs * 0.03) * 0.02);
 
           let val = 0;
 
           if (ch.id === 'ch1') {
-            // TX Carrier PWM (10 kHz square wave modulated with payload bit)
-            const carrierSquare = Math.sin(t * 3) >= 0 ? 1 : 0;
-            const dataBit = Math.sin(t * 0.4) >= 0 ? 1 : 0;
-            val = carrierSquare * dataBit;
+            // CH1: ESP32 TX Manchester Drive (GPIO 23 Out) - 0 to 3.3V
+            val = chipVal * 3.30;
           } else if (ch.id === 'ch2') {
-            // Optical Intensity / Photocurrent (slight exponential rise/fall curve & analog attenuation)
-            const carrierSquare = Math.sin(t * 3) >= 0 ? 1 : 0;
-            const dataBit = Math.sin(t * 0.4) >= 0 ? 1 : 0;
-            const target = carrierSquare * dataBit * 0.85;
-            const noise = (Math.sin(t * 19) + Math.cos(t * 31)) * 0.03;
-            val = target + noise;
+            // CH2: Optical Radiant Flux / BPW34 Photocurrent (Attenuated by servo flap)
+            val = Math.max(0.02, Math.min(3.30, 0.02 + (chipVal * 2.80 * servoTransmission * rcFactor) + noise));
           } else if (ch.id === 'ch3') {
-            // LM358 Conditioned Analog (Filtered TIA output with slew rate rounding)
-            const raw = Math.sin(t * 3) >= 0 ? 1 : 0;
-            const dataBit = Math.sin(t * 0.4) >= 0 ? 1 : 0;
-            const filtered = Math.tanh(Math.sin(t * 3) * 3) * 0.5 + 0.5;
-            val = filtered * dataBit * 0.9;
+            // CH3: LM358 Conditioned Analog Waveform (Stage 1 TIA Out)
+            val = Math.max(0.04, Math.min(3.26, 0.04 + (2.85 * servoTransmission * rcFactor) + noise));
           } else if (ch.id === 'ch4') {
-            // RX ADC / Decoded Logic (Clean sliced square wave reconstructed)
-            const carrierSquare = Math.sin(t * 3 - 0.2) >= 0 ? 1 : 0;
-            const dataBit = Math.sin(t * 0.4 - 0.2) >= 0 ? 1 : 0;
-            val = carrierSquare * dataBit;
+            // CH4: ESP32 RX ADC Mid-Bit Logic (GPIO 34 ADC1_CH6)
+            // Sliced against 1.65V V_ref threshold
+            const isAboveThreshold = (0.04 + (2.85 * servoTransmission * rcFactor)) >= 1.65;
+            val = isAboveThreshold ? 3.26 : 0.04;
           }
 
           // Scale voltage with channel vDiv
@@ -303,12 +403,12 @@ export const SignalsPage: React.FC<SignalsPageProps> = ({
 
     animationFrameId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isRunning, timeDiv, zoom, triggerLevel, channels, selectedChannelId]);
+  }, [isRunning, timeDiv, zoom, triggerLevel, channels, selectedChannelId, parsedBits, servoAngle]);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#070b14] overflow-hidden text-slate-100 font-sans">
       {/* Top Engineering Toolbar */}
-      <div className="px-6 py-3 border-b border-[#1f293d] bg-[#0c1220]/80 backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
+      <div className="px-5 py-3 border-b border-[#1f293d] bg-[#0c1220]/80 backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-blue-950/60 border border-blue-500/30 text-blue-400">
             <Activity className="w-5 h-5" />
@@ -321,13 +421,41 @@ export const SignalsPage: React.FC<SignalsPageProps> = ({
               </span>
             </h1>
             <p className="text-xs text-slate-400">
-              Real-time hardware waveform acquisition: Carrier PWM, Optical flux, LM358 TIA, and Reconstructed TTL logic.
+              Real-time hardware waveform acquisition: 1000 bps Manchester OOK, Optical flux, LM358 TIA, and ESP32 GPIO 34 mid-bit sampling.
             </p>
           </div>
         </div>
 
         {/* Global Scope Control Knobs */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* SG90 Servo Burst Occlusion Selector */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0f172a] border border-[#22324e]">
+            <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1">
+              <Sliders className="w-3 h-3 text-amber-400" />
+              <span>FLAP:</span>
+            </span>
+            {([0, 30, 60, 90] as const).map((angle) => (
+              <button
+                key={angle}
+                onClick={() => setServoAngle(angle)}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition ${
+                  servoAngle === angle
+                    ? angle === 0
+                      ? 'bg-emerald-600 text-white font-bold'
+                      : angle === 30
+                      ? 'bg-blue-600 text-white font-bold'
+                      : angle === 60
+                      ? 'bg-amber-600 text-white font-bold'
+                      : 'bg-rose-600 text-white font-bold'
+                    : 'text-slate-400 hover:text-slate-200 bg-slate-900'
+                }`}
+                title={angle === 0 ? 'Clear LOS' : angle === 30 ? 'P1 Short Burst (30 ms)' : angle === 60 ? 'P2 Moderate Burst (250 ms)' : 'P3 Full Occlusion (500 ms)'}
+              >
+                {angle}&deg;
+              </button>
+            ))}
+          </div>
+
           {/* Time / Div Control */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0f172a] border border-[#22324e]">
             <span className="text-[11px] font-mono text-slate-400">TIME/DIV:</span>
@@ -340,6 +468,7 @@ export const SignalsPage: React.FC<SignalsPageProps> = ({
               <option value={100} className="bg-[#0f172a] text-slate-200">100 µs</option>
               <option value={200} className="bg-[#0f172a] text-slate-200">200 µs</option>
               <option value={500} className="bg-[#0f172a] text-slate-200">500 µs</option>
+              <option value={1000} className="bg-[#0f172a] text-slate-200">1.0 ms</option>
             </select>
           </div>
 
@@ -386,6 +515,42 @@ export const SignalsPage: React.FC<SignalsPageProps> = ({
         </div>
       </div>
 
+      {/* Bit Pattern Injector Strip */}
+      <div className="px-5 py-2 border-b border-[#1c283f] bg-[#090d18] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+        <div className="flex items-center gap-2">
+          <span className="text-slate-400 flex items-center gap-1">
+            <FileCode className="w-3.5 h-3.5 text-cyan-400" />
+            <span>BITSTREAM PATTERN:</span>
+          </span>
+          <div className="flex items-center gap-1">
+            {['10110010', '0xAA55', 'TEM:24', '10101010'].map((preset) => (
+              <button
+                key={preset}
+                onClick={() => setActiveBitPattern(preset)}
+                className={`px-2 py-0.5 rounded text-[11px] transition border ${
+                  activeBitPattern === preset
+                    ? 'bg-cyan-950/90 text-cyan-300 border-cyan-500 font-bold'
+                    : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-slate-400">Custom String:</span>
+          <input
+            type="text"
+            value={activeBitPattern}
+            onChange={(e) => setActiveBitPattern(e.target.value)}
+            placeholder="e.g. 10110010 or 0xAA55"
+            className="px-2 py-0.5 rounded bg-[#0f172a] border border-slate-700 text-cyan-300 text-xs font-mono focus:outline-none focus:border-cyan-500 w-36"
+          />
+        </div>
+      </div>
+
       {/* Main Scope Split Layout: Canvas Display + Right Channel & Hardware Inspector */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left / Center: Oscilloscope Canvas Screen & Measurement Strip */}
@@ -418,13 +583,36 @@ export const SignalsPage: React.FC<SignalsPageProps> = ({
               ))}
             </div>
 
+            {/* Top-Right Optical Link Integrity Status Badge */}
+            <div className="absolute top-3 right-4 pointer-events-none">
+              <div
+                className={`px-3 py-1 rounded-lg border text-[11px] font-mono font-bold backdrop-blur-md shadow-lg ${
+                  servoAngle === 0
+                    ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/60'
+                    : servoAngle === 30
+                    ? 'bg-blue-950/80 text-blue-300 border-blue-500/60'
+                    : servoAngle === 60
+                    ? 'bg-amber-950/80 text-amber-300 border-amber-500/60'
+                    : 'bg-rose-950/80 text-rose-300 border-rose-500/60'
+                }`}
+              >
+                {servoAngle === 0
+                  ? '✓ LINK INTEGRITY: CLEAR LOS (0.000% BER)'
+                  : servoAngle === 30
+                  ? '⚠ LINK INTEGRITY: P1 SHORT BURST (30 ms) — SEMANTIC ACCEPT'
+                  : servoAngle === 60
+                  ? '✕ LINK INTEGRITY: P2 BURST (250 ms) — CGFP FALLBACK (C=0.729 < 0.80)'
+                  : '✕ LINK INTEGRITY: P3 TOTAL OCCLUSION (500 ms) — CGFP FALLBACK (C=0.000)'}
+              </div>
+            </div>
+
             {/* Bottom Status Bar */}
             <div className="absolute bottom-2 left-4 right-4 flex items-center justify-between text-[11px] font-mono text-slate-400 pointer-events-none">
               <div>
                 <span className="text-emerald-400 font-semibold">TRIG: AUTO</span> • TB: {timeDiv} µs/div • SMPL: 1.0 MSPS (DMA)
               </div>
               <div className="text-slate-400">
-                ARM CORTEX-M3 HARDWARE CLOCK: <span className="text-blue-300">72.0 MHz</span>
+                ESP32 XTENSA DUAL-CORE HARDWARE CLOCK: <span className="text-blue-300">240 MHz</span>
               </div>
             </div>
           </div>
@@ -607,7 +795,7 @@ export const SignalsPage: React.FC<SignalsPageProps> = ({
                 <Info className="w-3.5 h-3.5 text-blue-400" />
                 <span>OOK Optical Modulation Note</span>
               </div>
-              The 10 kHz square wave toggles the 2N2222 transistor into saturation (0.2V Vce), pulsing 14.5 mA forward current through the red LED without distorting rise-time edges.
+              The 1000 bps Manchester waveform toggles the 2N2222 transistor into saturation (0.2V Vce), pulsing 14.5 mA forward current through the red LED with 500 µs chip transitions.
             </div>
           </div>
         </div>

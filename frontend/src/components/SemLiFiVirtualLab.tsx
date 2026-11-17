@@ -220,7 +220,7 @@ export const COMPONENT_CATALOG: ComponentLibraryItem[] = [
     type: 'BJT Current Driver',
     description: 'High-speed NPN bipolar switching transistor capable of driving up to 800mA for nanosecond optical LED modulation.',
     operatingVoltage: 'Up to 40 V Vce',
-    thumbnail: '/hardware/resistor_macro.jpg',
+    thumbnail: '/hardware/transistor_2n2222.jpg',
     specs: [
       { label: 'Transistor Polarity', value: 'NPN Silicon Epitaxial' },
       { label: 'Max Collector Current', value: '800 mA Continuous' },
@@ -251,7 +251,7 @@ export const COMPONENT_CATALOG: ComponentLibraryItem[] = [
     type: 'Signal Conditioning Amplifier',
     description: 'Dual low-power operational amplifier configured as a high-gain Transimpedance Amplifier (TIA) to convert microamp photocurrent into volts.',
     operatingVoltage: '3.0 V to 32 V Single Supply',
-    thumbnail: '/hardware/photodiode_macro.jpg',
+    thumbnail: '/hardware/lm358_amplifier.jpg',
     specs: [
       { label: 'Amplifier Circuit', value: 'Transimpedance Amplifier (TIA)' },
       { label: 'Transimpedance Gain', value: 'Rf = 50 kΩ (Vout = 2.14 V)' },
@@ -293,7 +293,7 @@ export const COMPONENT_CATALOG: ComponentLibraryItem[] = [
     type: 'Mechanical Actuator',
     description: 'Precision 9g micro-servo holding a physical opaque occlusion blade to inject calibrated physical burst loss into the free-space optical channel.',
     operatingVoltage: '3.3 V - 5.0 V',
-    thumbnail: '/hardware/multimeter.jpg',
+    thumbnail: '/hardware/optical_setup_3d.jpg',
     specs: [
       { label: 'Torque', value: '1.8 kg·cm at 4.8V' },
       { label: 'Operating Speed', value: '0.10 sec / 60 degrees' },

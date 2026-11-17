@@ -49,8 +49,8 @@ export function normalizeComponentId(id: string): string {
   if (clean === 'signal_conditioning' || clean === 'lm358' || clean.includes('amp')) {
     return 'lm358_amplifier';
   }
-  if (clean === 'transistor' || clean === 'driver' || clean.includes('2n2222')) {
-    return 'transistor_2n2222';
+  if (clean === 'transistor' || clean === 'driver' || clean.includes('2n2222') || clean.includes('s8050') || clean.includes('bjt')) {
+    return 'transistor_s8050';
   }
   if (clean.includes('resistor') || clean.includes('220')) {
     return 'resistor_220';
@@ -77,83 +77,107 @@ export function getCircuitComponentMetadata(
   rawId: string,
   workingDistanceCm: number = 15,
   ambientLux: number = 250,
-  isSimulating: boolean = true
+  isSimulating: boolean = true,
+  servoAngle: number = 0
 ): CircuitComponentMetadata {
   const compId = normalizeComponentId(rawId);
 
   // Scaled physics calculations:
   // Optical channel attenuation follows inverse-square law: ∝ (15 / d)²
   const distRatio = 15 / Math.max(1, workingDistanceCm);
-  const pathGain = (4.2e-4) * (distRatio ** 2);
-  const photocurrentUA = Math.max(0.1, 42.8 * (distRatio ** 2));
+  
+  // Optical occlusion transmission factor T(theta) governed by SG90 servo angle:
+  // 0°: Clear LOS (T = 1.0)
+  // 30°: P1 Short Burst 30 ms (T = 0.60, partial occlusion)
+  // 60°: P2 Moderate Burst 250 ms (T = 0.05, severe occlusion, drops below slicing threshold)
+  // 90°: P3 Full Occlusion 500 ms (T = 0.00, total beam blockage)
+  const servoTransmission = servoAngle === 0 ? 1.0 : servoAngle === 30 ? 0.60 : servoAngle === 60 ? 0.05 : 0.0;
+  const pathGain = (4.2e-4) * (distRatio ** 2) * servoTransmission;
   const radiantIntensityMcd = 180;
-  const irradianceUwPerCm2 = (radiantIntensityMcd / (workingDistanceCm * workingDistanceCm)) * 225;
+  const irradianceUwPerCm2 = ((radiantIntensityMcd / (workingDistanceCm * workingDistanceCm)) * 225) * servoTransmission;
   const ambientNoiseCurrentUA = (ambientLux / 250) * 1.2;
+  
+  // Photocurrent I_ph = Responsivity * Optical Power + Dark/Ambient leakage
+  const photocurrentUA = Math.max(0.1, 42.8 * (distRatio ** 2) * servoTransmission + (ambientNoiseCurrentUA * 0.1));
+  
+  // LM358 Transimpedance Stage: V_out = V_ref_offset + I_ph * R_f (0.04V floor, 3.26V rail)
   const tiaVoltageOut = Math.min(3.26, Math.max(0.04, 0.04 + (photocurrentUA * 0.075)));
-  const adcCount = isSimulating ? Math.round(Math.min(180, Math.max(5, 135 * (distRatio ** 2)))) : 0;
+  
+  // ESP32 GPIO 34 ADC1_CH6 raw count (12-bit SAR ADC, threshold ~50 counts):
+  // At 0° LOS: ~135 counts (> 50 threshold -> Valid Manchester chips)
+  // At 30°: ~81 counts (> 50 threshold -> Decodable)
+  // At 60°: ~6 counts (< 50 threshold -> CRC fail, CGFP = 0.729 < 0.80 -> FALLBACK_NACK)
+  // At 90°: ~2-3 counts (< 50 threshold -> Complete burst loss)
+  const rawAdc = 135 * (distRatio ** 2);
+  const adcCount = isSimulating
+    ? Math.round(Math.max(2, rawAdc * servoTransmission + (ambientNoiseCurrentUA * 2)))
+    : 0;
 
   switch (compId) {
     case 'stm32_tx':
       return {
         id: 'stm32_tx',
         canonicalId: 'stm32_tx',
-        name: 'STM32 TX (Transmitter MCU)',
-        shortName: 'STM32 TX',
+        name: 'ESP32 TX (Transmitter MCU)',
+        shortName: 'ESP32 TX',
         category: 'Microcontrollers',
-        type: 'STM32F103C8T6 ARM Cortex-M3 (72 MHz)',
-        role: 'PWM Carrier Generation & Manchester Encoding',
+        type: 'ESP32-WROOM-32D Xtensa Dual-Core (240 MHz)',
+        role: 'Manchester OOK Modulation & Structured Telemetry Framing',
         accentColor: '#3b82f6',
-        imageUrl: '/hardware/stm32_board.jpg',
-        voltageReading: isSimulating ? '3.30 V TTL (PWM Out)' : '0.00 V (Standby)',
-        currentReading: isSimulating ? '34.2 mA (Active)' : '4.1 mA (Sleep)',
-        signalType: 'Digital 10 kHz PWM Carrier (50% Duty)',
+        imageUrl: '/hardware/esp32_3d.png',
+        voltageReading: isSimulating ? '3.30 V CMOS (GPIO 23 Out)' : '0.00 V (Standby)',
+        currentReading: isSimulating ? '45.2 mA (Active)' : '4.1 mA (Sleep)',
+        signalType: 'Digital 1000 bps Manchester OOK (1000 µs Tb)',
         pins: [
-          { id: 'tx_pa9', name: 'PA9', label: 'PA9 (PWM Carrier Out)', net: 'NET_CARRIER_PWM', type: 'OUT' },
-          { id: 'tx_vcc', name: 'VDD', label: '3.3V Power Rail', net: 'VCC_3V3', type: 'POWER' },
+          { id: 'tx_gpio23', name: 'GPIO23', label: 'GPIO 23 (Manchester OOK Out)', net: 'NET_CARRIER_PWM', type: 'OUT' },
+          { id: 'tx_vcc', name: '3V3', label: '3.3V Power Rail', net: 'VCC_3V3', type: 'POWER' },
           { id: 'tx_gnd', name: 'GND', label: 'System Ground', net: 'GND', type: 'POWER' }
         ],
         properties: [
-          { label: 'Core Architecture', value: 'ARM Cortex-M3 32-bit @ 72 MHz', status: 'MEASURED' },
-          { label: 'Carrier Pin', value: 'PA9 (TIM1_CH2 PWM Output)', status: 'MEASURED' },
-          { label: 'Carrier Frequency', value: '10.0 kHz Square Wave (50% Duty)', status: 'MEASURED' },
+          { label: 'Core Architecture', value: 'Xtensa Dual-Core 32-bit LX6 @ 240 MHz', status: 'MEASURED' },
+          { label: 'Transmitter Pin', value: 'GPIO 23 (Push-Pull Digital Output)', status: 'MEASURED' },
+          { label: 'Signaling Rate', value: '1000 bps Raw Signaling (Tb = 1000 µs)', status: 'MEASURED' },
           { label: 'Output Logic Level', value: '3.30 V CMOS High / 0.00 V Low', status: 'MEASURED' },
-          { label: 'Encoding Format', value: 'Manchester Phase Sliced', status: 'MEASURED' },
-          { label: 'Operating Current', value: '34.2 mA Active Transmit', status: 'MEASURED' }
+          { label: 'Encoding Format', value: 'IEEE 802.3 Manchester (500 µs Half-Chips)', status: 'MEASURED' },
+          { label: 'Framing Protocol', value: 'Sync (0xAA55) + Len + SeqID + Payload + CRC-8', status: 'MEASURED' },
+          { label: 'Operating Current', value: '45.2 mA Active Transmit', status: 'MEASURED' }
         ],
         infoTitle: 'Transmitter Modulator',
-        infoDescription: 'Hardware Timer 1 Channel 2 generates 10 kHz carrier square wave modulated with Manchester data packets.'
+        infoDescription: 'ESP32 GPIO 23 drives Manchester On-Off Keying (OOK) transitions at 1000 bps with Dallas/Maxim CRC-8 frame integrity.'
       };
 
+    case 'transistor_s8050':
     case 'transistor_2n2222':
       return {
-        id: 'transistor_2n2222',
-        canonicalId: 'transistor_2n2222',
-        name: '2N2222 NPN Transistor (LED Driver)',
-        shortName: '2N2222 Driver',
+        id: compId === 'transistor_s8050' ? 'transistor_s8050' : 'transistor_2n2222',
+        canonicalId: 'transistor_s8050',
+        name: 'S8050 NPN Transistor (Paper Primary Driver) / 2N2222 (Benchtop Alternate)',
+        shortName: 'S8050 / 2N2222 Driver',
         category: 'Transistors & Drivers',
-        type: 'TO-92 NPN Silicon Switching BJT',
-        role: 'High-Speed Sinking Current Switch for Red LED',
+        type: 'TO-92 NPN Silicon Switching BJT (Paper Spec: S8050; Benchtop Alt: 2N2222)',
+        role: 'High-Speed Sinking Current Switch for Red LED (Driven via 1 kΩ Base Resistor)',
         accentColor: '#f97316',
         imageUrl: '/hardware/transistor_2n2222.jpg',
         voltageReading: isSimulating ? 'V_CE = 0.20 V, V_BE = 0.72 V' : '0.00 V (Cut-off)',
         currentReading: isSimulating ? 'I_c = 14.5 mA (Switched)' : '0.0 µA (Cut-off)',
         signalType: 'Switched Ground Sinking Current',
         pins: [
-          { id: 'q1_base', name: 'BASE', label: 'Base (Pin 2 ← 1kΩ to PA9)', net: 'NET_DRIVE_BASE', type: 'IN' },
+          { id: 'q1_base', name: 'BASE', label: 'Base (Pin 2 ← 1kΩ to ESP32 GPIO 23)', net: 'NET_DRIVE_BASE', type: 'IN' },
           { id: 'q1_collector', name: 'COLLECTOR', label: 'Collector (Pin 3 ← LED Cathode)', net: 'NET_LED_CATHODE', type: 'OUT' },
           { id: 'q1_emitter', name: 'EMITTER', label: 'Emitter (Pin 1 → GND)', net: 'GND', type: 'POWER' }
         ],
         properties: [
+          { label: 'Primary Model (Research Paper)', value: 'S8050 NPN BJT (I_c = 120 mA, h_FE ≈ 200, f_T = 150 MHz)', status: 'MEASURED' },
+          { label: 'Alternate Model (Benchtop Hardware)', value: '2N2222 NPN BJT (I_c = 800 mA, h_FE ≈ 100-300, f_T = 300 MHz)', status: 'MEASURED' },
           { label: 'Package Type', value: 'TO-92 Through-Hole NPN BJT', status: 'MEASURED' },
           { label: 'Saturation Voltage (V_CE(sat))', value: '0.20 V in Deep Saturation', status: 'MEASURED' },
           { label: 'Base-Emitter Drop (V_BE(on))', value: '0.72 V Base-Emitter', status: 'MEASURED' },
           { label: 'Switched Sinking Current (I_c)', value: '14.5 mA Switched Current', status: 'MEASURED' },
-          { label: 'DC Current Gain (h_FE)', value: '100 – 300 (Typical 160)', status: 'MEASURED' },
-          { label: 'Transition Frequency (f_T)', value: '300 MHz High-Speed Edge', status: 'MEASURED' },
-          { label: 'Max Power Dissipation', value: '625 mW Maximum Rating', status: 'MEASURED' }
+          { label: 'Base Resistor (R_B)', value: '1 kΩ connected to ESP32 TX GPIO 23', status: 'MEASURED' },
+          { label: 'Optical Switching Transition', value: '< 25 ns Fast Edge', status: 'MEASURED' }
         ],
-        infoTitle: 'BJT Current Sinking Switch',
-        infoDescription: 'Operates strictly between Cut-off and Saturation, sinking 14.5 mA through the LED with sub-100ns switching edges.'
+        infoTitle: 'BJT Current Sinking Switch (S8050 Primary / 2N2222 Alternate)',
+        infoDescription: 'Paper specifies S8050 NPN BJT; verified benchtop alternate is 2N2222. Operates strictly between Cut-off and Saturation, sinking 14.5 mA through the LED with fast sub-100ns switching edges.'
       };
 
     case 'resistor_220':
@@ -201,7 +225,7 @@ export function getCircuitComponentMetadata(
         signalType: 'Modulated Visible Red Radiant Flux',
         pins: [
           { id: 'led_anode', name: 'ANODE', label: 'Anode (+ Lead ← 220Ω Resistor)', net: 'NET_LED_ANODE', type: 'IN' },
-          { id: 'led_cathode', name: 'CATHODE', label: 'Cathode (- Lead → 2N2222 Collector)', net: 'NET_LED_CATHODE', type: 'OUT' },
+          { id: 'led_cathode', name: 'CATHODE', label: 'Cathode (- Lead → S8050/2N2222 Collector)', net: 'NET_LED_CATHODE', type: 'OUT' },
           { id: 'led_opt', name: 'BEAM', label: 'Optical Aperture (650 nm)', net: 'OPT_AIR_GAP_TX', type: 'OPTICAL' }
         ],
         properties: [
@@ -214,7 +238,7 @@ export function getCircuitComponentMetadata(
           { label: 'Optical Rise/Fall Time', value: '< 18 ns Fast Transition', status: 'MEASURED' }
         ],
         infoTitle: 'Electro-Optical Emitter',
-        infoDescription: 'Converts 10 kHz PWM modulated electrical current into 650 nm visible red radiant photons propagating into free space.'
+        infoDescription: 'Converts 1000 bps Manchester OOK modulated electrical current into 650 nm visible red radiant photons propagating into free space.'
       };
 
     case 'optical_channel':
@@ -228,15 +252,17 @@ export function getCircuitComponentMetadata(
         role: 'Wireless Optical Transmission Medium',
         accentColor: '#eab308',
         imageUrl: '/hardware/optical_setup_3d.jpg',
-        voltageReading: isSimulating ? `Optical Irradiance: ${irradianceUwPerCm2.toFixed(1)} µW/cm²` : '0.0 µW/cm²',
+        voltageReading: isSimulating ? `Irradiance: ${irradianceUwPerCm2.toFixed(1)} µW/cm² (T=${(servoTransmission * 100).toFixed(0)}%)` : '0.0 µW/cm²',
         currentReading: isSimulating ? `Gain H(0) = ${pathGain.toExponential(2)}` : 'H(0) = 0.0',
-        signalType: 'Free-Space Unshielded Optical Propagation',
+        signalType: servoAngle === 0 ? 'Clear Line-of-Sight (LOS)' : servoAngle === 30 ? 'P1 30° Partial Occlusion (30 ms)' : servoAngle === 60 ? 'P2 60° Burst Occlusion (250 ms)' : 'P3 90° Full Occlusion (500 ms)',
         pins: [
           { id: 'opt_in', name: 'TX_DOME', label: 'LED Dome Optical Aperture', net: 'OPT_AIR_GAP_TX', type: 'OPTICAL' },
           { id: 'opt_out', name: 'RX_DIE', label: 'BPW34 Active Silicon Window', net: 'OPT_AIR_GAP_RX', type: 'OPTICAL' }
         ],
         properties: [
           { label: 'Transmission Air Gap', value: `${workingDistanceCm} cm (Configurable 10–40 cm)`, status: 'SIMULATED' },
+          { label: 'SG90 Servo Flap Angle', value: `${servoAngle}° (${servoAngle === 0 ? 'Clear LOS' : servoAngle === 30 ? 'P1 Short 30 ms' : servoAngle === 60 ? 'P2 Moderate 250 ms' : 'P3 Full 500 ms'})`, status: 'MEASURED' },
+          { label: 'Optical Transmission T(θ)', value: `${(servoTransmission * 100).toFixed(0)}% Optical Throughput`, status: 'MEASURED' },
           { label: 'Path Loss Attenuation', value: '∝ 1 / d² (Inverse-Square Dispersion)', status: 'SIMULATED' },
           { label: 'Optical DC Path Gain H(0)', value: `${pathGain.toExponential(2)} at ${workingDistanceCm} cm`, status: 'SIMULATED' },
           { label: 'Incident Irradiance', value: `${irradianceUwPerCm2.toFixed(1)} µW/cm² at Receiver`, status: 'SIMULATED' },
@@ -258,7 +284,7 @@ export function getCircuitComponentMetadata(
         role: 'Optical-to-Electrical Transducer',
         accentColor: '#10b981',
         imageUrl: '/hardware/photodiode_macro.jpg',
-        voltageReading: isSimulating ? 'Reverse Bias = 3.30 V' : '0.00 V',
+        voltageReading: isSimulating ? `Reverse Bias = 3.30 V | Sensed: ${irradianceUwPerCm2 > 5 ? 'ACTIVE' : 'OCCLUDED'}` : '0.00 V',
         currentReading: isSimulating ? `I_ph = ${photocurrentUA.toFixed(1)} µA (Reverse)` : '2.0 nA (Dark)',
         signalType: 'Microampere Reverse Photocurrent',
         pins: [
@@ -269,7 +295,7 @@ export function getCircuitComponentMetadata(
           { label: 'Radiant Sensitive Die Area', value: '7.5 mm² High-Area Silicon PIN Die', status: 'MEASURED' },
           { label: 'Spectral Sensitivity Range', value: '430 nm – 1100 nm (Silicon Window)', status: 'MEASURED' },
           { label: 'Peak Responsivity (R)', value: '0.62 A/W @ 650 nm Red Spectrum', status: 'MEASURED' },
-          { label: 'Generated Photocurrent (I_ph)', value: `${photocurrentUA.toFixed(1)} µA at ${workingDistanceCm} cm LOS`, status: 'SIMULATED' },
+          { label: 'Generated Photocurrent (I_ph)', value: `${photocurrentUA.toFixed(1)} µA at ${workingDistanceCm} cm (${servoAngle}° flap)`, status: 'SIMULATED' },
           { label: 'Dark Leakage Current (I_R)', value: '2.0 nA Clean Background Base', status: 'MEASURED' },
           { label: 'Junction Capacitance (C_j)', value: '25 pF (Reverse Biased @ 3V)', status: 'MEASURED' },
           { label: 'Response Rise/Fall Time', value: '20 ns Fast PIN Response', status: 'MEASURED' }
@@ -289,22 +315,23 @@ export function getCircuitComponentMetadata(
         role: 'Transimpedance Amplification (TIA) & Voltage Slicing',
         accentColor: '#06b6d4',
         imageUrl: '/hardware/lm358_amplifier.jpg',
-        voltageReading: isSimulating ? `TIA Out: ${tiaVoltageOut.toFixed(2)} V | Sliced: 3.26 V TTL` : '0.04 V Low',
-        currentReading: isSimulating ? 'I_in = ' + photocurrentUA.toFixed(1) + ' µA' : '0.0 µA',
+        voltageReading: isSimulating ? `TIA Out: ${tiaVoltageOut.toFixed(2)} V | Sliced: ${adcCount >= 50 ? '3.26 V TTL' : '0.04 V Cutoff'}` : '0.04 V Low',
+        currentReading: isSimulating ? `I_in = ${photocurrentUA.toFixed(1)} µA | State: ${adcCount >= 50 ? 'PULSING' : 'ATTENUATED'}` : '0.0 µA',
         signalType: 'Conditioned Analog Waveform & Restored TTL',
         pins: [
           { id: 'amp_in_minus', name: 'IN-', label: 'Inverting Pin 2 (← BPW34 Anode)', net: 'NET_PD_INVERTING', type: 'IN' },
           { id: 'amp_in_plus', name: 'IN+', label: 'Non-Inverting Pin 3 (← 1.65V Ref)', net: 'NET_VREF_1V65', type: 'IN' },
           { id: 'amp_vcc', name: 'VCC', label: 'VCC Pin 8 (+3.3V Supply)', net: 'VCC_3V3', type: 'POWER' },
           { id: 'amp_gnd', name: 'GND', label: 'GND Pin 4 (Ground)', net: 'GND', type: 'POWER' },
-          { id: 'amp_out', name: 'OUT', label: 'Output Pin 1 (→ STM32 PA0)', net: 'NET_RX_CAPTURE', type: 'OUT' }
+          { id: 'amp_out', name: 'OUT', label: 'Output Pin 1 (→ ESP32 GPIO 34)', net: 'NET_RX_CAPTURE', type: 'OUT' }
         ],
         properties: [
           { label: 'Circuit Architecture', value: 'Dual Op-Amp (Stage 1 TIA + Stage 2 Slicer)', status: 'MEASURED' },
           { label: 'Feedback Resistor (R_f)', value: '47 kΩ 1% Metal Film Resistor', status: 'MEASURED' },
           { label: 'Transimpedance Gain', value: '47,000 V/A Transimpedance', status: 'MEASURED' },
           { label: 'Slicing Threshold (V_ref)', value: '1.65 V Potentiometer Mid-Rail', status: 'MEASURED' },
-          { label: 'Conditioned Logic Swing', value: '0.04 V (Low) to 3.26 V (High) TTL', status: 'MEASURED' },
+          { label: 'Conditioned Logic Swing', value: adcCount >= 50 ? '0.04 V to 3.26 V Valid TTL' : '0.04 V (Sub-threshold Noise Floor)', status: 'MEASURED' },
+          { label: 'Slicing Comparator State', value: adcCount >= 50 ? 'PULSING (Above 1.65V V_ref)' : 'SILENT (Below 1.65V V_ref)', status: 'MEASURED' },
           { label: 'Op-Amp Slew Rate', value: '0.5 V/µs Clean Logic Edges', status: 'MEASURED' },
           { label: 'Input Offset Voltage', value: '2.0 mV Typical Offset', status: 'MEASURED' }
         ],
@@ -317,33 +344,35 @@ export function getCircuitComponentMetadata(
       return {
         id: 'stm32_rx',
         canonicalId: 'stm32_rx',
-        name: 'STM32 RX (Receiver MCU)',
-        shortName: 'STM32 RX',
+        name: 'ESP32 RX (Receiver MCU)',
+        shortName: 'ESP32 RX',
         category: 'Microcontrollers',
-        type: 'STM32F103C8T6 ARM Cortex-M3 (72 MHz)',
-        role: 'ADC / Timer Capture & Packet Reconstructor',
+        type: 'ESP32-WROOM-32D Xtensa Dual-Core (240 MHz)',
+        role: 'ADC Slicing, Manchester Demodulation & BASR Reconstruction',
         accentColor: '#8b5cf6',
-        imageUrl: '/hardware/stm32_board.jpg',
-        voltageReading: isSimulating ? `3.26 V TTL | ADC Count: ${adcCount}` : '0.00 V (Idle)',
-        currentReading: isSimulating ? '31.8 mA Active' : '3.8 mA Idle',
-        signalType: '12-bit ADC / Timer Capture (1.0 MSPS)',
+        imageUrl: '/hardware/esp32_3d.png',
+        voltageReading: isSimulating ? `${adcCount >= 50 ? '3.26 V Sliced' : '0.04 V Floor'} | ADC: ${adcCount} Counts` : '0.00 V (Idle)',
+        currentReading: isSimulating ? '42.8 mA Active' : '3.8 mA Idle',
+        signalType: adcCount >= 50 ? 'Valid Manchester Chips (ADC > 50)' : 'Burst Corrupted Stream (ADC < 50)',
         pins: [
-          { id: 'rx_pa0', name: 'PA0', label: 'PA0 (TIM2_CH1 Input Capture / ADC1)', net: 'NET_RX_CAPTURE', type: 'IN' },
-          { id: 'rx_vcc', name: 'VDD', label: '3.3V Power Rail', net: 'VCC_3V3', type: 'POWER' },
+          { id: 'rx_gpio34', name: 'GPIO34', label: 'GPIO 34 (ADC1_CH6 Input)', net: 'NET_RX_CAPTURE', type: 'IN' },
+          { id: 'rx_vcc', name: '3V3', label: '3.3V Power Rail', net: 'VCC_3V3', type: 'POWER' },
           { id: 'rx_gnd', name: 'GND', label: 'System Ground', net: 'GND', type: 'POWER' },
-          { id: 'rx_usb', name: 'USB', label: 'USB Virtual COM Port to PC', net: 'USB_HOST', type: 'BIDIR' }
+          { id: 'rx_usb', name: 'USB', label: 'USB Serial Monitor to PC (115200 baud)', net: 'USB_HOST', type: 'BIDIR' }
         ],
         properties: [
-          { label: 'Core Architecture', value: 'ARM Cortex-M3 32-bit @ 72 MHz', status: 'MEASURED' },
-          { label: 'Input Capture Pin', value: 'PA0 (Timer 2 CH1 / ADC1 Input)', status: 'MEASURED' },
-          { label: 'ADC / Timer Sampling Rate', value: '1.0 MSPS Capture Sampling', status: 'MEASURED' },
-          { label: 'Received ADC Raw Count', value: `${adcCount} Counts (${(adcCount * (3.3 / 4095)).toFixed(3)} V)`, status: 'SIMULATED' },
-          { label: 'Frame Decoding Algorithm', value: 'Manchester Mid-Bit Slicer', status: 'MEASURED' },
-          { label: 'Packet CRC Verification', value: 'CRC-8 Dallas (0x31 Hardware)', status: 'MEASURED' },
-          { label: 'Decoded Data Stream', value: '1000 bps Validated ASCII Payload', status: 'MEASURED' }
+          { label: 'Core Architecture', value: 'Xtensa Dual-Core 32-bit LX6 @ 240 MHz', status: 'MEASURED' },
+          { label: 'Receiver Pin', value: 'GPIO 34 (ADC1_CH6 Input Only)', status: 'MEASURED' },
+          { label: 'ADC Sampling Resolution', value: '12-bit SAR ADC (Threshold ~50 counts)', status: 'MEASURED' },
+          { label: 'Sampling Window', value: 'Mid-Bit Center Window (450 µs – 550 µs)', status: 'MEASURED' },
+          { label: 'Received ADC Raw Count', value: `${adcCount} Counts (${(adcCount * (3.3 / 4095)).toFixed(3)} V) [${adcCount >= 50 ? 'VALID' : 'BELOW THRESHOLD'}]`, status: 'SIMULATED' },
+          { label: 'Frame Status / CGFP Trigger', value: adcCount >= 50 ? 'CRC-8 Valid (Pass-Through)' : `CRC-8 Fail ➔ CGFP Triggered (${servoAngle === 60 ? 'C=0.729 < 0.80 ➔ FALLBACK' : 'C=0.000 ➔ FALLBACK'})`, status: 'SIMULATED' },
+          { label: 'Frame Decoding Algorithm', value: 'Manchester Mid-Bit Edge Slicer', status: 'MEASURED' },
+          { label: 'Packet Integrity Check', value: 'Dallas CRC-8 (Polynomial 0x31)', status: 'MEASURED' },
+          { label: 'Decoded Data Stream', value: adcCount >= 50 ? '1000 bps Validated ASCII Payload' : 'Corrupted / Incomplete Payload', status: 'MEASURED' }
         ],
         infoTitle: 'Receiver Decoder Engine',
-        infoDescription: 'Timer 2 Channel 1 input capture accurately records transition timestamps, decodes Manchester bits, and verifies Dallas CRC-8.'
+        infoDescription: 'ESP32 GPIO 34 samples LM358 sliced output at mid-bit intervals (450–550 µs), reconstructs Manchester chips, validates Dallas CRC-8, and feeds BASR + CGFP on packet burst corruption.'
       };
   }
 }

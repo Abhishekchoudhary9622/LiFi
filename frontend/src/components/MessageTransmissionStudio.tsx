@@ -549,12 +549,12 @@ export const MessageTransmissionStudio: React.FC<MessageTransmissionStudioProps>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
           {/* Stage 1: Transmitter MCU */}
           <div className={`p-3 rounded-xl border ${isCurrentBitOne ? 'bg-blue-950/40 border-blue-500' : 'bg-[#080d19] border-slate-800'} space-y-1 shadow`}>
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider block">1. STM32 / ESP32 TX</span>
+            <span className="text-[10px] text-slate-400 uppercase tracking-wider block">1. ESP32 TX (GPIO 23)</span>
             <strong className={`block text-xs ${isCurrentBitOne ? 'text-cyan-300' : 'text-slate-400'}`}>
-              {isCurrentBitOne ? 'PWM 3.30V @ 10.0 kHz' : 'HOLD LOW: 0.00 V'}
+              {isCurrentBitOne ? 'MANCHESTER 3.30V @ 1000 bps' : 'HOLD LOW: 0.00 V'}
             </strong>
             <p className="text-[10px] text-slate-400 leading-relaxed pt-1 border-t border-slate-800">
-              {isCurrentBitOne ? 'Hardware timer outputs continuous high-speed optical carrier pulses.' : 'Pin held low; optical carrier paused.'}
+              {isCurrentBitOne ? 'GPIO 23 outputs Manchester transitions at 1000 bps.' : 'Pin held low; optical carrier paused.'}
             </p>
           </div>
 
@@ -615,7 +615,7 @@ export const MessageTransmissionStudio: React.FC<MessageTransmissionStudioProps>
 
           {/* Stage 7: Receiver MCU ADC */}
           <div className={`p-3 rounded-xl border ${isCurrentBitOne ? 'bg-purple-950/40 border-purple-500' : 'bg-[#080d19] border-slate-800'} space-y-1 shadow`}>
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider block">7. Receiver MCU (PA0 / GPIO 34)</span>
+            <span className="text-[10px] text-slate-400 uppercase tracking-wider block">7. Receiver MCU (ESP32 GPIO 34)</span>
             <strong className={`block text-xs ${isCurrentBitOne ? 'text-purple-300' : 'text-slate-400'}`}>
               {isCurrentBitOne ? 'ADC: 2.14V > 1.65V -> LOGIC 1' : 'ADC: 0.05V < 1.65V -> LOGIC 0'}
             </strong>
@@ -646,7 +646,7 @@ export const MessageTransmissionStudio: React.FC<MessageTransmissionStudioProps>
             <FileCode className="w-4 h-4 text-emerald-400" />
             <span>Receiver Serial Terminal Console [115,200 baud]</span>
           </span>
-          <span className="text-[10px] text-emerald-400">Carrier: 10.0 kHz • Sampling: 1 MSPS</span>
+          <span className="text-[10px] text-emerald-400">Signaling: 1000 bps Manchester • ADC Sampling: Mid-Bit (450–550 µs)</span>
         </div>
 
         <div className="space-y-1 text-slate-300 text-[11px] pt-1">

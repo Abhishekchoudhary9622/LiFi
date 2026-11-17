@@ -286,14 +286,14 @@ export const COMPONENT_CATALOG: ComponentTemplate[] = [
     typeId: 'stm32',
     name: 'Microcontroller (STM32 / ESP32)',
     category: 'microcontrollers',
-    description: 'ARM Cortex-M3 72MHz / Tensilica development board with configurable physical pin mapping',
+    description: 'ESP32-WROOM-32D Xtensa Dual-Core 240MHz development board with configurable physical pin mapping',
     defaultWidth: 200,
     defaultHeight: 96,
     defaultProperties: {
-      model: 'STM32F103C8 / ESP32-WROOM',
-      clockFrequency: '72 MHz / 240 MHz',
+      model: 'ESP32-WROOM-32D',
+      clockFrequency: '240 MHz',
       operatingVoltage: 3.3,
-      verifiedPins: 'Configurable in Physical Mapping layer',
+      verifiedPins: 'GPIO 23 (TX Out), GPIO 34 (RX ADC)',
       purpose: 'Optical modulation generation & ADC symbol demodulation'
     },
     educationalInfo: {
@@ -305,13 +305,13 @@ export const COMPONENT_CATALOG: ComponentTemplate[] = [
       whatHappensIfRemoved: 'The entire hardware testbed goes dead; no modulation is emitted and no packets are processed.',
       formula: 'T_bit = 1 / BaudRate; ADC_counts = (V_in / 3.3V) * 4095',
       datasheet: {
-        partNumber: 'STM32F103C8T6 / Blue Pill',
-        manufacturer: 'STMicroelectronics',
-        maxVoltage: 'Operating Voltage 2.0V to 3.6V (3.3V nominal)',
-        maxCurrent: 'Maximum current sink/source per GPIO = 25 mA',
+        partNumber: 'ESP32-WROOM-32D / Dual-Core Xtensa LX6',
+        manufacturer: 'Espressif Systems',
+        maxVoltage: 'Operating Voltage 3.0V to 3.6V (3.3V nominal)',
+        maxCurrent: 'Maximum current sink/source per GPIO = 12 mA (20 mA transient)',
         operatingTemp: '-40°C to +85°C',
-        packageType: 'LQFP48 on Breakout PCB',
-        keyFeatures: ['ARM 32-bit Cortex-M3 CPU at 72 MHz', '64 Kbytes of Flash memory', '12-bit, 1 µs A/D converter (up to 16 channels)']
+        packageType: '38-pin Development Board Module',
+        keyFeatures: ['Xtensa Dual-Core 32-bit LX6 CPU at 240 MHz', '448 KB ROM, 520 KB SRAM, 4 MB Flash', '12-bit SAR ADC (up to 18 channels)']
       },
       teacherExplanation: {
         summary: 'Embedded brain executing the packet framing, Manchester/OOK encoding, and digital symbol slicing.',
@@ -321,7 +321,7 @@ export const COMPONENT_CATALOG: ComponentTemplate[] = [
           'Demonstrates real hardware-in-the-loop embedded engineering.'
         ],
         commonStudentQuestions: [
-          { q: 'Is PA0 fixed on the hardware?', a: 'No, any timer-capable PWM pin (PA0, PA1, PA8, PB0, etc.) can be configured and mapped.' }
+          { q: 'Are GPIO 23 and GPIO 34 fixed on the hardware?', a: 'GPIO 23 is standard push-pull digital TX out, and GPIO 34 (ADC1_CH6) is an input-only ADC pin, safe for sampling optical TIA voltage.' }
         ]
       }
     },
@@ -507,21 +507,21 @@ export function createDemoCircuit(): { components: CircuitComponent[]; wires: Wi
       ]
     },
 
-    // 2. STM32 / Microcontroller with placeholder customizable pins
+    // 2. Microcontroller (ESP32-WROOM-32D) with physical verified pins
     {
       id: 'MCU_1',
       typeId: 'stm32',
-      name: 'Microcontroller (STM32)',
+      name: 'Microcontroller (ESP32-WROOM-32D)',
       category: 'microcontrollers',
       x: 60,
       y: 170,
       rotation: 0,
       properties: {
-        model: 'STM32F103C8 / ESP32',
-        clockFrequency: '72 MHz',
+        model: 'ESP32-WROOM-32D',
+        clockFrequency: '240 MHz',
         operatingVoltage: 3.3,
-        txPinLabel: 'PAx (Verified Physical Pin: PA0)',
-        rxPinLabel: 'PAx (Verified Physical Pin: PA1)'
+        txPinLabel: 'GPIO 23 (Manchester OOK Out)',
+        rxPinLabel: 'GPIO 34 (ADC1_CH6 Input)'
       },
       pins: [
         { id: 'vcc_3v3', name: '3.3V', type: 'power', direction: 'input', x: 12, y: 20 },

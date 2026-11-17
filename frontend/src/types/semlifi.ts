@@ -196,3 +196,14 @@ export interface PipelineRunResult {
   cgfp_result: CGFPResult | null;
   data_source_badge: string;
 }
+
+export type {
+  SharedExperimentResult,
+  ExperimentMode,
+  ObstructionScenario,
+  CgfpDecision,
+  PacketDeliveryStatus,
+  RecoveryMethod,
+  TransmittedPacketStructure
+} from '../model/experimentModel';
+

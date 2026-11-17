@@ -41,36 +41,36 @@ export interface DigitalTwinConnection {
 export const DIGITAL_TWIN_COMPONENTS: DigitalTwinComponent[] = [
   {
     id: 'stm32_tx',
-    name: 'STM32 TX (Transmitter MCU)',
-    shortName: 'STM32 TX',
-    type: 'STM32F103C8T6 "Blue Pill"',
-    role: 'Transmitter Controller & Carrier Modulator',
+    name: 'ESP32 TX (Transmitter MCU)',
+    shortName: 'ESP32 TX',
+    type: 'ESP32-WROOM-32D',
+    role: 'Telemetry Packetizer & Manchester Modulator',
     badge: 'TX',
     badgeColor: 'bg-blue-900/80 text-blue-300 border-blue-500',
     category: 'transmitter',
-    physicalPhoto: '/hardware/stm32_board.jpg',
+    physicalPhoto: '/hardware/esp32_3d.png',
     normalizedPosition: { x: 0.22, y: 0.60 },
     box: { width: 0.12, height: 0.16 },
     specs: [
-      { label: 'Core Architecture', value: 'ARM Cortex-M3 @ 72 MHz', status: 'MEASURED' },
-      { label: 'Carrier Pin', value: 'PA9 (TIM1_CH2 PWM)', status: 'MEASURED' },
+      { label: 'Core Architecture', value: 'Xtensa Dual-Core LX6 @ 240 MHz', status: 'MEASURED' },
+      { label: 'Carrier Pin', value: 'GPIO 23 (OOK + Manchester Drive)', status: 'MEASURED' },
       { label: 'Operating Voltage', value: '3.30 V DC Regulated', status: 'MEASURED' },
-      { label: 'Modulation Scheme', value: 'OOK / Manchester 10 kHz', status: 'MEASURED' },
-      { label: 'Current Draw', value: '34.2 mA Active', status: 'MEASURED' }
+      { label: 'Modulation Scheme', value: 'Manchester OOK (1000 bps / 1000 µs)', status: 'MEASURED' },
+      { label: 'Integrity Check', value: 'Dallas/Maxim CRC-8 (0x31)', status: 'MEASURED' }
     ],
-    connections: 'STM32 TX (PA9) → 1 kΩ Base Resistor → 2N2222 Transistor Base',
-    functionDescription: 'Executes carrier modulation algorithm, generates 10 kHz optical carrier pulses, and streams serialized data packets.',
-    whyUsed: 'Provides hardware timer PWM precision with zero software jitter and 72 MHz processing speed.',
-    vivaNote: 'PA9 is configured in Alternate Function Push-Pull mode driven by Timer 1 Channel 2.',
+    connections: 'ESP32 TX (GPIO 23) → 1 kΩ Base Resistor → S8050 / 2N2222 Transistor Base',
+    functionDescription: 'Executes packet framing, sequence numbering, Dallas CRC-8 computation, Manchester line encoding, and drives GPIO 23 with microsecond hardware timer interrupts.',
+    whyUsed: 'Provides 240 MHz dual-core processing, hardware microsecond timers, and clean GPIO switching at low cost.',
+    vivaNote: 'GPIO 23 is driven in push-pull mode at 1000 bps (500 µs chip period for Manchester transitions).',
     flowStep: 2,
-    schematicNodeId: 'U1_STM32_TX'
+    schematicNodeId: 'U1_ESP32_TX'
   },
   {
     id: 'transistor_2n2222',
-    name: '2N2222 NPN Transistor (Driver)',
-    shortName: '2N2222 Driver',
-    type: 'TO-92 NPN Bipolar Junction Transistor',
-    role: 'High-Speed LED Current Sinking Switch',
+    name: 'S8050 / 2N2222 NPN Transistor (LED Driver)',
+    shortName: 'S8050 / 2N2222 Driver',
+    type: 'TO-92 NPN Bipolar Junction Transistor (Paper: S8050; Alt: 2N2222)',
+    role: 'High-Speed LED Current Sinking Switch (S8050 Paper / 2N2222 Lab)',
     badge: 'DRIVER',
     badgeColor: 'bg-purple-900/80 text-purple-300 border-purple-500',
     category: 'driver',
@@ -78,18 +78,19 @@ export const DIGITAL_TWIN_COMPONENTS: DigitalTwinComponent[] = [
     normalizedPosition: { x: 0.31, y: 0.62 },
     box: { width: 0.05, height: 0.08 },
     specs: [
-      { label: 'Transistor Type', value: 'NPN Silicon Switching BJT', status: 'MEASURED' },
-      { label: 'V_CE(sat)', value: '0.20 V in Saturation', status: 'MEASURED' },
+      { label: 'Paper Primary Model', value: 'S8050 NPN BJT (Ic = 120 mA, hFE ≈ 200, fT = 150 MHz)', status: 'MEASURED' },
+      { label: 'Benchtop Alternate Model', value: '2N2222 NPN BJT (Ic = 800 mA, hFE ≈ 100-300, fT = 300 MHz)', status: 'MEASURED' },
+      { label: 'V_CE(sat)', value: '0.20 V in Deep Saturation', status: 'MEASURED' },
       { label: 'V_BE(on)', value: '0.72 V Base-Emitter', status: 'MEASURED' },
-      { label: 'Transition Frequency (f_T)', value: '300 MHz High Speed', status: 'MEASURED' },
-      { label: 'Collector Current', value: '14.5 mA Switched', status: 'MEASURED' }
+      { label: 'Base Resistor (R_B)', value: '1 kΩ Base Resistor to ESP32 GPIO 23', status: 'MEASURED' },
+      { label: 'Collector Current', value: '14.5 mA Switched Current', status: 'MEASURED' }
     ],
-    connections: 'Base ← STM32 PA9; Collector ← LED Cathode; Emitter → GND',
-    functionDescription: 'Amplifies low-current STM32 GPIO signal into sufficient sinking current to drive the 5mm transmitter LED at full radiance.',
-    whyUsed: 'Protects the STM32 GPIO from sinking excessive current (exceeding 25mA limits) while maintaining crisp nanosecond switching edges.',
-    vivaNote: 'Operates strictly in Cut-off (logic 0) and Saturation (logic 1) regions as a digital optical switch.',
+    connections: 'Base ← ESP32 GPIO 23 (via 1 kΩ); Collector ← LED Cathode; Emitter → GND',
+    functionDescription: 'Amplifies low-current ESP32 GPIO signal into sufficient sinking current to drive the 5mm transmitter LED at full radiance. Research paper specifies S8050; lab benchtop hardware supports 2N2222 as verified alternate.',
+    whyUsed: 'Protects the ESP32 GPIO from sinking excessive current (exceeding pin limits) while maintaining crisp nanosecond switching edges.',
+    vivaNote: 'Paper specifies S8050; lab prototype uses 2N2222 as verified alternate. Operates strictly in Cut-off (logic 0) and Saturation (logic 1) regions as a digital optical switch.',
     flowStep: 2,
-    schematicNodeId: 'Q1_2N2222'
+    schematicNodeId: 'Q1_S8050_2N2222'
   },
   {
     id: 'resistor_220',
@@ -213,38 +214,38 @@ export const DIGITAL_TWIN_COMPONENTS: DigitalTwinComponent[] = [
       { label: 'Output Swing', value: '0.04 V (Low) to 3.26 V (High)', status: 'MEASURED' },
       { label: 'Slew Rate', value: '0.5 V/µs Clean Transitions', status: 'MEASURED' }
     ],
-    connections: 'Input ← Photodiode Anode; Output → STM32 RX (PA0 / ADC1)',
-    functionDescription: 'Converts microampere photocurrent into voltage (Stage 1 TIA), then slices against reference threshold (Stage 2 Comparator) to yield a pristine 3.3V logic square wave.',
-    whyUsed: 'Raw photocurrent is too weak for direct microcontroller digital reading; signal conditioning reconstructs sharp TTL logic edges.',
-    vivaNote: 'Hysteresis prevents false double-switching caused by ambient room lamp optical noise.',
+    connections: 'Input ← Photodiode Anode; Output → ESP32 RX (GPIO 34 / ADC1_CH6)',
+    functionDescription: 'Converts microampere photocurrent into voltage (Stage 1 TIA), then slices against reference threshold to yield a measurable analog logic swing for the ESP32 ADC.',
+    whyUsed: 'Raw photocurrent is too weak for direct microcontroller reading; signal conditioning reconstructs measurable voltage levels for ADC sampling.',
+    vivaNote: 'Single-supply operation down to ground rail enables clean conversion of low-level photocurrent.',
     flowStep: 6,
     schematicNodeId: 'U2_LM358'
   },
   {
     id: 'stm32_rx',
-    name: 'STM32 RX (Receiver MCU)',
-    shortName: 'STM32 RX',
-    type: 'STM32F103C8T6 "Blue Pill"',
-    role: 'Data Decoder & Packet Reconstructor',
+    name: 'ESP32 RX (Receiver MCU)',
+    shortName: 'ESP32 RX',
+    type: 'ESP32-WROOM-32D',
+    role: 'ADC Mid-bit Sampler & Burst Detector',
     badge: 'RX',
     badgeColor: 'bg-blue-900/80 text-blue-300 border-blue-500',
     category: 'receiver',
-    physicalPhoto: '/hardware/stm32_board.jpg',
+    physicalPhoto: '/hardware/esp32_3d.png',
     normalizedPosition: { x: 0.63, y: 0.60 },
     box: { width: 0.12, height: 0.16 },
     specs: [
-      { label: 'Core Architecture', value: 'ARM Cortex-M3 @ 72 MHz', status: 'MEASURED' },
-      { label: 'Input Capture Pin', value: 'PA0 (Timer 2 CH1 / ADC1)', status: 'MEASURED' },
-      { label: 'Sampling Rate', value: '1.0 MSPS ADC / Timer Capture', status: 'MEASURED' },
-      { label: 'Decoding Algorithm', value: 'Manchester Phase Slicer', status: 'MEASURED' },
-      { label: 'Packet CRC Check', value: 'CRC-8 Hardware Validated', status: 'MEASURED' }
+      { label: 'Core Architecture', value: 'Xtensa Dual-Core LX6 @ 240 MHz', status: 'MEASURED' },
+      { label: 'Input ADC Pin', value: 'GPIO 34 (ADC1_CH6, Input-Only)', status: 'MEASURED' },
+      { label: 'Operating Threshold', value: '50 ADC Counts (Dark 0-5, Illum 95-176)', status: 'MEASURED' },
+      { label: 'Sampling Window', value: 'Mid-bit 450–550 µs Window', status: 'MEASURED' },
+      { label: 'Packet Integrity', value: 'Dallas CRC-8 + Manchester Check', status: 'MEASURED' }
     ],
-    connections: 'STM32 RX (PA0) ← LM358 Stage 2 Comparator Output; USB ← PC Host',
-    functionDescription: 'Samples conditioned logic transitions, synchronizes with bit clock, decodes Manchester framing, verifies checksum, and outputs the decoded message.',
-    whyUsed: 'Hardware timer input capture allows nanosecond edge measurement without CPU polling overhead.',
-    vivaNote: 'Uses double-buffered DMA transfer to stream samples without dropping bits during high-speed transmission.',
+    connections: 'ESP32 RX (GPIO 34) ← LM358 Stage 1/2 TIA Output; USB ← PC Host',
+    functionDescription: 'Samples conditioned optical analog voltage on GPIO 34 within a 450-550 µs mid-bit window, slices logic at ~50 counts, decodes Manchester symbols, validates Dallas CRC-8, and detects physical burst losses.',
+    whyUsed: 'Integrated 12-bit SAR ADC, microsecond hardware timers, and sufficient memory to buffer telemetry frames and feed the BASR model.',
+    vivaNote: 'Mid-bit sampling eliminates edge-jitter false triggers caused by transition rise/fall transients.',
     flowStep: 7,
-    schematicNodeId: 'U3_STM32_RX'
+    schematicNodeId: 'U3_ESP32_RX'
   }
 ];
 
@@ -254,8 +255,8 @@ export const DIGITAL_TWIN_CONNECTIONS: DigitalTwinConnection[] = [
     fromId: 'stm32_tx',
     toId: 'transistor_2n2222',
     type: 'ELECTRICAL',
-    signalName: '10 kHz PWM Modulated Carrier (0-3.3V)',
-    description: 'Electrical logic trace from STM32 PA9 through 1kΩ base resistor to 2N2222 transistor base.',
+    signalName: 'Manchester OOK Signal (GPIO 23, 1000 bps)',
+    description: 'Electrical logic trace from ESP32 GPIO 23 through 1kΩ base resistor to 2N2222 transistor base.',
     verified: true
   },
   {
@@ -299,8 +300,8 @@ export const DIGITAL_TWIN_CONNECTIONS: DigitalTwinConnection[] = [
     fromId: 'signal_conditioning',
     toId: 'stm32_rx',
     type: 'ELECTRICAL',
-    signalName: 'Reconstructed 3.3V TTL Logic Square Wave',
-    description: 'Clean sliced digital signal from LM358 comparator output into STM32 PA0 timer capture pin.',
+    signalName: 'Conditioned Analog Voltage (GPIO 34 ADC)',
+    description: 'Conditioned analog optical signal from LM358 output routed to ESP32 GPIO 34 ADC input.',
     verified: true
   }
 ];
@@ -310,15 +311,15 @@ export const HOW_IT_WORKS_STEPS = [
     step: '01',
     name: 'DATA',
     title: 'Payload Encoding',
-    desc: 'Digital text message serialized into binary bits with start/stop framing.',
+    desc: 'Digital telemetry string framed with sequence ID, length, and Dallas CRC-8.',
     icon: 'FileText',
     color: '#38bdf8'
   },
   {
     step: '02',
-    name: 'STM32 TX',
-    title: 'Carrier Modulation',
-    desc: 'Generates the electrical/modulated signal used to drive the transmitter.',
+    name: 'ESP32 TX',
+    title: 'Manchester Line Coding',
+    desc: 'Encodes bits into Manchester transitions (1000 µs symbol period) driving GPIO 23.',
     icon: 'Cpu',
     color: '#3b82f6'
   },
@@ -326,7 +327,7 @@ export const HOW_IT_WORKS_STEPS = [
     step: '03',
     name: 'LED',
     title: 'Optical Conversion',
-    desc: 'Converts the modulated electrical signal into optical information.',
+    desc: 'Converts modulated electrical current pulses into visible optical photons.',
     icon: 'Zap',
     color: '#ef4444'
   },
@@ -334,7 +335,7 @@ export const HOW_IT_WORKS_STEPS = [
     step: '04',
     name: 'OPTICAL LINK',
     title: 'Free-Space Air Gap',
-    desc: 'Transfers modulated light across the physical free-space optical channel.',
+    desc: 'Photons propagate across line-of-sight path subject to SG90 servo occlusion.',
     icon: 'Radio',
     color: '#f43f5e'
   },
@@ -342,23 +343,23 @@ export const HOW_IT_WORKS_STEPS = [
     step: '05',
     name: 'PHOTODIODE',
     title: 'Photon Detection',
-    desc: 'Converts received light into an electrical signal.',
+    desc: 'BPW34 silicon PIN photodiode converts incident photons into microamp photocurrent.',
     icon: 'Eye',
     color: '#10b981'
   },
   {
     step: '06',
     name: 'SIGNAL CONDITIONING',
-    title: 'LM358 Amplification',
-    desc: 'Amplifies and filters the photodiode current into a clean logic signal.',
+    title: 'LM358 TIA Amplification',
+    desc: 'Converts microamp photocurrent into 0-3.3V analog swing for the ESP32 ADC.',
     icon: 'Activity',
     color: '#06b6d4'
   },
   {
     step: '07',
-    name: 'STM32 RX',
-    title: 'Reconstruction',
-    desc: 'Samples and reconstructs the received information into valid data.',
+    name: 'ESP32 RX',
+    title: 'Mid-bit Slicing & BASR',
+    desc: 'Samples mid-bit on GPIO 34, checks CRC-8, detects bursts, and triggers BASR + CGFP.',
     icon: 'CheckCircle2',
     color: '#8b5cf6'
   }

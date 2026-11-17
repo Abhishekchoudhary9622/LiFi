@@ -42,33 +42,33 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     {
       virtualComponentId: 'MCU_1',
       virtualPinId: 'vcc_3v3',
-      physicalComponent: 'STM32F103C8 Blue Pill',
-      physicalPin: 'Pin 3.3V (Header 1 Pin 18)',
+      physicalComponent: 'ESP32-WROOM-32D',
+      physicalPin: 'Pin 3.3V (Power Header)',
       connectionDescription: '+3.3V Regulated Power Rail',
       status: 'verified'
     },
     {
       virtualComponentId: 'MCU_1',
       virtualPinId: 'gnd_1',
-      physicalComponent: 'STM32F103C8 Blue Pill',
-      physicalPin: 'Pin GND (Header 1 Pin 19)',
+      physicalComponent: 'ESP32-WROOM-32D',
+      physicalPin: 'Pin GND (Ground Header)',
       connectionDescription: 'System Digital Ground',
       status: 'verified'
     },
     {
       virtualComponentId: 'MCU_1',
-      virtualPinId: 'pa0',
-      physicalComponent: 'STM32F103C8 Blue Pill',
-      physicalPin: 'Pin PA0 (Header 1 Pin 6)',
-      connectionDescription: 'Timer 2 CH1 PWM Modulator -> 220Ω -> LED Anode',
+      virtualPinId: 'gpio23',
+      physicalComponent: 'ESP32-WROOM-32D',
+      physicalPin: 'GPIO 23 (Push-Pull Digital Out)',
+      connectionDescription: 'Manchester OOK Modulator -> 220Ω -> LED Anode',
       status: 'verified'
     },
     {
       virtualComponentId: 'MCU_1',
-      virtualPinId: 'pa1',
-      physicalComponent: 'STM32F103C8 Blue Pill',
-      physicalPin: 'Pin PA1 (Header 1 Pin 7)',
-      connectionDescription: 'ADC1 Channel 1 <- TIA Pre-amplifier Output',
+      virtualPinId: 'gpio34',
+      physicalComponent: 'ESP32-WROOM-32D',
+      physicalPin: 'GPIO 34 (ADC1_CH6 Input Only)',
+      connectionDescription: 'ADC1 Channel 6 <- TIA Slicer Pre-amplifier Output',
       status: 'verified'
     },
     {
@@ -100,7 +100,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               System Settings & Hardware Pin Mapping
             </h1>
             <p className="text-xs text-slate-400">
-              Correlate virtual simulation nodes with real-world physical STM32 benchtop hardware pins
+              Correlate virtual simulation nodes with real-world physical ESP32 benchtop hardware pins
             </p>
           </div>
         </div>
