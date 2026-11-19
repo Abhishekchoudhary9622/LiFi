@@ -356,25 +356,40 @@ export const CATALOGUE_TEMPLATES: Omit<CanvasComponent, 'id' | 'x' | 'y'>[] = [
 /**
  * Strict horizontal & vertical grid positions for all 9 components.
  * Guarantees zero overlaps, perfect alignment, and full visibility.
- * Row 1 (Transmitter chain): y = 40 (Stages 01 -> 05)
- * Row 2 (Receiver chain):    y = 240 (Stages 06 -> 09)
+ * Row 1 (Transmitter chain): y = 45 (Stages 01 -> 05)
+ * Row 2 (Receiver chain):    y = 300 (Stages 06 -> 09)
  * Columns:
  *  Col 1: x = 25  (Stage 01 above Stage 06)
- *  Col 2: x = 170 (Stage 02 above Stage 07)
- *  Col 3: x = 295 (Stage 03 above Stage 08)
- *  Col 4: x = 430 (Stage 04)
- *  Col 5: x = 555 (Stage 05 above Stage 09)
+ *  Col 2: x = 175 (Stage 02 above Stage 07)
+ *  Col 3: x = 305 (Stage 03 above Stage 08)
+ *  Col 4: x = 445 (Stage 04)
+ *  Col 5: x = 575 (Stage 05 above Stage 09)
  */
 export const CANONICAL_GRID_POSITIONS: Record<string, { x: number; y: number }> = {
-  comp_esp32_tx: { x: 25, y: 40 },
-  comp_r_base: { x: 170, y: 40 },
-  comp_driver_bjt: { x: 295, y: 40 },
-  comp_r_led: { x: 430, y: 40 },
-  comp_led_tx: { x: 555, y: 40 },
-  comp_optical_channel: { x: 25, y: 240 },
-  comp_bpw34: { x: 170, y: 240 },
-  comp_lm358: { x: 295, y: 240 },
-  comp_esp32_rx: { x: 555, y: 240 }
+  comp_esp32_tx: { x: 25, y: 45 },
+  comp_r_base: { x: 175, y: 45 },
+  comp_driver_bjt: { x: 305, y: 45 },
+  comp_r_led: { x: 445, y: 45 },
+  comp_led_tx: { x: 575, y: 45 },
+  comp_optical_channel: { x: 25, y: 300 },
+  comp_bpw34: { x: 175, y: 300 },
+  comp_lm358: { x: 305, y: 300 },
+  comp_esp32_rx: { x: 575, y: 300 }
+};
+
+/**
+ * Single-line continuous horizontal pipeline (Stages 01 to 09 in a single straight row)
+ */
+export const CANONICAL_GRID_SINGLE_LINE: Record<string, { x: number; y: number }> = {
+  comp_esp32_tx: { x: 25, y: 60 },
+  comp_r_base: { x: 175, y: 60 },
+  comp_driver_bjt: { x: 305, y: 60 },
+  comp_r_led: { x: 445, y: 60 },
+  comp_led_tx: { x: 575, y: 60 },
+  comp_optical_channel: { x: 715, y: 60 },
+  comp_bpw34: { x: 865, y: 60 },
+  comp_lm358: { x: 995, y: 60 },
+  comp_esp32_rx: { x: 1135, y: 60 }
 };
 
 /**

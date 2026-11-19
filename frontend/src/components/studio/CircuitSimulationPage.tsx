@@ -41,7 +41,8 @@ import {
   ArrowDown,
   Lock,
   Unlock,
-  Grid
+  Grid,
+  GitCommit
 } from 'lucide-react';
 import {
   getCircuitComponentMetadata,
@@ -54,6 +55,7 @@ import {
   CanvasPin,
   CATALOGUE_TEMPLATES,
   CANONICAL_GRID_POSITIONS,
+  CANONICAL_GRID_SINGLE_LINE,
   createDefaultCircuit,
   validateCircuitConnectivity,
   calculateProbeTelemetry,
@@ -161,14 +163,17 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
   const [gridSnap, setGridSnap] = useState<number>(20); // 20px, 10px, or 0 (Off)
   const [isLayoutLocked, setIsLayoutLocked] = useState<boolean>(true); // Locked by default: clicks inspect without moving!
 
+  // Wire Visibility State: Hidden by default to keep the interface uncluttered and clean
+  const [showConnections, setShowConnections] = useState<boolean>(false);
+
   // Validation DRC Drawer State
   const [showValidationDrawer, setShowValidationDrawer] = useState<boolean>(false);
 
-  // Persistent Text Annotation State (Clean Subsystem Banners above rows)
-  const [canvasLabels, setCanvasLabels] = useState<CanvasTextLabel[]>([
-    { id: 'lbl_tx_domain', text: '01 — Transmitter Subsystem: Stages 01 to 05 (ESP32 TX 1000 bps)', x: 25, y: 15 },
-    { id: 'lbl_rx_domain', text: '02 — Receiver Subsystem: Stages 06 to 09 (Optical Channel + BPW34 + LM358 + ESP32 RX)', x: 25, y: 215 }
-  ]);
+  // Layout View Mode: 'dual-row' (Transmitter top / Receiver bottom) vs 'single-line' (1 continuous horizontal pipeline)
+  const [circuitLayoutMode, setCircuitLayoutMode] = useState<'dual-row' | 'single-line'>('dual-row');
+
+  // Persistent Text Annotation State (Clean Subsystem Banners - empty by default so canvas cards are unobstructed)
+  const [canvasLabels, setCanvasLabels] = useState<CanvasTextLabel[]>([]);
   const [servoAngle, setServoAngle] = useState<number>(0);
   const [labelInputModal, setLabelInputModal] = useState<{ isOpen: boolean; x: number; y: number; text: string }>({
     isOpen: false,
@@ -195,25 +200,25 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
   const handleFitToScreen = useCallback(() => {
     if (!diagramFrameRef.current || canvasComponents.length === 0) return;
     const rect = diagramFrameRef.current.getBoundingClientRect();
-    const padding = 70;
+    const padding = 45;
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     canvasComponents.forEach((c) => {
       minX = Math.min(minX, c.x);
       minY = Math.min(minY, c.y);
       maxX = Math.max(maxX, c.x + c.width);
-      maxY = Math.max(maxY, c.y + c.height);
+      maxY = Math.max(maxY, c.y + (c.height || 180));
     });
 
     const circuitWidth = Math.max(100, maxX - minX);
     const circuitHeight = Math.max(100, maxY - minY);
 
-    const availW = Math.max(300, rect.width - padding * 2);
+    const availW = Math.max(280, rect.width - padding * 2);
     const availH = Math.max(200, rect.height - padding * 2);
 
     const scaleX = availW / circuitWidth;
     const scaleY = availH / circuitHeight;
-    const targetScale = Math.max(0.45, Math.min(1.25, Math.min(scaleX, scaleY)));
+    const targetScale = Math.max(0.40, Math.min(1.10, Math.min(scaleX, scaleY)));
     const targetZoom = Math.round(targetScale * 100);
 
     const scaledW = circuitWidth * targetScale;
@@ -226,20 +231,29 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
     showToast(`Fit to Screen: Zoom set to ${targetZoom}%`, 'info');
   }, [canvasComponents, showToast]);
 
-  // Auto-align all 9 components into strict horizontal and vertical grid
-  const handleAlignGrid = useCallback(() => {
+  // Apply layout preset (dual-row or single-line pipeline)
+  const applyLayout = useCallback((mode: 'dual-row' | 'single-line') => {
+    setCircuitLayoutMode(mode);
+    const posMap = mode === 'single-line' ? CANONICAL_GRID_SINGLE_LINE : CANONICAL_GRID_POSITIONS;
     setCanvasComponents((prev) =>
       prev.map((c) => {
-        const pos = CANONICAL_GRID_POSITIONS[c.id];
+        const pos = posMap[c.id];
         return pos ? { ...c, x: pos.x, y: pos.y } : c;
       })
     );
-    setCanvasLabels([
-      { id: 'lbl_tx_domain', text: '01 — Transmitter Subsystem: Stages 01 to 05 (ESP32 TX 1000 bps)', x: 25, y: 15 },
-      { id: 'lbl_rx_domain', text: '02 — Receiver Subsystem: Stages 06 to 09 (Optical Channel + BPW34 + LM358 + ESP32 RX)', x: 25, y: 215 }
-    ]);
-    showToast('Grid Auto-Aligned: All 9 components locked in horizontal & vertical lanes', 'success');
+    setCanvasLabels([]);
+    showToast(
+      mode === 'single-line'
+        ? 'Single-Line Flow: All 9 stages aligned in end-to-end pipeline'
+        : 'Dual-Row Bus: Components aligned in Transmitter & Receiver rows',
+      'success'
+    );
   }, [showToast]);
+
+  // Auto-align all 9 components into strict horizontal and vertical grid
+  const handleAlignGrid = useCallback(() => {
+    applyLayout(circuitLayoutMode);
+  }, [applyLayout, circuitLayoutMode]);
 
   const hasAutoFittedRef = useRef(false);
   useEffect(() => {
@@ -934,6 +948,7 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
     const initial = createDefaultCircuit();
     setCanvasComponents(initial.components);
     setCanvasWires(initial.wires);
+    setCanvasLabels([]);
     setSelectedWireId(null);
     setWireDraftStart(null);
     setActiveProbeReading(null);
@@ -1486,6 +1501,56 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                 <span>{isLayoutLocked ? 'Locked' : 'Unlocked'}</span>
               </button>
 
+              {/* Show Connections Toggle: Wires hidden by default as strictly required */}
+              <button
+                onClick={() => {
+                  setShowConnections((prev) => {
+                    const next = !prev;
+                    showToast(next ? 'Show Connections: Wire paths visible' : 'Connections Hidden: Clean circuit schematic view', 'info');
+                    return next;
+                  });
+                }}
+                className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition flex items-center space-x-1 border ${
+                  showConnections
+                    ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
+                    : isDarkMode
+                    ? 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+                title="Toggle visible electrical and optical wire connection paths on canvas (Hidden by default)"
+              >
+                <GitCommit className="w-3 h-3 text-cyan-400" />
+                <span>{showConnections ? 'Wires: Shown' : 'Show Connections'}</span>
+              </button>
+
+              {/* Layout Mode Selector: 2-Row Bus vs 1-Line Flow */}
+              <div className="flex items-center space-x-0.5 bg-slate-900 border border-slate-800 rounded p-0.5">
+                <button
+                  onClick={() => applyLayout('dual-row')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition flex items-center space-x-1 ${
+                    circuitLayoutMode === 'dual-row'
+                      ? 'bg-cyan-950 text-cyan-300 border border-cyan-500/60 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Dual-Row Bus: Row 1 Transmitter (Stages 01-05), Row 2 Receiver (Stages 06-09)"
+                >
+                  <Grid className="w-2.5 h-2.5 text-cyan-400" />
+                  <span>2-Row Bus</span>
+                </button>
+                <button
+                  onClick={() => applyLayout('single-line')}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition flex items-center space-x-1 ${
+                    circuitLayoutMode === 'single-line'
+                      ? 'bg-purple-950 text-purple-300 border border-purple-500/60 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Single-Line Pipeline: All 9 stages in 1 continuous horizontal line"
+                >
+                  <ArrowRight className="w-2.5 h-2.5 text-purple-400" />
+                  <span>1-Line Flow</span>
+                </button>
+              </div>
+
               {/* Auto-Align Grid Button */}
               <button
                 onClick={handleAlignGrid}
@@ -1720,8 +1785,8 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
                   </marker>
                 </defs>
 
-                {/* Render All Connected Wires with Directional Flow */}
-                {canvasWires.map((wire) => {
+                {/* Render All Connected Wires with Directional Flow (Hidden by default, shown when showConnections is enabled) */}
+                {showConnections && canvasWires.map((wire) => {
                   const pt1 = getPinAbsoluteCoords(wire.fromCompId, wire.fromPinId);
                   const pt2 = getPinAbsoluteCoords(wire.toCompId, wire.toPinId);
                   if (!pt1 || !pt2) return null;
@@ -2062,104 +2127,7 @@ export const CircuitSimulationPage: React.FC<CircuitSimulationPageProps> = ({
               </button>
             )}
 
-            {/* Floating Canvas Navigation & Gliding HUD (Cynbit / Figma style) */}
-            <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end space-y-2 select-none pointer-events-auto">
-              {/* Directional D-Pad Navigation Pill */}
-              <div className="p-2 rounded-2xl bg-[#091122]/95 border border-cyan-500/30 shadow-2xl backdrop-blur-md flex flex-col items-center space-y-1">
-                <button
-                  onClick={() => handlePanBy(0, 80)}
-                  className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-cyan-600 text-slate-300 hover:text-white transition active:scale-95"
-                  title="Pan Canvas Up (ArrowUp)"
-                >
-                  <ArrowUp className="w-3.5 h-3.5" />
-                </button>
-                <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => handlePanBy(120, 0)}
-                    className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-cyan-600 text-slate-300 hover:text-white transition active:scale-95"
-                    title="Glide Canvas Left (ArrowLeft)"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={handleFitToScreen}
-                    className="px-2 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-600 border border-cyan-500/40 text-cyan-300 hover:text-white text-[10px] font-bold transition active:scale-95"
-                    title="Fit All Components to Viewport (F key)"
-                  >
-                    Fit
-                  </button>
-                  <button
-                    onClick={() => handlePanBy(-120, 0)}
-                    className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-cyan-600 text-slate-300 hover:text-white transition active:scale-95"
-                    title="Glide Canvas Right (ArrowRight)"
-                  >
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <button
-                  onClick={() => handlePanBy(0, -80)}
-                  className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-cyan-600 text-slate-300 hover:text-white transition active:scale-95"
-                  title="Pan Canvas Down (ArrowDown)"
-                >
-                  <ArrowDown className="w-3.5 h-3.5" />
-                </button>
-              </div>
 
-              {/* Zoom & 1:1 Reset Controls Pill */}
-              <div className="px-2.5 py-1.5 rounded-xl bg-[#091122]/95 border border-slate-700/80 shadow-xl backdrop-blur-md flex items-center space-x-1.5 text-xs font-mono text-slate-300">
-                <button
-                  onClick={handleZoomOut}
-                  className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white active:scale-95"
-                  title="Zoom Out (- key)"
-                >
-                  <ZoomOut className="w-3.5 h-3.5" />
-                </button>
-                <span className="w-10 text-center font-bold text-cyan-400 text-[11px]">{zoomLevel}%</span>
-                <button
-                  onClick={handleZoomIn}
-                  className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white active:scale-95"
-                  title="Zoom In (+ key)"
-                >
-                  <ZoomIn className="w-3.5 h-3.5" />
-                </button>
-                <div className="w-px h-3.5 bg-slate-700 mx-0.5" />
-                <button
-                  onClick={handleResetZoom}
-                  className="px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-400 hover:text-white hover:bg-slate-800"
-                  title="Reset View to 100% (0 key)"
-                >
-                  1:1
-                </button>
-              </div>
-            </div>
-
-            {/* Bottom-Center Gliding Scrubber Bar */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-2 px-3 py-1.5 rounded-full bg-[#091122]/90 border border-slate-700/80 shadow-2xl backdrop-blur-md text-[11px] font-mono text-slate-400 select-none pointer-events-auto">
-              <button
-                onClick={() => handlePanBy(150, 0)}
-                className="p-1 rounded-full hover:bg-cyan-600/30 text-cyan-400 hover:text-white transition"
-                title="Glide Left (Move Viewport Left)"
-              >
-                <ArrowLeft className="w-3 h-3" />
-              </button>
-              <span className="text-[10px] text-slate-400 px-1 font-semibold hidden sm:inline">Glide View</span>
-              <input
-                type="range"
-                min="-500"
-                max="500"
-                value={panOffset.x}
-                onChange={(e) => setPanOffset((prev) => ({ ...prev, x: Number(e.target.value) }))}
-                className="w-24 sm:w-36 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-                title="Drag to glide left or right across canvas"
-              />
-              <button
-                onClick={() => handlePanBy(-150, 0)}
-                className="p-1 rounded-full hover:bg-cyan-600/30 text-cyan-400 hover:text-white transition"
-                title="Glide Right (Move Viewport Right)"
-              >
-                <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
 
             {/* Empty Canvas State */}
             {canvasComponents.length === 0 && (

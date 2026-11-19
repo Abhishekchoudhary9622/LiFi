@@ -410,10 +410,10 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
       {/* ========================================================= */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div>
-          <div className="flex items-center space-x-2 text-xs font-mono text-cyan-400 font-semibold mb-1">
-            <span>SemLiFi / Transmission Lab</span>
-            <span className="text-slate-600">•</span>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
+          <div className="flex items-center space-x-2 text-xs font-mono text-blue-600 dark:text-blue-400 font-semibold mb-1">
+            <span>SemLiFi / Signal Studio</span>
+            <span className="text-slate-400 dark:text-slate-600">•</span>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[10px]">
               SIMULATION READY
             </span>
           </div>
@@ -423,9 +423,9 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                 isDarkMode ? 'text-white' : 'text-slate-900'
               }`}
             >
-              Transmission &amp; Signal Analyzer
+              Signal Studio
             </h1>
-            <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold border border-slate-700">
+            <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-700">
               {activeExperiment?.experiment_id || `EXP-${String(Math.max(1, packetsSent)).padStart(3, '0')}`}
             </span>
           </div>
@@ -440,20 +440,26 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
 
         {/* Global Pipeline Telemetry Controls */}
         <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-          <div className="px-3 py-1.5 rounded-xl border bg-slate-900/80 border-slate-800 flex items-center space-x-2">
-            <span className="text-slate-400">Packets TX:</span>
-            <span className="font-bold text-cyan-400">{packetsSent}</span>
+          <div className={`px-3 py-1.5 rounded-lg border flex items-center space-x-2 ${
+            isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 text-slate-700 shadow-2xs'
+          }`}>
+            <span className="text-slate-500">Packets TX:</span>
+            <span className={`font-bold ${isDarkMode ? 'text-cyan-400' : 'text-blue-600'}`}>{packetsSent}</span>
           </div>
-          <div className="px-3 py-1.5 rounded-xl border bg-slate-900/80 border-slate-800 flex items-center space-x-2">
-            <span className="text-slate-400">Air Gap:</span>
-            <span className="font-bold text-blue-400">{workingDistanceCm} cm</span>
+          <div className={`px-3 py-1.5 rounded-lg border flex items-center space-x-2 ${
+            isDarkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 text-slate-700 shadow-2xs'
+          }`}>
+            <span className="text-slate-500">Air Gap:</span>
+            <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>{workingDistanceCm} cm</span>
           </div>
           <button
             onClick={() => setIsStepThroughMode(!isStepThroughMode)}
-            className={`px-3 py-1.5 rounded-xl border flex items-center space-x-1.5 font-bold transition ${
+            className={`px-3 py-1.5 rounded-lg border flex items-center space-x-1.5 font-bold transition ${
               isStepThroughMode
-                ? 'bg-purple-600 text-white border-purple-400 shadow'
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                : isDarkMode
+                ? 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-2xs'
             }`}
             title="Inspect communication pipeline stage-by-stage"
           >
@@ -557,21 +563,21 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
         {/* ======================================================= */}
         <div className="lg:col-span-4 space-y-4">
           <div
-            className={`rounded-2xl border p-5 space-y-4 shadow-sm ${
-              isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200'
+            className={`rounded-xl border p-5 space-y-4 shadow-xs ${
+              isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200/90'
             }`}
           >
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center space-x-2">
-                <span className="font-mono text-xs font-bold text-cyan-400">01 &mdash;</span>
+                <span className="font-mono text-xs font-bold text-blue-600 dark:text-cyan-400">01 &mdash;</span>
                 <h2 className="text-sm font-bold tracking-tight uppercase">TRANSMITTER</h2>
               </div>
               <span
                 className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold border ${
                   hasValidPayload
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                    : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
+                    : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30'
                 }`}
               >
                 {hasValidPayload ? 'VALID' : 'INVALID'}
@@ -580,7 +586,7 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
 
             {/* Message Payload Input (Interaction 1: live regeneration) */}
             <div className="space-y-2">
-              <label className="text-xs text-slate-400 font-medium block">
+              <label className="text-xs text-slate-500 dark:text-slate-400 font-medium block">
                 Message payload:
               </label>
               <textarea
@@ -588,12 +594,12 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                 value={message}
                 onChange={(e) => handleMessageChange(e.target.value)}
                 placeholder="Enter telemetry (e.g. TEMP=27.4,HUM=61,MOTOR=ON)..."
-                className={`w-full px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none transition ${
+                className={`w-full px-3 py-2 rounded-lg text-xs font-mono border focus:outline-none transition ${
                   !hasValidPayload
-                    ? 'border-rose-500/60 bg-rose-950/20 text-rose-200'
+                    ? 'border-rose-500/60 bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-200'
                     : isDarkMode
                     ? 'bg-[#060b17] border-slate-700 text-white focus:border-blue-500'
-                    : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-blue-500'
+                    : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'
                 }`}
               />
 
@@ -603,7 +609,11 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                 <button
                   onClick={() => handleSelectPreset('A')}
                   className={`px-1.5 py-0.5 rounded border transition ${
-                    message === 'A' ? 'bg-[#006067] text-white border-[#006067] font-bold' : (isDarkMode ? 'bg-slate-800/60 text-slate-300 border-slate-700/50' : 'bg-slate-100 text-slate-700 border-slate-300')
+                    message === 'A'
+                      ? 'bg-blue-600 text-white border-blue-600 font-bold'
+                      : isDarkMode
+                      ? 'bg-slate-800/60 text-slate-300 border-slate-700/50'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
                   }`}
                 >
                   'A' (1B)
@@ -611,7 +621,11 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                 <button
                   onClick={() => handleSelectPreset('HELLO')}
                   className={`px-1.5 py-0.5 rounded border transition ${
-                    message === 'HELLO' ? 'bg-[#006067] text-white border-[#006067] font-bold' : (isDarkMode ? 'bg-slate-800/60 text-slate-300 border-slate-700/50' : 'bg-slate-100 text-slate-700 border-slate-300')
+                    message === 'HELLO'
+                      ? 'bg-blue-600 text-white border-blue-600 font-bold'
+                      : isDarkMode
+                      ? 'bg-slate-800/60 text-slate-300 border-slate-700/50'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
                   }`}
                 >
                   'HELLO' (5B)
@@ -619,7 +633,11 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                 <button
                   onClick={() => handleSelectPreset('TEMP=27.4,HUM=61,MOTOR=ON')}
                   className={`px-1.5 py-0.5 rounded border transition ${
-                    message === 'TEMP=27.4,HUM=61,MOTOR=ON' ? 'bg-[#006067] text-white border-[#006067] font-bold' : (isDarkMode ? 'bg-slate-800/60 text-slate-300 border-slate-700/50' : 'bg-slate-100 text-slate-700 border-slate-300')
+                    message === 'TEMP=27.4,HUM=61,MOTOR=ON'
+                      ? 'bg-blue-600 text-white border-blue-600 font-bold'
+                      : isDarkMode
+                      ? 'bg-slate-800/60 text-slate-300 border-slate-700/50'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
                   }`}
                 >
                   Telemetry (25B)
@@ -627,57 +645,61 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                 <button
                   onClick={() => handleSelectPreset('STATUS=OK,VCC=3.30,CURRENT=14.5mA,RPM=3200')}
                   className={`px-1.5 py-0.5 rounded border transition ${
-                    message === 'STATUS=OK,VCC=3.30,CURRENT=14.5mA,RPM=3200' ? 'bg-[#006067] text-white border-[#006067] font-bold' : (isDarkMode ? 'bg-slate-800/60 text-slate-300 border-slate-700/50' : 'bg-slate-100 text-slate-700 border-slate-300')
+                    message === 'STATUS=OK,VCC=3.30,CURRENT=14.5mA,RPM=3200'
+                      ? 'bg-blue-600 text-white border-blue-600 font-bold'
+                      : isDarkMode
+                      ? 'bg-slate-800/60 text-slate-300 border-slate-700/50'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
                   }`}
                 >
                   Long (42B)
                 </button>
                 <button
                   onClick={() => handleSelectPreset('')}
-                  className="px-1.5 py-0.5 rounded border bg-rose-950/40 text-rose-300 border-rose-800/50 hover:bg-rose-900/60 transition"
+                  className="px-1.5 py-0.5 rounded border bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/50 transition"
                 >
                   Clear
                 </button>
               </div>
 
               {/* Metadata & Encoding Badges */}
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1">
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 pt-1">
                 <span>{payloadBytes.length} bytes • ASCII encoding</span>
-                <span className="text-cyan-400 font-bold">
+                <span className="text-blue-600 dark:text-cyan-400 font-bold">
                   {digitalFrame ? `CRC-8: 0x${digitalFrame.crcByte.toString(16).toUpperCase().padStart(2, '0')}` : 'CRC-8: --'}
                 </span>
               </div>
 
               <div className="flex items-center gap-1.5 pt-1">
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
                   ASCII
                 </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
                   Manchester
                 </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
                   1000 bps
                 </span>
               </div>
             </div>
 
             {/* Encoded Bitstream Viewer */}
-            <div className="space-y-1.5 pt-2 border-t border-slate-800/60 font-mono text-xs">
+            <div className="space-y-1.5 pt-2 border-t border-slate-200 dark:border-slate-800/60 font-mono text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-slate-400 font-semibold text-[11px]">Encoded bitstream:</span>
-                <span className="text-[10px] text-slate-500">
+                <span className="text-slate-500 font-semibold text-[11px]">Encoded bitstream:</span>
+                <span className="text-[10px] text-slate-400">
                   {digitalFrame ? `${digitalFrame.totalBits} bits • ${digitalFrame.totalChips} chips` : '0 bits • 0 chips'}
                 </span>
               </div>
 
               {/* Real-time Character-to-Binary Mapping */}
               <div
-                className={`p-3 rounded-xl border text-[11px] leading-relaxed break-all max-h-36 overflow-y-auto select-all ${
-                  isDarkMode ? 'bg-[#060b17] border-slate-800 text-cyan-300' : 'bg-slate-50 border-slate-200 text-blue-900'
+                className={`p-3 rounded-lg border text-[11px] leading-relaxed break-all max-h-36 overflow-y-auto select-all ${
+                  isDarkMode ? 'bg-[#060b17] border-slate-800 text-cyan-300' : 'bg-slate-50 border-slate-200 text-slate-800'
                 }`}
               >
                 {!hasValidPayload ? (
-                  <span className="text-slate-500 italic">
+                  <span className="text-slate-400 italic">
                     [No payload — Enter a telemetry string above (e.g. &apos;HELLO&apos; or &apos;TEMP=27.4&apos;) to generate binary bitstream]
                   </span>
                 ) : (
@@ -685,14 +707,14 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                     {/* Character-by-Character Byte Breakdown */}
                     <div className="flex flex-wrap gap-1 text-[10px]">
                       {asciiTable.map((item) => (
-                        <span key={item.index} className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800">
-                          <span className="text-amber-300 font-bold">&apos;{item.char}&apos;:</span>{' '}
-                          <span className="text-cyan-300 font-mono">{item.binary}</span>
+                        <span key={item.index} className={`px-1.5 py-0.5 rounded border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-2xs'}`}>
+                          <span className="text-amber-600 dark:text-amber-300 font-bold">&apos;{item.char}&apos;:</span>{' '}
+                          <span className="text-blue-600 dark:text-cyan-300 font-mono">{item.binary}</span>
                         </span>
                       ))}
                     </div>
                     {/* Serialized Stream with Byte Spacing */}
-                    <div className="text-[10px] text-slate-400 border-t border-slate-800/60 pt-1.5 font-mono">
+                    <div className="text-[10px] text-slate-400 border-t border-slate-200 dark:border-slate-800/60 pt-1.5 font-mono">
                       <span className="text-slate-500 text-[9px] block mb-0.5">Full Frame (Sync + Len + Seq + Data + CRC):</span>
                       {bitString.match(/.{1,8}/g)?.join(' ') || bitString}
                     </div>
@@ -705,7 +727,7 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                 <button
                   type="button"
                   onClick={() => setShowAsciiDrawer(!showAsciiDrawer)}
-                  className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 flex items-center space-x-1 pt-1"
+                  className="text-[11px] font-mono text-blue-600 dark:text-cyan-400 hover:underline flex items-center space-x-1 pt-1"
                 >
                   <Binary className="w-3.5 h-3.5" />
                   <span>{showAsciiDrawer ? 'Hide ASCII Symbol Drawer' : 'Inspect ASCII & Nibble Breakdown'}</span>
@@ -713,25 +735,25 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
               )}
 
               {showAsciiDrawer && hasValidPayload && (
-                <div className="max-h-36 overflow-y-auto rounded-lg border border-slate-800 mt-2 bg-[#060b17]">
+                <div className={`max-h-36 overflow-y-auto rounded-lg border mt-2 ${isDarkMode ? 'border-slate-800 bg-[#060b17]' : 'border-slate-200 bg-white'}`}>
                   <table className="w-full text-left text-[10px] font-mono">
-                    <thead className="bg-slate-900 text-slate-400 sticky top-0 border-b border-slate-800">
+                    <thead className={`sticky top-0 border-b ${isDarkMode ? 'bg-slate-900 text-slate-400 border-slate-800' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
                       <tr>
                         <th className="px-2 py-1">#</th>
                         <th className="px-2 py-1">Char</th>
                         <th className="px-2 py-1">Dec</th>
                         <th className="px-2 py-1">Hex</th>
-                        <th className="px-2 py-1 text-cyan-400">8-Bit Binary</th>
+                        <th className="px-2 py-1 text-blue-600 dark:text-cyan-400">8-Bit Binary</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60 text-slate-300' : 'divide-slate-100 text-slate-700'}`}>
                       {asciiTable.map((item) => (
                         <tr key={item.index}>
-                          <td className="px-2 py-0.5 text-slate-500">{item.index}</td>
-                          <td className="px-2 py-0.5 font-bold text-amber-300">&apos;{item.char}&apos;</td>
+                          <td className="px-2 py-0.5 text-slate-400">{item.index}</td>
+                          <td className="px-2 py-0.5 font-bold text-amber-600 dark:text-amber-300">&apos;{item.char}&apos;</td>
                           <td className="px-2 py-0.5">{item.asciiCode}</td>
-                          <td className="px-2 py-0.5 text-purple-300">{item.hex}</td>
-                          <td className="px-2 py-0.5 text-cyan-300 font-bold">{item.binary}</td>
+                          <td className="px-2 py-0.5 text-purple-600 dark:text-purple-300">{item.hex}</td>
+                          <td className="px-2 py-0.5 text-blue-600 dark:text-cyan-300 font-bold">{item.binary}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -745,14 +767,12 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
               <button
                 onClick={handleTransmit}
                 disabled={isTransmitting || !hasValidPayload}
-                className={`w-full py-3 rounded-full text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-lg transition-all active:scale-95 ${
+                className={`w-full py-2.5 rounded-lg text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-xs transition-all active:scale-98 ${
                   isTransmitting
                     ? 'bg-amber-600 cursor-wait'
                     : !hasValidPayload
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                    : hasTransmitted
-                    ? 'bg-gradient-to-r from-[#006067] to-[#00838f] hover:from-[#004f55] hover:to-[#006067] shadow-lg shadow-[#006067]/30 ring-2 ring-[#00a2ac]/40'
-                    : 'bg-gradient-to-r from-[#006067] to-[#00838f] hover:from-[#004f55] hover:to-[#006067] shadow-lg shadow-[#006067]/30 animate-pulse'
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300 dark:bg-slate-800 dark:text-slate-500'
+                    : 'bg-blue-600 hover:bg-blue-700 shadow-xs'
                 }`}
               >
                 {isTransmitting ? (
@@ -768,7 +788,7 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                 )}
               </button>
               {hasValidPayload && !hasTransmitted && (
-                <p className="text-[10px] text-center font-mono text-amber-400/90 mt-1.5">
+                <p className="text-[10px] text-center font-mono text-amber-600 dark:text-amber-400 mt-1.5">
                   • Click TRANSMIT SIGNAL to run physical link &amp; capture waveforms
                 </p>
               )}
@@ -781,34 +801,34 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
         {/* ======================================================= */}
         <div className="lg:col-span-5 space-y-4">
           <div
-            className={`rounded-2xl border p-5 space-y-4 shadow-sm flex flex-col justify-between ${
-              isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200'
+            className={`rounded-xl border p-5 space-y-4 shadow-xs flex flex-col justify-between ${
+              isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200/90'
             }`}
           >
             {/* Header */}
             <div>
               <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center space-x-2">
-                  <span className="font-mono text-xs font-bold text-cyan-400">02 &mdash;</span>
+                  <span className="font-mono text-xs font-bold text-blue-600 dark:text-cyan-400">02 &mdash;</span>
                   <h2 className="text-sm font-bold tracking-tight uppercase">LIVE SIGNAL MONITOR</h2>
                 </div>
                 {!hasValidPayload ? (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-500 border border-slate-700 flex items-center space-x-1">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 flex items-center space-x-1">
                     <span>STANDBY (EMPTY)</span>
                   </span>
                 ) : hasTransmitted ? (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 flex items-center space-x-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>LIVE</span>
                   </span>
                 ) : (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center space-x-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30 flex items-center space-x-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
                     <span>ARMED</span>
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">
+              <p className="text-[11px] text-slate-500 mt-1">
                 {!hasValidPayload
                   ? 'Transmitter quiescent (0.0V baseline) — Awaiting message payload.'
                   : hasTransmitted
@@ -818,7 +838,9 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
             </div>
 
             {/* Scope Control Bar (Timebase, Zoom, Run/Pause, Burst Injector) */}
-            <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl bg-[#060b17] border border-slate-800 text-xs font-mono">
+            <div className={`flex flex-wrap items-center justify-between gap-2 p-2 rounded-lg border text-xs font-mono ${
+              isDarkMode ? 'bg-[#060b17] border-slate-800' : 'bg-slate-50 border-slate-200 text-slate-700'
+            }`}>
               <div className="flex items-center space-x-1.5">
                 <button
                   onClick={() => setIsScopeRunning(!isScopeRunning)}
@@ -828,24 +850,28 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                 >
                   {isScopeRunning ? 'RUN' : 'PAUSE'}
                 </button>
-                <div className="text-[11px] text-slate-400 pl-1">
-                  Timebase: <strong className="text-white">{timebaseUs} µs/div</strong>
+                <div className="text-[11px] text-slate-500 pl-1">
+                  Timebase: <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{timebaseUs} µs/div</strong>
                 </div>
               </div>
 
               {/* Zoom Controls */}
               <div className="flex items-center space-x-1">
-                <span className="text-slate-400 text-[11px]">Zoom:</span>
+                <span className="text-slate-500 text-[11px]">Zoom:</span>
                 <button
                   onClick={() => setZoom((z) => Math.min(4.0, z * 1.25))}
-                  className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded text-[10px]"
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                    isDarkMode ? 'bg-slate-800 text-white border-slate-700' : 'bg-white text-slate-700 border-slate-200'
+                  }`}
                 >
                   +
                 </button>
-                <span className="text-cyan-400 font-bold text-[11px]">{zoom.toFixed(1)}×</span>
+                <span className="text-blue-600 dark:text-cyan-400 font-bold text-[11px]">{zoom.toFixed(1)}×</span>
                 <button
                   onClick={() => setZoom((z) => Math.max(0.5, z / 1.25))}
-                  className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded text-[10px]"
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                    isDarkMode ? 'bg-slate-800 text-white border-slate-700' : 'bg-white text-slate-700 border-slate-200'
+                  }`}
                 >
                   -
                 </button>
@@ -853,15 +879,17 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
 
               {/* Burst Occlusion Selector */}
               <div className="flex items-center space-x-1">
-                <span className="text-slate-400 text-[10px]">BURST:</span>
+                <span className="text-slate-500 text-[10px]">BURST:</span>
                 {(['P0', 'P1', 'P2', 'P3'] as const).map((sc) => (
                   <button
                     key={sc}
                     onClick={() => handleScenarioChange(sc)}
-                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition ${
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition border ${
                       occlusionScenario === sc
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : isDarkMode
+                        ? 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                     }`}
                     title={sc === 'P0' ? 'Clean Line of Sight' : `${burstDurations[sc]} ms Occlusion`}
                   >
@@ -873,29 +901,31 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
 
             {/* Standby Banner when not transmitted or empty */}
             {!hasValidPayload ? (
-              <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-400 font-mono text-xs flex items-center justify-between">
+              <div className={`p-2.5 rounded-lg border font-mono text-xs flex items-center justify-between ${
+                isDarkMode ? 'bg-slate-900/60 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'
+              }`}>
                 <div className="flex items-center space-x-2">
-                  <AlertTriangle className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span>Transmitter empty. Enter a message above to generate bitstream &amp; waveforms.</span>
                 </div>
               </div>
             ) : !hasTransmitted ? (
-              <div className="p-2.5 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-300 font-mono text-xs flex items-center justify-between">
+              <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 font-mono text-xs flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                   <span><strong>DSO ARMED:</strong> Optical carrier quiescent • Trigger: ESP32 GPIO 23</span>
                 </div>
-                <span className="text-[10px] text-amber-300/80 font-bold hidden sm:inline">Press [TRANSMIT SIGNAL] to capture</span>
+                <span className="text-[10px] text-amber-700 dark:text-amber-300/80 font-bold hidden sm:inline">Press [TRANSMIT SIGNAL] to capture</span>
               </div>
             ) : null}
 
             {/* 4 Oscilloscope Signal Traces */}
             <div className="space-y-2.5 font-mono">
               {/* CH1 · TX Manchester Data */}
-              <div className="p-2.5 rounded-xl bg-[#060b17] border border-slate-800 space-y-1">
+              <div className="p-2.5 rounded-lg bg-[#070c18] border border-slate-800 space-y-1 text-white">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-bold text-amber-400">CH1 • TX Manchester Data</span>
-                  <span className="text-slate-500 text-[10px]">
+                  <span className="text-slate-400 text-[10px]">
                     {!hasValidPayload
                       ? '0.0V (Transmitter Empty)'
                       : hasTransmitted
@@ -904,7 +934,7 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                   </span>
                 </div>
                 {/* SVG Digital Waveform */}
-                <div className="h-10 w-full overflow-hidden relative bg-slate-950/80 rounded border border-slate-900">
+                <div className="h-10 w-full overflow-hidden relative bg-black/60 rounded border border-slate-800/80">
                   <svg className="w-full h-full" preserveAspectRatio="none" viewBox={`0 0 ${numSamples} 35`}>
                     <path
                       d={traces.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${i} ${32 - (pt.ch1_v / 3.3) * 26}`).join(' ')}
@@ -917,10 +947,10 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
               </div>
 
               {/* CH2 · LED Optical Intensity */}
-              <div className="p-2.5 rounded-xl bg-[#060b17] border border-slate-800 space-y-1">
+              <div className="p-2.5 rounded-lg bg-[#070c18] border border-slate-800 space-y-1 text-white">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-bold text-red-400">CH2 • LED Optical Intensity</span>
-                  <span className="text-slate-500 text-[10px]">
+                  <span className="text-slate-400 text-[10px]">
                     {!hasValidPayload
                       ? '0.0 mW (LED Dark)'
                       : hasTransmitted
@@ -928,7 +958,7 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                       : '650 nm Radiant Power (Staged)'}
                   </span>
                 </div>
-                <div className="h-10 w-full overflow-hidden relative bg-slate-950/80 rounded border border-slate-900">
+                <div className="h-10 w-full overflow-hidden relative bg-black/60 rounded border border-slate-800/80">
                   <svg className="w-full h-full" preserveAspectRatio="none" viewBox={`0 0 ${numSamples} 35`}>
                     <path
                       d={traces.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${i} ${32 - (pt.ch2_v / 3.3) * 26}`).join(' ')}
@@ -941,10 +971,10 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
               </div>
 
               {/* CH3 · RX Photodiode Signal */}
-              <div className="p-2.5 rounded-xl bg-[#060b17] border border-slate-800 space-y-1">
+              <div className="p-2.5 rounded-lg bg-[#070c18] border border-slate-800 space-y-1 text-white">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-bold text-purple-400">CH3 • RX Photodiode Signal</span>
-                  <span className="text-slate-500 text-[10px]">
+                  <span className="text-slate-400 text-[10px]">
                     {!hasValidPayload
                       ? '0.05V (Dark Current Baseline)'
                       : hasTransmitted
@@ -952,7 +982,7 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                       : '0.05V (Awaiting Optical Pulse)'}
                   </span>
                 </div>
-                <div className="h-10 w-full overflow-hidden relative bg-slate-950/80 rounded border border-slate-900">
+                <div className="h-10 w-full overflow-hidden relative bg-black/60 rounded border border-slate-800/80">
                   <svg className="w-full h-full" preserveAspectRatio="none" viewBox={`0 0 ${numSamples} 35`}>
                     <path
                       d={traces.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${i} ${32 - (pt.ch3_v / 3.3) * 26}`).join(' ')}
@@ -965,10 +995,10 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
               </div>
 
               {/* CH4 · RX Digital Recovered Bits */}
-              <div className="p-2.5 rounded-xl bg-[#060b17] border border-slate-800 space-y-1">
+              <div className="p-2.5 rounded-lg bg-[#070c18] border border-slate-800 space-y-1 text-white">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-bold text-emerald-400">CH4 • RX Digital Recovered Bits</span>
-                  <span className="text-slate-500 text-[10px]">
+                  <span className="text-slate-400 text-[10px]">
                     {!hasValidPayload
                       ? '0.0V (Comparator Idle)'
                       : hasTransmitted
@@ -976,7 +1006,7 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                       : '0.0V (Comparator Standby)'}
                   </span>
                 </div>
-                <div className="h-10 w-full overflow-hidden relative bg-slate-950/80 rounded border border-slate-900">
+                <div className="h-10 w-full overflow-hidden relative bg-black/60 rounded border border-slate-800/80">
                   <svg className="w-full h-full" preserveAspectRatio="none" viewBox={`0 0 ${numSamples} 35`}>
                     <path
                       d={traces.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${i} ${32 - (pt.ch4_v / 3.3) * 26}`).join(' ')}
@@ -990,19 +1020,21 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
             </div>
 
             {/* Scope Trace Export Controls */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-[10px] font-mono text-slate-400">
+            <div className={`flex items-center justify-between pt-2 border-t text-[10px] font-mono ${
+              isDarkMode ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-500'
+            }`}>
               <span>Time: 0 to {((timebaseUs * 10) / zoom).toFixed(0)} µs</span>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <button
                   onClick={() => handleExportSamples('csv')}
-                  className="text-cyan-400 hover:underline flex items-center space-x-1"
+                  className="text-blue-600 dark:text-cyan-400 hover:underline flex items-center space-x-1"
                 >
                   <FileSpreadsheet className="w-3 h-3" />
                   <span>Export CSV</span>
                 </button>
                 <button
                   onClick={() => handleExportSamples('json')}
-                  className="text-cyan-400 hover:underline flex items-center space-x-1"
+                  className="text-blue-600 dark:text-cyan-400 hover:underline flex items-center space-x-1"
                 >
                   <FileCode className="w-3 h-3" />
                   <span>Export JSON</span>
@@ -1017,23 +1049,23 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
         {/* ======================================================= */}
         <div className="lg:col-span-3 space-y-4">
           <div
-            className={`rounded-2xl border p-5 space-y-4 shadow-sm ${
-              isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200'
+            className={`rounded-xl border p-5 space-y-4 shadow-xs ${
+              isDarkMode ? 'bg-[#0c1220] border-[#1a2844]' : 'bg-white border-slate-200/90'
             }`}
           >
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center space-x-2">
-                <span className="font-mono text-xs font-bold text-cyan-400">03 &mdash;</span>
+                <span className="font-mono text-xs font-bold text-blue-600 dark:text-cyan-400">03 &mdash;</span>
                 <h2 className="text-sm font-bold tracking-tight uppercase">RECEIVER &amp; DECODING</h2>
               </div>
               <span
                 className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold border ${
                   !hasValidPayload
-                    ? 'bg-slate-800 text-slate-500 border-slate-700'
+                    ? 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
                     : hasTransmitted
-                    ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20'
+                    : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
                 }`}
               >
                 {!hasValidPayload ? 'STANDBY' : hasTransmitted ? 'ESP32 RX' : 'ARMED'}
@@ -1043,44 +1075,50 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
             {/* 4 Metric Cards Grid */}
             <div className="grid grid-cols-2 gap-2.5 font-mono text-xs">
               {/* Metric 1: Received bits */}
-              <div className="p-3 rounded-xl bg-[#060b17] border border-slate-800">
-                <span className="text-[10px] text-slate-400 block font-semibold">Received bits</span>
-                <span className={`text-lg font-bold block mt-1 ${hasTransmitted && decodeResult ? 'text-cyan-400' : 'text-slate-600'}`}>
+              <div className={`p-3 rounded-lg border ${
+                isDarkMode ? 'bg-[#060b17] border-slate-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className="text-[10px] text-slate-500 block font-semibold">Received bits</span>
+                <span className={`text-lg font-bold block mt-1 ${hasTransmitted && decodeResult ? (isDarkMode ? 'text-cyan-400' : 'text-blue-600') : 'text-slate-400'}`}>
                   {hasTransmitted && decodeResult ? (decodeResult.totalBits || digitalFrame?.totalBits) : '--'}
                 </span>
-                <span className="text-[9px] text-slate-500">
+                <span className="text-[9px] text-slate-400">
                   {hasTransmitted ? 'Total framed bits' : 'Awaiting optical pulse'}
                 </span>
               </div>
 
               {/* Metric 2: Bit error rate */}
-              <div className="p-3 rounded-xl bg-[#060b17] border border-slate-800">
-                <span className="text-[10px] text-slate-400 block font-semibold">Bit error rate</span>
+              <div className={`p-3 rounded-lg border ${
+                isDarkMode ? 'bg-[#060b17] border-slate-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className="text-[10px] text-slate-500 block font-semibold">Bit error rate</span>
                 <span className={`text-lg font-bold block mt-1 ${
                   !hasTransmitted || !decodeResult
-                    ? 'text-slate-600'
+                    ? 'text-slate-400'
                     : decodeResult.bitErrors === 0
-                    ? 'text-emerald-400'
-                    : 'text-rose-400'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-rose-600 dark:text-rose-400'
                 }`}>
                   {hasTransmitted && decodeResult ? `${decodeResult.ber.toFixed(2)}%` : '--'}
                 </span>
-                <span className="text-[9px] text-slate-500">
+                <span className="text-[9px] text-slate-400">
                   {hasTransmitted && decodeResult ? `${decodeResult.bitErrors} corrupted bits` : 'No transmission'}
                 </span>
               </div>
 
               {/* Metric 3: CRC status */}
-              <div className="p-3 rounded-xl bg-[#060b17] border border-slate-800">
-                <span className="text-[10px] text-slate-400 block font-semibold">CRC status</span>
+              <div className={`p-3 rounded-lg border ${
+                isDarkMode ? 'bg-[#060b17] border-slate-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className="text-[10px] text-slate-500 block font-semibold">CRC status</span>
                 <span className={`text-lg font-bold block mt-1 ${
                   !hasValidPayload
-                    ? 'text-slate-600'
+                    ? 'text-slate-400'
                     : !hasTransmitted || !decodeResult
-                    ? 'text-amber-400'
+                    ? 'text-amber-600 dark:text-amber-400'
                     : decodeResult.crcStatus === 'PASS'
-                    ? 'text-emerald-400'
-                    : 'text-rose-400'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-rose-600 dark:text-rose-400'
                 }`}>
                   {!hasValidPayload
                     ? 'STANDBY'
@@ -1088,24 +1126,26 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                     ? 'ARMED'
                     : decodeResult?.crcStatus ?? 'FAIL'}
                 </span>
-                <span className="text-[9px] text-slate-500">
+                <span className="text-[9px] text-slate-400">
                   {hasTransmitted ? 'Dallas poly 0x31' : 'Awaiting frame'}
                 </span>
               </div>
 
               {/* Metric 4: Recovery status */}
-              <div className="p-3 rounded-xl bg-[#060b17] border border-slate-800">
-                <span className="text-[10px] text-slate-400 block font-semibold">Recovery status</span>
+              <div className={`p-3 rounded-lg border ${
+                isDarkMode ? 'bg-[#060b17] border-slate-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <span className="text-[10px] text-slate-500 block font-semibold">Recovery status</span>
                 <span className={`text-base font-bold block mt-1 ${
                   !hasValidPayload || !hasTransmitted || !decodeResult
-                    ? 'text-slate-600'
+                    ? 'text-slate-400'
                     : decodeResult.crcStatus === 'PASS'
-                    ? 'text-emerald-400'
+                    ? 'text-emerald-600 dark:text-emerald-400'
                     : occlusionScenario === 'P1'
-                    ? 'text-blue-400'
+                    ? 'text-blue-600 dark:text-blue-400'
                     : occlusionScenario === 'P2'
-                    ? 'text-amber-400'
-                    : 'text-rose-400'
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-rose-600 dark:text-rose-400'
                 }`}>
                   {!hasValidPayload || !hasTransmitted || !decodeResult
                     ? 'IDLE'
@@ -1117,7 +1157,7 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
                     ? 'FALLBACK_ARQ'
                     : 'DROPPED'}
                 </span>
-                <span className="text-[9px] text-slate-500">
+                <span className="text-[9px] text-slate-400">
                   {!hasTransmitted
                     ? 'Awaiting physical link'
                     : decodeResult?.crcStatus === 'PASS'
@@ -1129,16 +1169,16 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
 
             {/* Decoded Message Card */}
             <div className="space-y-1.5 font-mono text-xs">
-              <span className="text-slate-400 font-semibold text-[11px] block">Decoded message:</span>
+              <span className="text-slate-500 font-semibold text-[11px] block">Decoded message:</span>
               <div
-                className={`p-3 rounded-xl border text-xs font-bold leading-relaxed break-all ${
+                className={`p-3 rounded-lg border text-xs font-bold leading-relaxed break-all ${
                   !hasValidPayload
-                    ? 'bg-slate-950/40 border-slate-800 text-slate-500 italic'
+                    ? 'bg-slate-50 border-slate-200 text-slate-400 italic dark:bg-slate-950/40 dark:border-slate-800 dark:text-slate-500'
                     : !hasTransmitted
-                    ? 'bg-slate-950/40 border-slate-800 text-slate-400 italic'
+                    ? 'bg-slate-50 border-slate-200 text-slate-500 italic dark:bg-slate-950/40 dark:border-slate-800 dark:text-slate-400'
                     : decodeResult?.crcStatus === 'PASS' || occlusionScenario === 'P1' || occlusionScenario === 'P2'
-                    ? 'bg-emerald-950/20 border-emerald-800/80 text-emerald-300'
-                    : 'bg-rose-950/20 border-rose-800/80 text-rose-300'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-800/80 dark:text-emerald-300'
+                    : 'bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/20 dark:border-rose-800/80 dark:text-rose-300'
                 }`}
               >
                 {!hasValidPayload
@@ -1151,18 +1191,18 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
               </div>
               <div className="flex items-center space-x-1.5 text-[10px] font-semibold">
                 {!hasValidPayload ? (
-                  <span className="text-slate-500 flex items-center space-x-1">
-                    <Clock className="w-3 h-3 text-slate-500 shrink-0" />
+                  <span className="text-slate-400 flex items-center space-x-1">
+                    <Clock className="w-3 h-3 text-slate-400 shrink-0" />
                     <span>Transmitter empty. Enter a telemetry message above.</span>
                   </span>
                 ) : !hasTransmitted ? (
-                  <span className="text-amber-400/90 flex items-center space-x-1">
-                    <Clock className="w-3 h-3 text-amber-400 shrink-0" />
+                  <span className="text-amber-600 dark:text-amber-400 flex items-center space-x-1">
+                    <Clock className="w-3 h-3 text-amber-500 shrink-0" />
                     <span>Optical transceiver staged. Press TRANSMIT SIGNAL to run link.</span>
                   </span>
                 ) : (
-                  <span className="text-emerald-400 flex items-center space-x-1">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                  <span className="text-emerald-600 dark:text-emerald-400 flex items-center space-x-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
                     <span>
                       {occlusionScenario === 'P0'
                         ? 'Payload verified • Direct physical transmission'
@@ -1178,36 +1218,42 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
             </div>
 
             {/* TX vs RX Bit Comparison Toggle */}
-            <div className="pt-2 border-t border-slate-800 font-mono text-xs">
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 font-mono text-xs">
               <button
                 type="button"
                 onClick={() => setShowBitComparison(!showBitComparison)}
-                className="w-full py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center space-x-1.5 transition text-[11px]"
+                className={`w-full py-2 rounded-lg border flex items-center justify-center space-x-1.5 transition text-[11px] ${
+                  isDarkMode
+                    ? 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                }`}
               >
-                <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                <Activity className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400" />
                 <span>{showBitComparison ? 'Hide TX vs RX Bit Comparison' : 'Compare TX vs RX Bits'}</span>
               </button>
 
               {showBitComparison && (
-                <div className="mt-2.5 p-3 rounded-xl bg-[#060b17] border border-slate-800 space-y-2 text-[10px]">
+                <div className={`mt-2.5 p-3 rounded-lg border space-y-2 text-[10px] ${
+                  isDarkMode ? 'bg-[#060b17] border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
+                }`}>
                   {hasTransmitted && decodeResult ? (
                     <>
-                      <div className="flex justify-between text-slate-400">
+                      <div className="flex justify-between text-slate-500">
                         <span>TX Bits:</span>
-                        <span className="text-cyan-400 font-bold">{bits.slice(0, 24).join('')}...</span>
+                        <span className="text-blue-600 dark:text-cyan-400 font-bold">{bits.slice(0, 24).join('')}...</span>
                       </div>
-                      <div className="flex justify-between text-slate-400">
+                      <div className="flex justify-between text-slate-500">
                         <span>RX Sliced Bits:</span>
-                        <span className={decodeResult.bitErrors === 0 ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+                        <span className={decodeResult.bitErrors === 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-amber-600 dark:text-amber-400 font-bold'}>
                           {decodeResult.decodedBits.slice(0, 24)}...
                         </span>
                       </div>
-                      <div className="text-slate-500 text-[9px] pt-1">
+                      <div className="text-slate-400 text-[9px] pt-1">
                         Side-by-side inspection across all {digitalFrame?.totalBits} framed bit positions.
                       </div>
                     </>
                   ) : (
-                    <div className="text-slate-500 text-center py-2 italic text-[11px]">
+                    <div className="text-slate-400 text-center py-2 italic text-[11px]">
                       Awaiting transmission to capture received bitstream.
                     </div>
                   )}
@@ -1219,7 +1265,7 @@ export const TransmissionSignalAnalyzerPage: React.FC<TransmissionSignalAnalyzer
             {onOpenReport && (
               <button
                 onClick={onOpenReport}
-                className="w-full py-2 text-center text-xs font-mono text-blue-400 hover:underline"
+                className="w-full py-2 text-center text-xs font-mono text-blue-600 dark:text-blue-400 hover:underline"
               >
                 View Full Benchmark Report &rarr;
               </button>
